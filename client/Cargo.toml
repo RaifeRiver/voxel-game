@@ -1,0 +1,5 @@
+[package]
+name = "voxel_game_client"
+license = "MIT"
+version.workspace = true
+edition.workspace = true

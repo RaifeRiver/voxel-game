@@ -6,4 +6,4 @@ edition.workspace = true
 
 [dependencies]
 fastnoise2 = "0.4.0"
-glm.workspace = true
+glam.workspace = true

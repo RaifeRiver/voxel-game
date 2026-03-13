@@ -3,3 +3,10 @@ name = "voxel_game_client"
 license = "MIT"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+ash = "0.38.0"
+glfw = "0.61.0"
+glm.workspace = true
+vma = "0.3.1"
+voxel_game_common = {path = "../common"}

@@ -3,3 +3,7 @@ name = "voxel_game_common"
 license = "MIT"
 version.workspace = true
 edition.workspace = true
+
+[dependencies]
+fastnoise2 = "0.4.0"
+glm.workspace = true

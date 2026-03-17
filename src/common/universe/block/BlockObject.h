@@ -22,6 +22,6 @@ namespace voxel_game::universe::block {
 
 	private:
 		mutable std::shared_mutex mMutex;
-		std::unordered_map<glm::ivec3, std::unique_ptr<Chunk>, util::ivec3Hasher> mChunks;
+		std::unordered_map<glm::ivec3, std::unique_ptr<Chunk>, util::vec3Hasher<int32_t, glm::ivec3>> mChunks;
 	};
 }

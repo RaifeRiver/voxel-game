@@ -11,17 +11,17 @@
 namespace voxel_game::universe {
 	class Universe {
 	public:
-		PhysicsObject * getPhysicsObject(uint32_t id);
+		PhysicsObject * getPhysicsObject(uint64_t id);
 
-		std::vector<uint32_t> getPhysicsObjectsInSector(const glm::i64vec3& pos);
+		std::vector<uint64_t> getPhysicsObjectsInSector(const glm::i64vec3& pos);
 
 		void addPhysicsObject(PhysicsObject* object);
 
-		void removePhysicsObject(uint32_t id);
+		void removePhysicsObject(uint64_t id);
 
 	private:
-		std::unordered_map<uint32_t, std::unique_ptr<PhysicsObject>> mObjects;
-		std::unordered_map<glm::i64vec3, std::vector<uint32_t>, util::i64vec3Hasher> mSectorPhysicsObjects;
-		uint32_t mNextID = 0;
+		std::unordered_map<uint64_t, std::unique_ptr<PhysicsObject>> mObjects;
+		std::unordered_map<glm::i64vec3, std::vector<uint64_t>, util::vec3Hasher<int64_t, glm::i64vec3>> mSectorPhysicsObjects;
+		uint64_t mNextID = 0;
 	};
 }

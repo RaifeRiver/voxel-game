@@ -13,7 +13,7 @@ namespace voxel_game::universe {
 	public:
 		PhysicsObject * getPhysicsObject(uint32_t id);
 
-		std::vector<uint32_t> getPhysicsObjectsInSector(const glm::ivec3& pos);
+		std::vector<uint32_t> getPhysicsObjectsInSector(const glm::i64vec3& pos);
 
 		void addPhysicsObject(PhysicsObject* object);
 
@@ -21,7 +21,7 @@ namespace voxel_game::universe {
 
 	private:
 		std::unordered_map<uint32_t, std::unique_ptr<PhysicsObject>> mObjects;
-		std::unordered_map<glm::ivec3, std::vector<uint32_t>, util::ivec3Hasher> mSectorPhysicsObjects;
+		std::unordered_map<glm::i64vec3, std::vector<uint32_t>, util::i64vec3Hasher> mSectorPhysicsObjects;
 		uint32_t mNextID = 0;
 	};
 }

@@ -10,8 +10,8 @@ namespace voxel_game::util {
 		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 	}
 
-	struct ivec3Hasher {
-		std::size_t operator()(const glm::ivec3& v) const {
+	struct i64vec3Hasher {
+		std::size_t operator()(const glm::i64vec3& v) const {
 			size_t seed = 0;
 			combineHash(seed, v.x);
 			combineHash(seed, v.y);

@@ -31,7 +31,7 @@ namespace voxel_game::universe::block {
 		return mPos;
 	}
 
-	uint32_t Chunk::getBlockIndex(const glm::ivec3 &pos) {
+	uint32_t Chunk::getBlockIndex(const glm::ivec3& pos) {
 		return pos.x & 31 | (pos.y & 31) << 5 | (pos.z & 31) << 10;
 	}
 

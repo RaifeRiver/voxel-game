@@ -1,6 +1,6 @@
 #include "PhysicsObject.h"
 
-namespace voxel_game::world {
+namespace voxel_game::universe {
 	void PhysicsObject::move(const glm::vec3 distance) {
 		mLocalPos += distance;
 

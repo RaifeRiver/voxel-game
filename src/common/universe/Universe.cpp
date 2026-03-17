@@ -1,6 +1,6 @@
 #include "Universe.h"
 
-namespace voxel_game::world {
+namespace voxel_game::universe {
 	PhysicsObject * Universe::getPhysicsObject(const uint32_t id) {
 		const auto it = mObjects.find(id);
 		return it == mObjects.end()? nullptr: it->second.get();

@@ -8,7 +8,7 @@
 #include "PhysicsObject.h"
 #include "common/util/Hashers.h"
 
-namespace voxel_game::world {
+namespace voxel_game::universe {
 	class Universe {
 	public:
 		PhysicsObject * getPhysicsObject(uint32_t id);

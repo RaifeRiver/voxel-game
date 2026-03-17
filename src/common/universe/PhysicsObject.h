@@ -2,7 +2,7 @@
 
 #include "glm/gtc/type_precision.hpp"
 
-namespace voxel_game::world {
+namespace voxel_game::universe {
 	constexpr uint64_t SECTOR_SIZE = 64;
 
 	class PhysicsObject {

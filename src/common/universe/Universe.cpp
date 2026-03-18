@@ -8,7 +8,7 @@ namespace voxel_game::universe {
 
 	std::vector<uint64_t> Universe::getPhysicsObjectsInSector(const glm::i64vec3 &pos) {
 		const auto it = mSectorPhysicsObjects.find(pos);
-		return it == mSectorPhysicsObjects.end()? std::vector<uint32_t>{}: it->second;
+		return it == mSectorPhysicsObjects.end()? std::vector<uint64_t>{}: it->second;
 	}
 
 	void Universe::addPhysicsObject(PhysicsObject *object) {

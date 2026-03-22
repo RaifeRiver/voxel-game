@@ -1,0 +1,22 @@
+#version 460
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (rgba16f, set = 0, binding = 0) uniform image2D image;
+
+layout (push_constant) uniform PushConstants {
+    float r;
+    float g;
+    float b;
+} pushConstants;
+
+void main() {
+    ivec2 texCoord = ivec2(gl_GlobalInvocationID.xy);
+    ivec2 size = imageSize(image);
+    if (texCoord.x < size.x && texCoord.y < size.y) {
+        vec4 colour = vec4(0.0, 0.0, pushConstants.b, 1.0);
+        colour.r = float(texCoord.x) / size.x * pushConstants.r;
+        colour.g = float(texCoord.y) / size.y * pushConstants.g;
+        imageStore(image, texCoord, colour);
+    }
+}

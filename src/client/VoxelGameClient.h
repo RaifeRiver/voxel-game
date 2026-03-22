@@ -3,6 +3,8 @@
 #include <memory>
 
 #include "renderer/RenderEngine.h"
+#include "renderer/universe/UniverseRenderer.h"
+#include "resource/ResourceManager.h"
 
 namespace voxel_game::client {
 	class VoxelGameClient {
@@ -17,6 +19,14 @@ namespace voxel_game::client {
 			return mRenderEngine.get();
 		}
 
+		[[nodiscard]] resource::ResourceManager * getResourceManager() const {
+			return mResourceManager.get();
+		}
+
+		[[nodiscard]] renderer::universe::UniverseRenderer * getUniverseRenderer() const {
+			return mUniverseRenderer.get();
+		}
+
 		void run() const;
 
 		void destroy() const;
@@ -25,7 +35,9 @@ namespace voxel_game::client {
 		static inline std::unique_ptr<VoxelGameClient> sInstance = nullptr;
 
 		std::unique_ptr<renderer::RenderEngine> mRenderEngine;
+		std::unique_ptr<resource::ResourceManager> mResourceManager;
+		std::unique_ptr<renderer::universe::UniverseRenderer> mUniverseRenderer;
 
-		VoxelGameClient();
+		void init_();
 	};
 }

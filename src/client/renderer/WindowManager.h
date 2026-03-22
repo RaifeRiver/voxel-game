@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vulkan/vulkan.h>
+
 #include "GLFW/glfw3.h"
 
 namespace voxel_game::client::renderer {
@@ -14,6 +16,14 @@ namespace voxel_game::client::renderer {
 		[[nodiscard]] bool shouldClose() const;
 
 		static void pollEvents();
+
+		void createSurface(VkInstance instance, VkSurfaceKHR* surface) const;
+
+		[[nodiscard]] uint32_t getWidth() const;
+
+		[[nodiscard]] uint32_t getHeight() const;
+
+		[[nodiscard]] VkExtent2D getSize() const;
 
 		void destroy() const;
 

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 3.31)
 
 project(voxel_game)
 
+set(GLSL_VALIDATOR glslangValidator)
+
 set(CMAKE_CXX_STANDARD 20)
 
 find_package(Vulkan REQUIRED)
@@ -17,8 +19,19 @@ FetchContent_MakeAvailable(vkb)
 FetchContent_Declare(vma GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git v3.3.0)
 FetchContent_MakeAvailable(vma)
 
+file(GLOB_RECURSE GLSL_SOURCE_FILES CONFIGURE_DEPENDS "resources/shaders/*.frag" "resources/shaders/*.vert" "resources/shaders/*.comp")
+foreach(GLSL ${GLSL_SOURCE_FILES})
+    get_filename_component(FILE_NAME ${GLSL} NAME)
+    set(SPIRV "${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/${FILE_NAME}.spv")
+    add_custom_command(OUTPUT ${SPIRV} COMMAND ${GLSL_VALIDATOR} -V ${GLSL} -o ${SPIRV} DEPENDS ${GLSL})
+    list(APPEND SPIRV_BINARY_FILES ${SPIRV})
+endforeach(GLSL)
+add_custom_target(voxel_game_shaders DEPENDS ${SPIRV_BINARY_FILES})
+
 file(GLOB_RECURSE CLIENT_SOURCES CONFIGURE_DEPENDS src/common/*.cpp src/client/*.cpp)
 add_executable(voxel_game_client ${CLIENT_SOURCES})
+
+add_dependencies(voxel_game_client voxel_game_shaders)
 
 target_include_directories(voxel_game_client PUBLIC src)
 

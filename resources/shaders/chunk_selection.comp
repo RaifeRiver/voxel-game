@@ -1,0 +1,62 @@
+#version 460
+
+layout (local_size_x = 64) in;
+
+struct Chunk {
+    vec3 minAABB;
+    vec3 maxAABB;
+    vec3 worldPos;
+};
+layout (std430, set = 0, binding = 0) readonly buffer ChunkBuffer {
+    Chunk chunks[];
+};
+
+struct VisibleChunk {
+    uint id;
+    uint lod;
+};
+layout (std430, set = 0, binding = 1) writeonly buffer VisibleBuffer {
+    VisibleChunk visibleChunks[];
+};
+
+layout (std430, set = 0, binding = 2) buffer ChunkCountBuffer {
+    uint visibleChunkCount;
+};
+
+layout (push_constant) uniform PushConstants {
+    vec4 frustumPlanes[6];
+    vec3 cameraPos;
+    float lodQuality;
+} pushConstants;
+
+bool isVisible(vec3 min, vec3 max) {
+    for(int i = 0; i < 6; i++) {
+        vec3 p = min;
+        if(pushConstants.frustumPlanes[i].x >= 0) {
+            p.x = max.x;
+        }
+        if(pushConstants.frustumPlanes[i].y >= 0) {
+            p.y = max.y;
+        }
+        if(pushConstants.frustumPlanes[i].z >= 0) {
+            p.z = max.z;
+        }
+        if(dot(pushConstants.frustumPlanes[i].xyz, p) + pushConstants.frustumPlanes[i].w < 0) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void main() {
+    uint chunk = gl_GlobalInvocationID.x;
+    if (isVisible(chunks[chunk].minAABB, chunks[chunk].maxAABB)) {
+        vec3 centre = (chunks[chunk].minAABB + chunks[chunk].maxAABB) * 0.5;
+        float dist = distance(pushConstants.cameraPos, centre);
+
+        uint lod = uint(clamp(log2(dist * pushConstants.lodQuality), 0.0, 5.0));
+        uint slot = atomicAdd(visibleChunkCount, 1);
+        visibleChunks[slot].id = chunk;
+        visibleChunks[slot].lod = lod;
+    }
+}

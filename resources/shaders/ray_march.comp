@@ -1,0 +1,178 @@
+#version 460
+
+#extension GL_EXT_nonuniform_qualifier : require
+#extension GL_EXT_shader_atomic_int64 : require
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+#extension GL_EXT_shader_image_int64 : require
+
+layout(local_size_x = 8, local_size_y = 8) in;
+
+struct Tile {
+    uvec2 pos;
+    uint chunkID;
+    uint lod;
+};
+layout (std430, set = 0, binding = 0) readonly buffer TileBuffer {
+    Tile tiles[];
+};
+
+layout (std430, set = 0, binding = 1) readonly buffer PoolBuffer {
+    uint data[];
+} pools[];
+
+layout (std430, set = 0, binding = 2) readonly buffer Model {
+    mat4 model;
+};
+
+layout (set = 0, binding = 3, r64ui) uniform u64image2D visibilityBuffer;
+
+layout(std430, set = 0, binding = 4) readonly buffer ChunkMetadata {
+    uint rootOffset;
+    uint poolIndex;
+    uint attributeOffset;
+    uint attributeCount;
+} metadata;
+
+layout (push_constant) uniform PushConstants {
+    vec3 pos;
+    mat4 viewProj;
+    vec2 viewportSize;
+    float farPlane;
+} pushConstants;
+
+uint getRootNode(uint chunkID) {
+    return metadata.rootOffset;
+}
+
+uint64_t packVisibility(float depth, uint normal, uint chunkID, uvec3 pos) {
+    uint depthBits = uint(clamp(1.0 - depth, 0.0, 1.0) * 16777215.0);
+    uint coordBits = (pos.x & 0xFF) | ((pos.y & 0xFF) << 8) | ((pos.z & 0xFF) << 16);
+    uint64_t visibility = uint64_t(0);
+    visibility |= (uint64_t(depthBits) << 40);
+    visibility |= (uint64_t(normal & 7) << 37);
+    visibility |= (uint64_t(chunkID & 0x1FFF) << 24);
+    visibility |= uint64_t(coordBits);
+    return visibility;
+}
+
+vec2 intersectAABB(vec3 pos, vec3 inverseDir, vec3 boxMin, vec3 boxMax) {
+    vec3 t0 = (boxMin - pos) * inverseDir;
+    vec3 t1 = (boxMax - pos) * inverseDir;
+    vec3 tMin = min(t0, t1);
+    vec3 tMax = max(t0, t1);
+    return vec2(max(max(tMin.x, tMin.y), tMin.z), min(min(tMax.x, tMax.y), tMax.z));
+}
+
+uint findFirstEntryOctant(vec3 pos, vec3 centre) {
+    return uint(pos.x >= centre.x? 1 : 0) | uint(pos.y >= centre.y? 2 : 0) | uint(pos.z >= centre.z? 4 : 0);
+}
+
+bool stepToNextOctant(inout vec3 p, vec3 dir, vec3 inverseDir, vec3 centre, float size, inout uint currentOctant) {
+    vec3 planes = centre + sign(dir) * size * 0.5;
+    vec3 tMax = (planes - p) * inverseDir;
+    float tStep = min(min(tMax.x, tMax.y), tMax.z);
+    p += dir * (tStep + 0.001);
+    if (any(lessThan(p, centre - size * 0.5)) || any(greaterThanEqual(p, centre + size * 0.5))) {
+        return false;
+    }
+    currentOctant = findFirstEntryOctant(p, centre);
+    return true;
+}
+
+uint getMorton4x4x4(uvec3 p) {
+    return (p.x) | (p.y << 2u) | (p.z << 4u);
+}
+
+bool intersectSVDAG(vec3 pos, vec3 dir, uint node, uint lod, out float tHit, out uvec3 hitPos, out uint hitNormal) {
+    uint currentAddress = 0;
+    vec3 inverseDir = 1.0 / dir;
+
+    vec3 t0 = (vec3(0.0) - pos) * inverseDir;
+    vec3 t1 = (vec3(256.0) - pos) * inverseDir;
+    vec3 tMin = min(t0, t1);
+    if (tMin.x > tMin.y && tMin.x > tMin.z) {
+        hitNormal = dir.x > 0.0 ? 1 : 0;
+    }
+    else if (tMin.y > tMin.z) {
+        hitNormal = dir.y > 0.0 ? 3 : 2;
+    }
+    else {
+        hitNormal = dir.z > 0.0 ? 5 : 4;
+    }
+
+    vec2 tRange = intersectAABB(pos, inverseDir, vec3(0), vec3(256));
+    if (tRange.y < 0.0 || tRange.x > tRange.y) {
+        return false;
+    }
+
+    float t = max(0.0, tRange.x);
+    vec3 p = pos + dir * t;
+
+    uint maxLevel = 6 - max(0, lod - 2);
+    for (int level = 0; level < maxLevel; level++) {
+        uint childMask = pools[node].data[currentAddress];
+        float cellSize = 256.0 / pow(2.0, float(level));
+        vec3 centre = floor(p / cellSize) * cellSize + cellSize * 0.5;
+
+        uint octant = findFirstEntryOctant(p, centre);
+        if (((childMask >> octant) & 1) != 0) {
+            uint offset = bitCount(childMask & ((1u << octant) - 1u));
+            currentAddress = pools[node].data[currentAddress + 2u + offset];
+        }
+        else {
+            vec3 planes = centre + sign(dir) * cellSize * 0.5;
+            vec3 tMax = (planes - p) * inverseDir;
+            if (tMax.x < tMax.y && tMax.x < tMax.z) {
+                hitNormal = dir.x > 0.0 ? 1 : 0;
+            }
+            else if (tMax.y < tMax.z) {
+                hitNormal = dir.y > 0.0 ? 3 : 2;
+            }
+            else {
+                hitNormal = dir.z > 0.0 ? 5 : 4;
+            }
+
+            if (!stepToNextOctant(p, dir, inverseDir, centre, cellSize, octant)) {
+                return false;
+            }
+            level--;
+        }
+    }
+
+    tHit = t;
+    hitPos = uvec3(clamp(p, 0.0, 255.0));
+    if (lod == 0) {
+        uvec2 bitmap = uvec2(pools[node].data[currentAddress], pools[node].data[currentAddress + 1u]);
+        uint bitIndex = getMorton4x4x4(hitPos % 4u);
+        return ((bitmap[bitIndex / 32u] >> (bitIndex % 32u)) & 1u) != 0u;
+    }
+    else if (lod == 1) {
+        uvec2 bitmap = uvec2(pools[node].data[currentAddress], pools[node].data[currentAddress + 1u]);
+        uint bitIndex = getMorton4x4x4((hitPos % 4u) & ~1u);
+        return bitCount((bitmap[bitIndex / 32u] >> (bitIndex % 32u)) & 0xFFu) >= 4;
+    }
+    return true;
+}
+
+void main() {
+    uint index = gl_WorkGroupID.x;
+    Tile tile = tiles[index];
+    ivec2 pixel = ivec2(tile.pos * 8 + gl_LocalInvocationID.xy);
+
+    vec2 ndc = (vec2(pixel) / vec2(pushConstants.viewportSize)) * 2.0 - 1.0;
+    vec4 target = pushConstants.viewProj * vec4(ndc, 1.0, 1.0);
+    vec3 rayDir = normalize(target.xyz / target.w - pushConstants.pos);
+
+    vec3 localPos = (model * vec4(pushConstants.pos, 1.0)).xyz;
+    vec3 localDir = normalize((model * vec4(rayDir, 0.0)).xyz);
+
+    uint node = getRootNode(tile.chunkID);
+    float t = 0.0;
+    uvec3 hitPos;
+    uint hitNormal;
+    if (intersectSVDAG(localPos, localDir, node, tile.lod, t, hitPos, hitNormal)) {
+        vec3 worldHit = (inverse(model) * vec4(localPos + localDir * t, 1.0)).xyz;
+        float worldDepth = length(worldHit - pushConstants.pos) / pushConstants.farPlane;
+        imageAtomicMax(visibilityBuffer, pixel, packVisibility(worldDepth, hitNormal, tile.chunkID, hitPos));
+    }
+}

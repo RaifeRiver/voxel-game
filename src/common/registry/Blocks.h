@@ -3,7 +3,7 @@
 #include "Registry.h"
 #include "common/block/Block.h"
 
-namespace voxel_game::registry {
+namespace voxel_game::registry::blocks {
 	inline Registry<block::Block> BLOCKS;
 
 	inline const block::Block* AIR = BLOCKS.registerObject({"voxel_game", "air"}, std::make_unique<block::Block>());

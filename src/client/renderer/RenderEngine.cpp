@@ -40,7 +40,7 @@ namespace voxel_game::client::renderer {
 
 		image::transitionImage(commandBuffer, mRenderContext->getDrawImage().image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
-		renderBackground(commandBuffer);
+		VoxelGameClient::getClient()->getUniverseRenderer()->render(mRenderContext.get(), commandBuffer);
 
 		image::transitionImage(commandBuffer, mRenderContext->getDrawImage().image, VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL);
 		image::transitionImage(commandBuffer, mRenderContext->getSwapchainImages()[swapchainIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
@@ -49,6 +49,8 @@ namespace voxel_game::client::renderer {
 		image::copyImageToImage(commandBuffer, mRenderContext->getDrawImage().image, mRenderContext->getSwapchainImages()[swapchainIndex], drawImageExtent, mRenderContext->getSwapchainExtent());
 
 		image::transitionImage(commandBuffer, mRenderContext->getSwapchainImages()[swapchainIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+		TracyVkCollect(mRenderContext->getTracyContext(), commandBuffer);
 
 		VK_CHECK(vkEndCommandBuffer(commandBuffer));
 
@@ -113,6 +115,5 @@ namespace voxel_game::client::renderer {
 		const VkClearColorValue clearValue = {clearColour.r, clearColour.g, clearColour.b, 1.0f};
 		const VkImageSubresourceRange clearRange = initialisers::imageSubresourceRange(VK_IMAGE_ASPECT_COLOR_BIT);
 		vkCmdClearColorImage(commandBuffer, mRenderContext->getDrawImage().image, VK_IMAGE_LAYOUT_GENERAL, &clearValue, 1, &clearRange);
-		VoxelGameClient::getClient()->getUniverseRenderer()->render(mRenderContext.get(), commandBuffer);
 	}
 }

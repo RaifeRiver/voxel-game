@@ -1,11 +1,11 @@
 #include "DescriptorSetLayoutBuilder.h"
 
 namespace voxel_game::client::renderer {
-	void DescriptorSetLayoutBuilder::addBinding(const uint32_t binding, const VkDescriptorType descriptorType) {
+	void DescriptorSetLayoutBuilder::addBinding(const uint32_t binding, const VkDescriptorType descriptorType, uint32_t count) {
 		VkDescriptorSetLayoutBinding bindingInfo = {};
 		bindingInfo.binding = binding;
 		bindingInfo.descriptorType = descriptorType;
-		bindingInfo.descriptorCount = 1;
+		bindingInfo.descriptorCount = count;
 		mBindings.push_back(bindingInfo);
 	}
 

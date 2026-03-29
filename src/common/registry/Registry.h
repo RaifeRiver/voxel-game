@@ -17,7 +17,7 @@ namespace voxel_game::registry {
 			return mObjects[id].get();
 		}
 
-		T* getObject(const RegistryID& id) const {
+		[[nodiscard]] T* getObject(const RegistryID& id) {
 			return mObjects[id].get();
 		}
 

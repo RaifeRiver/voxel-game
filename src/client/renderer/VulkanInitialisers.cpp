@@ -90,6 +90,7 @@ namespace voxel_game::client::renderer::initialisers {
 		info.samples = VK_SAMPLE_COUNT_1_BIT;
 		info.tiling = VK_IMAGE_TILING_OPTIMAL;
 		info.usage = usage;
+		info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		return info;
 	}
 

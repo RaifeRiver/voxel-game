@@ -1,5 +1,6 @@
 #include "Chunk.h"
 
+#include <cstdio>
 #include <mutex>
 
 namespace voxel_game::universe::block {
@@ -22,6 +23,9 @@ namespace voxel_game::universe::block {
 		}
 		getOrCreateBlockIDAndModifyCount(oldBlock, -1);
 		const uint32_t id = getOrCreateBlockIDAndModifyCount(block, 1);
+		if (mBitsPerBlock == 0) {
+			return;
+		}
 		const uint32_t offset = (index & mBlockMask) * mBitsPerBlock;
 		mBlocks[index >> mBlockIndexShift] &= ~(mClearMask << offset);
 		mBlocks[index >> mBlockIndexShift] |= static_cast<uint64_t>(id) << offset;

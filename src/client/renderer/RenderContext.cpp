@@ -1,9 +1,14 @@
 #include "RenderContext.h"
 
-#include "VkBootstrap.h"
-#define VMA_IMPLEMENTATION
+#include <iostream>
+
+#include "tracy/TracyVulkan.hpp"
+
 #include "DescriptorSetLayoutBuilder.h"
+#define VMA_IMPLEMENTATION
+// ReSharper disable once CppUnusedIncludeDirective
 #include "vk_mem_alloc.h"
+#include "VkBootstrap.h"
 #include "VulkanInitialisers.h"
 #include "VulkanUtil.h"
 
@@ -39,7 +44,32 @@ namespace voxel_game::client::renderer {
 		initSwapchain(swapchainExtent.width, swapchainExtent.height);
 		initSyncStructures();
 		initCommands();
+
+		immediateSubmit([this](const VkCommandBuffer commandBuffer) {
+			mTracyContext = TracyVkContext(mPhysicalDevice, mDevice, mGraphicsQueue, commandBuffer);
+		});
+
 		initDescriptorSets();
+	}
+
+	void RenderContext::immediateSubmit(std::function<void(VkCommandBuffer commandBuffer)> &&function) const {
+		VK_CHECK(vkResetFences(mDevice, 1, &mImmediateFence));
+		VK_CHECK(vkResetCommandBuffer(mImmediateCommandBuffer, 0));
+
+		VkCommandBufferBeginInfo cmdBeginInfo = initialisers::commandBufferBeginInfo(VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT);
+
+		VK_CHECK(vkBeginCommandBuffer(mImmediateCommandBuffer, &cmdBeginInfo));
+
+		function(mImmediateCommandBuffer);
+
+		VK_CHECK(vkEndCommandBuffer(mImmediateCommandBuffer));
+
+		VkCommandBufferSubmitInfo commandBufferSubmitInfo = initialisers::commandBufferSubmitInfo(mImmediateCommandBuffer);
+		VkSubmitInfo2 submit = initialisers::submitInfo(&commandBufferSubmitInfo, nullptr, nullptr);
+
+		VK_CHECK(vkQueueSubmit2(mGraphicsQueue, 1, &submit, mImmediateFence));
+
+		VK_CHECK(vkWaitForFences(mDevice, 1, &mImmediateFence, true, UINT64_MAX));
 	}
 
 	void RenderContext::resizeSwapchain(const WindowManager* windowManager) {
@@ -57,6 +87,9 @@ namespace voxel_game::client::renderer {
 			frameContext.destroy(this);
 		}
 
+		vkDestroyCommandPool(mDevice, mImmediateCommandPool, nullptr);
+		vkDestroyFence(mDevice, mImmediateFence, nullptr);
+
 		for (const VkSemaphore& semaphore: mRenderSemaphores) {
 			vkDestroySemaphore(mDevice, semaphore, nullptr);
 		}
@@ -72,12 +105,21 @@ namespace voxel_game::client::renderer {
 
 		destroySwapchain();
 
+		TracyVkDestroy(mTracyContext);
+
 		vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
 		vkDestroyDevice(mDevice, nullptr);
 
 		vkb::destroy_debug_utils_messenger(mInstance, mDebugMessenger);
 		vkDestroyInstance(mInstance, nullptr);
 	}
+
+#define REQUIRE_FEATURE(x, success, message) do { \
+	if (!x) { \
+		std::cerr << message << std::endl; \
+		success = false; \
+	} \
+} while (0)
 
 	void RenderContext::initVulkan(const WindowManager* windowManager) {
 		vkb::InstanceBuilder instanceBuilder;
@@ -97,16 +139,80 @@ namespace voxel_game::client::renderer {
 		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 		features12.bufferDeviceAddress = true;
 		features12.descriptorIndexing = true;
+		features12.shaderBufferInt64Atomics = true;
+		features12.samplerFilterMinmax = true;
+		features12.runtimeDescriptorArray = true;
+		features12.shaderStorageBufferArrayNonUniformIndexing = true;
 
-		vkb::PhysicalDeviceSelector physicalDeviceSelector{instance, mSurface};
-		vkb::PhysicalDevice physicalDevice = physicalDeviceSelector.set_minimum_version(1, 3).set_required_features_13(features13).set_required_features_12(features12).select().value();
+		VkPhysicalDeviceFeatures2 features = {};
+		features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+		features.features.shaderInt64 = true;
+
+		vkb::PhysicalDeviceSelector selector{instance, mSurface};
+		vkb::Result<std::vector<vkb::PhysicalDevice>> devicesResult = selector.select_devices();
+		if (!devicesResult) {
+			std::cout << "Failed to find suitable devices: " << devicesResult.error() << std::endl;
+			throw std::runtime_error("Failed to find suitable devices");
+		}
+		std::vector<vkb::PhysicalDevice> devices = devicesResult.value();
+		std::vector<vkb::PhysicalDevice> suitableDevices;
+		for (const vkb::PhysicalDevice& device: devices) {
+			VkPhysicalDeviceProperties properties = device.properties;
+			std::cout << "Found device: " << properties.deviceName << std::endl;
+
+			VkPhysicalDeviceVulkan13Features deviceFeatures13 = {};
+			deviceFeatures13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
+
+			VkPhysicalDeviceVulkan12Features deviceFeatures12 = {};
+			deviceFeatures12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+			deviceFeatures12.pNext = &deviceFeatures13;
+
+			VkPhysicalDeviceFeatures2 deviceFeatures = {};
+			deviceFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+			deviceFeatures.pNext = &deviceFeatures12;
+
+			vkGetPhysicalDeviceFeatures2(device, &deviceFeatures);
+
+			bool hasFeatures = true;
+
+			REQUIRE_FEATURE(deviceFeatures.features.shaderInt64, hasFeatures, "Device does not support shaderInt64");
+
+			REQUIRE_FEATURE(deviceFeatures12.bufferDeviceAddress, hasFeatures, "Device does not support bufferDeviceAddress");
+			REQUIRE_FEATURE(deviceFeatures12.descriptorIndexing, hasFeatures, "Device does not support descriptorIndexing");
+			REQUIRE_FEATURE(deviceFeatures12.shaderBufferInt64Atomics, hasFeatures, "Device does not support shaderBufferInt64Atomics");
+			REQUIRE_FEATURE(deviceFeatures12.samplerFilterMinmax, hasFeatures, "Device does not support samplerFilterMinmax");
+			REQUIRE_FEATURE(deviceFeatures12.runtimeDescriptorArray, hasFeatures, "Device does not support runtimeDescriptorArray");
+			REQUIRE_FEATURE(deviceFeatures12.shaderStorageBufferArrayNonUniformIndexing, hasFeatures, "Device does not support shaderStorageBufferArrayNonUniformIndexing");
+
+			REQUIRE_FEATURE(deviceFeatures13.dynamicRendering, hasFeatures, "Device does not support dynamicRendering");
+			REQUIRE_FEATURE(deviceFeatures13.synchronization2, hasFeatures, "Device does not support synchronization2");
+
+			if (!hasFeatures || !(properties.deviceType & VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)) {
+				std::cout << "Device does not satisfy requirements" << std::endl;
+			}
+			else {
+				suitableDevices.push_back(device);
+			}
+		}
+		if (suitableDevices.empty()) {
+			throw std::runtime_error("No suitable devices found");
+		}
+
+		vkb::PhysicalDevice physicalDevice = suitableDevices[0];
 		mPhysicalDevice = physicalDevice.physical_device;
 
+		std::cout << "Using GPU: " << physicalDevice.properties.deviceName << std::endl;
+
 		vkb::DeviceBuilder deviceBuilder{physicalDevice};
-		vkb::Device device = deviceBuilder.build().value();
+		vkb::Device device = deviceBuilder.add_pNext(&features13).add_pNext(&features12).add_pNext(&features).build().value();
 		mDevice = device.device;
 
-		mGraphicsQueue = device.get_queue(vkb::QueueType::graphics).value();
+		vkb::Result<VkQueue> graphicsQueueResult = device.get_queue(vkb::QueueType::graphics);
+		if (!graphicsQueueResult) {
+			std::cerr << "Failed to get graphics queue: " << graphicsQueueResult.error() << std::endl;
+			throw std::runtime_error("Failed to get graphics queue");
+		}
+		mGraphicsQueue = graphicsQueueResult.value();
 		mGraphicsQueueFamily = device.get_queue_index(vkb::QueueType::graphics).value();
 
 		VmaAllocatorCreateInfo allocatorCreateInfo = {};
@@ -120,7 +226,7 @@ namespace voxel_game::client::renderer {
 	void RenderContext::initSwapchain(const uint32_t width, const uint32_t height) {
 		vkb::SwapchainBuilder swapchainBuilder{mPhysicalDevice, mDevice, mSurface};
 		mSwapchainImageFormat = VK_FORMAT_B8G8R8A8_UNORM;
-		vkb::Swapchain swapchain = swapchainBuilder.set_desired_format(VkSurfaceFormatKHR{mSwapchainImageFormat, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}).set_desired_present_mode(VK_PRESENT_MODE_FIFO_KHR).set_desired_extent(width, height).add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT).build().value();
+		vkb::Swapchain swapchain = swapchainBuilder.set_desired_format(VkSurfaceFormatKHR{mSwapchainImageFormat, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR}).set_desired_present_mode(VK_PRESENT_MODE_IMMEDIATE_KHR).set_desired_extent(width, height).add_image_usage_flags(VK_IMAGE_USAGE_TRANSFER_DST_BIT).build().value();
 		mSwapchain = swapchain.swapchain;
 		mSwapchainImages = swapchain.get_images().value();
 		mSwapchainImageViews = swapchain.get_image_views().value();
@@ -146,6 +252,11 @@ namespace voxel_game::client::renderer {
 		for (FrameContext& frameContext: mFrameContexts) {
 			frameContext.initCommands(this, commandPoolInfo);
 		}
+
+		VK_CHECK(vkCreateCommandPool(mDevice, &commandPoolInfo, nullptr, &mImmediateCommandPool));
+
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo = initialisers::commandBufferAllocateInfo(mImmediateCommandPool, 1);
+		VK_CHECK(vkAllocateCommandBuffers(mDevice, &commandBufferAllocateInfo, &mImmediateCommandBuffer));
 	}
 
 	void RenderContext::initSyncStructures() {
@@ -158,6 +269,8 @@ namespace voxel_game::client::renderer {
 		for (VkSemaphore& semaphore: mRenderSemaphores) {
 			VK_CHECK(vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &semaphore));
 		}
+
+		VK_CHECK(vkCreateFence(mDevice, &fenceCreateInfo, nullptr, &mImmediateFence));
 	}
 
 	void RenderContext::initDescriptorSets() {

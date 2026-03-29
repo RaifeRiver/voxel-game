@@ -6,7 +6,9 @@
 
 layout(local_size_x = 16, local_size_y = 16) in;
 
-layout (set = 0, binding = 0, r64ui) uniform u64image2D visibilityBuffer;
+layout (std430, set = 0, binding = 0) buffer VisibilityBuffer {
+    uint64_t data[];
+} visibilityBuffer;
 
 struct MaterialIndex {
     uint startIndex;
@@ -17,13 +19,15 @@ layout (std430, set = 0, binding = 1) readonly buffer MaterialIndexBuffer {
     MaterialIndex materialIndices[];
 };
 
-layout(std430, set = 0, binding = 2) readonly buffer ChunkMetadata {
+struct ChunkMetadata {
     uint rootOffset;
-    uint poolIndex;
     uint attributeOffset;
     uint attributeCount;
-    vec3 worldOrigin;
-} metadata[];
+    uint objectID;
+};
+layout(std430, set = 0, binding = 2) readonly buffer ChunkMetadataBuffer {
+    ChunkMetadata metadata[];
+};
 
 layout (set = 0, binding = 3) uniform sampler2D textures[];
 
@@ -40,6 +44,15 @@ layout (std430, set = 0, binding = 6) readonly buffer MaterialBuffer {
     Material materials[];
 };
 
+layout (std430, set = 0, binding = 7) readonly buffer ModelBuffer {
+    mat4 model;
+    mat4 modelInv;
+} models[];
+
+layout (push_constant) uniform PushConstants {
+    uint width;
+} pushConstants;
+
 uint getMorton4x4x4(uvec3 p) {
     return (p.x) | (p.y << 2u) | (p.z << 4u);
 }
@@ -55,7 +68,7 @@ uint hitChildMaskOffset(uint childMask, uint hitChildIndex) {
 }
 
 uvec2 getLeafBitmap(uint chunkID, uint address) {
-    return uvec2(pools[chunkID].data[address], pools[chunkID].data[address + 1]);
+    return uvec2(pools[nonuniformEXT(chunkID)].data[address], pools[nonuniformEXT(chunkID)].data[address + 1]);
 }
 
 uint bitCountBefore(uvec2 bitmap, uint k) {
@@ -67,32 +80,41 @@ uint bitCountBefore(uvec2 bitmap, uint k) {
     }
 }
 
-uint getDFSIndex(uint chunkID, uvec3 pos) {
+uint getMaterial(uint chunkID, uvec3 pos) {
     uint dfsIndex = 0;
-    uint currentAddress = 0;
+    uint currentAddress = metadata[chunkID].rootOffset;
 
     for (int level = 0; level < 6; level++) {
-        uint childMask = pools[chunkID].data[currentAddress];
+        uint childMask = pools[nonuniformEXT(chunkID)].data[currentAddress];
         uint hitChild = getOctantIndex(pos, level);
 
         for (uint i = 0; i < hitChild; i++) {
             if (((childMask >> i) & 1) != 0) {
-                uint ptrOffset = hitChildMaskOffset(childMask, i);
-                uint childAddr = pools[chunkID].data[currentAddress + 2u + ptrOffset];
-                dfsIndex += pools[chunkID].data[childAddr + 1u];
+                uint childAddr = pools[nonuniformEXT(chunkID)].data[currentAddress + 1u + i];
+                if ((childAddr & 0x80000000u) != 0u) {
+                    dfsIndex += 1u;
+                }
+                else {
+                    dfsIndex += pools[nonuniformEXT(chunkID)].data[childAddr + 9u];
+                }
             }
         }
 
-        uint finalOffset = hitChildMaskOffset(childMask, hitChild);
-        currentAddress = pools[chunkID].data[currentAddress + 2u + finalOffset];
+        if (((childMask >> hitChild) & 1u) == 0u) {
+            return 0;
+        }
+
+        uint finalPtr = pools[nonuniformEXT(chunkID)].data[currentAddress + 1u + hitChild];
+
+        if ((finalPtr & 0x80000000u) != 0u) {
+            return finalPtr & 0x7FFFFFFFu;
+        }
+
+        currentAddress = finalPtr;
     }
 
     uvec2 bitmap = getLeafBitmap(chunkID, currentAddress);
     dfsIndex += bitCountBefore(bitmap, getMorton4x4x4(pos % 4u));
-    return dfsIndex;
-}
-
-uint getMaterial(uint chunkID, uint dfsIndex) {
     uint low = metadata[chunkID].attributeOffset;
     uint high = low + metadata[chunkID].attributeCount - 1;
     while (low <= high) {
@@ -136,22 +158,29 @@ vec3 unpackNormal(uint normalIndex) {
 }
 
 vec3 getWorldPos(uint chunkID, uvec3 localPos) {
-    return metadata[chunkID].worldOrigin + vec3(localPos);
+    return (models[metadata[chunkID].objectID].model * vec4(localPos, 1.0)).xyz;
 }
 
 void main() {
     ivec2 pixel = ivec2(gl_GlobalInvocationID.xy);
-    uint64_t data = imageLoad(visibilityBuffer, pixel).x;
+    if (pixel.x >= imageSize(image).x || pixel.y >= imageSize(image).y) return;
+
+    uint64_t data = visibilityBuffer.data[pixel.y * pushConstants.width + pixel.x];
     if (data == 0) {
+        imageStore(image, pixel, vec4(0.53, 0.8, 0.92, 1.0));
         return;
     }
 
     uint chunkID = uint((data >> 24) & 0x1FFF);
+    if (chunkID == 8000) {
+        imageStore(image, pixel, vec4(1, 0, 1, 1));
+        return;
+    }
+
     uvec3 localPos = uvec3(data & 0xFF, (data >> 8) & 0xFF, (data >> 16) & 0xFF);
     vec3 normal = unpackNormal(uint((data >> 37) & 7));
 
-    uint dfsIndex = getDFSIndex(chunkID, localPos);
-    uint material = getMaterial(chunkID, dfsIndex);
+    uint material = getMaterial(chunkID, localPos);
 
     vec3 worldPos = getWorldPos(chunkID, localPos);
     vec3 colour = triplanarSample(material, worldPos, normal);

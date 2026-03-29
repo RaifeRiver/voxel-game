@@ -1,5 +1,6 @@
 #pragma once
 
+#include <functional>
 #include <vector>
 
 #include "AllocatedImage.h"
@@ -7,6 +8,7 @@
 #include "vk_mem_alloc.h"
 
 #include "WindowManager.h"
+#include "tracy/TracyVulkan.hpp"
 
 namespace voxel_game::client::renderer {
 	constexpr uint32_t FRAME_OVERLAP = 2;
@@ -113,10 +115,6 @@ namespace voxel_game::client::renderer {
 			return mDrawImage;
 		}
 
-		[[nodiscard]] VkExtent2D& getDrawExtent() {
-			return mDrawExtent;
-		}
-
 		[[nodiscard]] DescriptorAllocator& getDescriptorAllocator() {
 			return mDescriptorAllocator;
 		}
@@ -129,6 +127,11 @@ namespace voxel_game::client::renderer {
 			return mDrawImageDescriptorSetLayout;
 		}
 
+		[[nodiscard]] tracy::VkCtx* getTracyContext() const {
+			return mTracyContext;
+		}
+
+		void immediateSubmit(std::function<void(VkCommandBuffer commandBuffer)> &&function) const;
 
 		void nextFrame() {
 			mFrame++;
@@ -162,12 +165,17 @@ namespace voxel_game::client::renderer {
 		VmaAllocator mAllocator = nullptr;
 
 		AllocatedImage mDrawImage = {};
-		VkExtent2D mDrawExtent = {};
 
 		DescriptorAllocator mDescriptorAllocator;
 
 		VkDescriptorSet mDrawImageDescriptorSet = nullptr;
 		VkDescriptorSetLayout mDrawImageDescriptorSetLayout = nullptr;
+
+		VkFence mImmediateFence = nullptr;
+		VkCommandBuffer mImmediateCommandBuffer = nullptr;
+		VkCommandPool mImmediateCommandPool = nullptr;
+
+		tracy::VkCtx *mTracyContext = nullptr;
 
 		void initVulkan(const WindowManager* windowManager);
 

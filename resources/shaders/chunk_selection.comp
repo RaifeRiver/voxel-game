@@ -19,14 +19,20 @@ layout (std430, set = 0, binding = 1) writeonly buffer VisibleBuffer {
     VisibleChunk visibleChunks[];
 };
 
-layout (std430, set = 0, binding = 2) buffer ChunkCountBuffer {
-    uint visibleChunkCount;
+struct DispatchCommand {
+    uint x;
+    uint y;
+    uint z;
+};
+layout (std430, set = 0, binding = 2) buffer DispatchBuffer {
+    DispatchCommand command;
 };
 
 layout (push_constant) uniform PushConstants {
     vec4 frustumPlanes[6];
     vec3 cameraPos;
     float lodQuality;
+    uint chunkCount;
 } pushConstants;
 
 bool isVisible(vec3 min, vec3 max) {
@@ -50,13 +56,16 @@ bool isVisible(vec3 min, vec3 max) {
 
 void main() {
     uint chunk = gl_GlobalInvocationID.x;
-    if (isVisible(chunks[chunk].minAABB, chunks[chunk].maxAABB)) {
-        vec3 centre = (chunks[chunk].minAABB + chunks[chunk].maxAABB) * 0.5;
+    if (chunk >= pushConstants.chunkCount) {
+        return;
+    }
+    //if (isVisible(chunks[chunk].minAABB.xyz, chunks[chunk].maxAABB.xyz)) {
+        vec3 centre = (chunks[chunk].minAABB.xyz + chunks[chunk].maxAABB.xyz) * 0.5;
         float dist = distance(pushConstants.cameraPos, centre);
 
         uint lod = uint(clamp(log2(dist * pushConstants.lodQuality), 0.0, 5.0));
-        uint slot = atomicAdd(visibleChunkCount, 1);
+        uint slot = atomicAdd(command.z, 1);
         visibleChunks[slot].id = chunk;
         visibleChunks[slot].lod = lod;
-    }
+    //}
 }

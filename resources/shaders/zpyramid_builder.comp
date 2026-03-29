@@ -1,0 +1,53 @@
+#version 460
+
+#extension GL_EXT_shader_explicit_arithmetic_types_int64 : require
+
+layout (local_size_x = 16, local_size_y = 16) in;
+
+layout (std430, set = 0, binding = 0) buffer VisibilityBuffer {
+    uint64_t data[];
+} visibilityBuffer;
+
+layout (r32f, set = 0, binding = 1) writeonly uniform image2D outMip;
+
+layout (set = 0, binding = 2) uniform sampler2D prevMip;
+
+layout (push_constant) uniform PushConstants {
+    uvec2 size;
+    uint level;
+} pushConstants;
+
+float getDepth(uint x, uint y, uint width) {
+    uint64_t raw = visibilityBuffer.data[y * width + x];
+    uint depthBits = uint(raw >> 40);
+    return 1.0 - (float(depthBits) / 16777215.0);
+}
+
+void main() {
+    uvec2 pos = gl_GlobalInvocationID.xy;
+    if (pos.x > pushConstants.size.x || pos.y > pushConstants.size.y) {
+        return;
+    }
+
+    float depth;
+    if (pushConstants.level == 0) {
+        uint fullWidth = pushConstants.size.x * 2;
+        uvec2 base = pos * 2;
+        float d0 = getDepth(base.x, base.y, fullWidth);
+        float d1 = getDepth(base.x + 1, base.y, fullWidth);
+        float d2 = getDepth(base.x, base.y + 1, fullWidth);
+        float d3 = getDepth(base.x + 1, base.y + 1, fullWidth);
+        depth = max(max(d0, d1), max(d2, d3));
+    }
+    else {
+        vec2 prevSize = vec2(pushConstants.size * 2);
+        vec2 uv = (vec2(pos * 2) + 1.0) / prevSize;
+        vec2 texelSize = 1.0 / vec2(pushConstants.size * 2);
+        float d0 = texture(prevMip, uv + vec2(-0.25, -0.25) * texelSize).r;
+        float d1 = texture(prevMip, uv + vec2( 0.25, -0.25) * texelSize).r;
+        float d2 = texture(prevMip, uv + vec2(-0.25,  0.25) * texelSize).r;
+        float d3 = texture(prevMip, uv + vec2( 0.25,  0.25) * texelSize).r;
+        depth = max(max(d0, d1), max(d2, d3));
+    }
+    imageStore(outMip, ivec2(pos), vec4(depth, 0.0, 0.0, 0.0));
+}

@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "client/VoxelGameClient.h"
+
 namespace voxel_game::client::renderer {
 	WindowManager::WindowManager() {
 		if (sWindowCount++ == 0) {
@@ -33,7 +35,28 @@ namespace voxel_game::client::renderer {
 						glfwSetWindowMonitor(window, monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
 					}
 				}
+				else if (key == GLFW_KEY_ESCAPE) {
+					if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+						glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+					}
+					else {
+						glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+					}
+				}
 			}
+			VoxelGameClient::getClient()->getCamera()->processKeyInput(key, action);
+		});
+
+		glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		glfwSetCursorPosCallback(mWindow, [](GLFWwindow* window, const double x, const double y) {
+			static double previousX = 0;
+			static double previousY = 0;
+
+			if (glfwGetInputMode(window, GLFW_CURSOR) == GLFW_CURSOR_DISABLED) {
+				VoxelGameClient::getClient()->getCamera()->processMouseInput(x - previousX, y - previousY);
+			}
+			previousX = x;
+			previousY = y;
 		});
 	}
 

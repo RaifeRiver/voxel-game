@@ -1,9 +1,15 @@
 #version 460
 
-layout(local_size_x = 8, local_size_y = 8) in;
+#extension GL_KHR_shader_subgroup_ballot : require
 
-layout (std430, set = 0, binding = 0) readonly buffer VisibleChunks {
-    uint ids[];
+layout (local_size_x = 8, local_size_y = 8) in;
+
+struct VisibleChunk {
+    uint id;
+    uint lod;
+};
+layout (std430, set = 0, binding = 0) readonly buffer VisibleBuffer {
+    VisibleChunk visibleChunks[];
 };
 
 layout (set = 0, binding = 1) uniform sampler2D zPyramid;
@@ -11,6 +17,7 @@ layout (set = 0, binding = 1) uniform sampler2D zPyramid;
 struct TileInfo {
     uvec2 pos;
     uint chunkID;
+    uint lod;
 };
 layout (std430, set = 0, binding = 2) writeonly buffer TileBuffer {
     TileInfo tiles[];
@@ -25,33 +32,36 @@ layout (std430, set = 0, binding = 3) buffer DispatchBuffer {
     DispatchCommand command;
 };
 
-layout (std430, set = 0, binding = 4) buffer Counter {
-    uint count;
-};
-
 struct Chunk {
-    vec3 worldPos;
+    vec4 minAABB;
+    vec4 maxAABB;
+    vec4 worldPos;
 };
-layout (std430, set = 0, binding = 5) readonly buffer ChunkBuffer {
+layout (std430, set = 0, binding = 4) readonly buffer ChunkBuffer {
     Chunk chunks[];
 };
 
 layout (push_constant) uniform PushConstants {
     mat4 viewProj;
-    vec2 viewportSize;
+    uvec2 viewportSize;
     vec3 cameraPos;
 } pushConstants;
 
 vec3 getChunkCorner(uint chunkID, uint i) {
-    vec3 basePos = chunks[chunkID].worldPos - pushConstants.cameraPos;
-    return basePos + vec3((i & 1) * 32, ((i >> 1) & 1) * 32, ((i >> 2) & 1) * 32);
+    // Fixed: Use absolute world position. viewProj already handles camera offset.
+    vec3 basePos = chunks[chunkID].worldPos.xyz;
+    return basePos + vec3((i & 1) * 256, ((i >> 1) & 1) * 256, ((i >> 2) & 1) * 256);
 }
 
 void main() {
-    uint chunkIndex = gl_WorkGroupID.z;
+    uint chunkIndex = gl_GlobalInvocationID.z;
 
-    uint chunkID = ids[chunkIndex];
+    uint chunkID = visibleChunks[chunkIndex].id;
     uvec2 tileCoords = gl_WorkGroupID.xy;
+
+    if (tileCoords.x >= (pushConstants.viewportSize.x + 7) / 8 || tileCoords.y >= (pushConstants.viewportSize.y + 7) / 8) {
+        return;
+    }
 
     vec2 minNDC = vec2(1.0);
     vec2 maxNDC = vec2(-1.0);
@@ -69,18 +79,23 @@ void main() {
         }
     }
 
-    if (!anyInFront) {
-        return;
-    }
-
     vec2 tileMinNDC = (vec2(tileCoords * 8) / pushConstants.viewportSize) * 2.0 - 1.0;
     vec2 tileMaxNDC = (vec2((tileCoords + 1) * 8) / pushConstants.viewportSize) * 2.0 - 1.0;
 
-    if (all(lessThanEqual(minNDC, tileMaxNDC)) && all(greaterThanEqual(maxNDC, tileMinNDC))) {
-        float maxTileZ = textureLod(zPyramid, (vec2(tileCoords) * 8.0 + 4.0) / pushConstants.viewportSize, 3).r;
-        if (minZ < maxTileZ) {
-            uint pairIndex = atomicAdd(command.x, 1);
-            tiles[pairIndex] = TileInfo(tileCoords, chunkID);
-        }
+    bool visible = anyInFront && all(lessThanEqual(minNDC, tileMaxNDC)) && all(greaterThanEqual(maxNDC, tileMinNDC));
+
+    uvec4 ballot = subgroupBallot(visible);
+    uint activeCount = subgroupBallotBitCount(ballot);
+    uint localIndex = subgroupBallotExclusiveBitCount(ballot);
+
+    uint baseIndex = 0;
+    if (subgroupElect() && activeCount > 0) {
+        baseIndex = atomicAdd(command.x, activeCount);
+    }
+
+    baseIndex = subgroupBroadcastFirst(baseIndex);
+
+    if (visible) {
+        tiles[baseIndex + localIndex] = TileInfo(tileCoords, chunkID, visibleChunks[chunkIndex].lod);
     }
 }

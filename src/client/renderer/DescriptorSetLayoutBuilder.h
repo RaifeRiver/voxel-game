@@ -6,7 +6,7 @@
 namespace voxel_game::client::renderer {
 	class DescriptorSetLayoutBuilder {
 	public:
-		void addBinding(uint32_t binding, VkDescriptorType descriptorType);
+		void addBinding(uint32_t binding, VkDescriptorType descriptorType, uint32_t count = 1);
 
 		void clear();
 

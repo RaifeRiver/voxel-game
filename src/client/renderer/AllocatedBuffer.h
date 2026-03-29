@@ -12,5 +12,7 @@ namespace voxel_game::client::renderer {
 		VmaAllocationInfo allocationInfo;
 	};
 
-	AllocatedBuffer createBuffer(const RenderContext* renderContext, size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage);
+	AllocatedBuffer createBuffer(const RenderContext *renderContext, size_t size, VkBufferUsageFlags usage, VmaMemoryUsage memoryUsage, VmaAllocationCreateFlags flags);
+
+	void destroyBuffer(const RenderContext *renderContext, const AllocatedBuffer& buffer);
 }

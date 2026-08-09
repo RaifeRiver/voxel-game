@@ -5,6 +5,7 @@
 
 #include "CommandQueue.h"
 #include "ComponentStorage.h"
+#include "Resource.h"
 
 class Registry {
 public:
@@ -46,6 +47,46 @@ public:
 		}
 	}
 
+	template <typename T> requires std::derived_from<T, Resource<T>> T& addResource(T resource) {
+		const uint32_t id = T::getID();
+		if (mResources.size() < id) {
+			mResources.resize(id + 1);
+		}
+		if (mResources[id]) {
+			throw std::runtime_error("Resource already exists");
+		}
+		mResources[id] = std::make_unique<Resource<T>>(resource);
+		return reinterpret_cast<T&>(*mResources[id].get());
+	}
+
+	template <typename T> requires std::derived_from<T, Resource<T>> [[nodiscard]] T& getResource() {
+		const uint32_t id = T::getID();
+		if (mResources.size() < id) {
+			mResources.resize(id + 1);
+		}
+		if (!mResources[id]) {
+			throw std::runtime_error("Resource not loaded");
+		}
+		return reinterpret_cast<T&>(*mResources[id].get());
+	}
+
+	template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] bool hasResource() {
+		const uint32_t id = T::getID();
+		if (mResources.size() < id || !mResources[id]) {
+			return false;
+		}
+		return true;
+	}
+
+	template <typename T> requires std::derived_from<T, Resource<T>> void removeResource() {
+		const uint32_t id = T::getID();
+		if (mResources.size() < id || !mResources[id]) {
+			mResources.resize(id + 1);
+		}
+		mResources[id]->destroy();
+		mResources[id] = nullptr;
+	}
+
 	void pushCommand(const Command &command);
 
 	void executeCommands();
@@ -53,6 +94,7 @@ public:
 private:
 	std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;
 	std::vector<uint32_t> mFreeIDs;
+	std::vector<std::unique_ptr<IResource>> mResources;
 	CommandQueue mCommandQueue;
 	uint32_t mNextID = 0;
 };

@@ -15,7 +15,7 @@ public:
 		if (has(entity)) {
 			return mComponents[mComponentIndices[entity]];
 		}
-		if (mUnusedComponents.size() > 0) {
+		if (!mUnusedComponents.empty()) {
 			uint32_t index = mUnusedComponents.back();
 			mUnusedComponents.pop_back();
 			mComponents[index] = component;
@@ -26,7 +26,7 @@ public:
 		return &mComponents[index];
 	}
 
-	T& get(const Entity entity) {
+	[[nodiscard]] T& get(const Entity entity) {
 		uint32_t index = mComponentIndices.at(entity);
 		if (index == UINT32_MAX) {
 			throw std::runtime_error("Entity does not have the requested component");
@@ -34,7 +34,7 @@ public:
 		return &mComponents[index];
 	}
 
-	bool has(const Entity entity) const {
+	[[nodiscard]] bool has(const Entity entity) const {
 		return mComponentIndices.size() < entity && mComponentIndices[entity] != UINT32_MAX;
 	}
 

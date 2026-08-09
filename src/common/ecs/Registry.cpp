@@ -1,7 +1,7 @@
 #include "Registry.h"
 
 Entity Registry::createEntity() {
-	if (mFreeIDs.size() > 0) {
+	if (!mFreeIDs.empty()) {
 		const uint32_t id = mFreeIDs.back();
 		mFreeIDs.pop_back();
 		return Entity(id);
@@ -11,4 +11,12 @@ Entity Registry::createEntity() {
 
 void Registry::destroyEntity(const Entity entity) {
 	mFreeIDs.push_back(entity);
+}
+
+void Registry::pushCommand(const Command &command) {
+	mCommandQueue.pushCommand(command);
+}
+
+void Registry::executeCommands() {
+	mCommandQueue.execute(*this);
 }

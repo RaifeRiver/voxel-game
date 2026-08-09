@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 
+#include "CommandQueue.h"
 #include "ComponentStorage.h"
 
 class Registry {
@@ -22,7 +23,7 @@ public:
 		return reinterpret_cast<T*>(mComponentStorages[id].get())->attach(entity);
 	}
 
-	template <typename T> requires std::derived_from<T, Component<T>> T& getComponent(Entity entity) {
+	template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] T& getComponent(Entity entity) {
 		const uint32_t id = T::getID();
 		if (mComponentStorages.size() < id || !mComponentStorages[id]) {
 			throw std::runtime_error("Entity does not have the requested component");
@@ -30,7 +31,7 @@ public:
 		return reinterpret_cast<T*>(mComponentStorages[id].get())->get(entity);
 	}
 
-	template <typename T> requires std::derived_from<T, Component<T>> bool hasComponent(Entity entity) {
+	template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] bool hasComponent(Entity entity) {
 		const uint32_t id = T::getID();
 		if (mComponentStorages.size() < id || !mComponentStorages[id]) {
 			return false;
@@ -45,8 +46,13 @@ public:
 		}
 	}
 
+	void pushCommand(const Command &command);
+
+	void executeCommands();
+
 private:
 	std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;
 	std::vector<uint32_t> mFreeIDs;
+	CommandQueue mCommandQueue;
 	uint32_t mNextID = 0;
 };

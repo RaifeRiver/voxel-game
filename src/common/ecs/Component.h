@@ -4,7 +4,7 @@
 
 // ReSharper disable once CppTemplateParameterNeverUsed
 template <typename T> struct Component {
-	static uint32_t getID() {
+	[[nodiscard]] static uint32_t getID() {
 		static uint32_t id = sNextID++;
 		return id;
 	}

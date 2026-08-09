@@ -7,22 +7,24 @@
 #include <thread>
 #include <vector>
 
-using Task = std::function<void()>;
+namespace voxel_game::util {
+	using Task = std::function<void()>;
 
-class ThreadPool {
-public:
-	explicit ThreadPool(uint32_t threads);
+	class ThreadPool {
+	public:
+		explicit ThreadPool(uint32_t threads);
 
-	void queueTask(const Task &task);
+		void queueTask(const Task &task);
 
-	void destroy();
+		void destroy();
 
-private:
-	std::vector<std::thread> mThreads;
-	std::mutex mMutex;
-	std::queue<Task> mTasks;
-	std::condition_variable mCondition;
-	bool mRunning;
+	private:
+		std::vector<std::thread> mThreads;
+		std::mutex mMutex;
+		std::queue<Task> mTasks;
+		std::condition_variable mCondition;
+		bool mRunning;
 
-	void run();
-};
+		void run();
+	};
+}

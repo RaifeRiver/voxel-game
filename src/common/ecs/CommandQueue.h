@@ -4,17 +4,19 @@
 #include <mutex>
 #include <queue>
 
-class Registry;
+namespace voxel_game::ecs {
+	class Registry;
 
-using Command = std::function<void(Registry& registry)>;
+	using Command = std::function<void(Registry& registry)>;
 
-class CommandQueue {
-public:
-	void pushCommand(const Command &command);
+	class CommandQueue {
+	public:
+		void pushCommand(const Command &command);
 
-	void execute(Registry& registry);
+		void execute(Registry& registry);
 
-private:
-	std::mutex mMutex;
-	std::queue<Command> mCommands;
-};
+	private:
+		std::mutex mMutex;
+		std::queue<Command> mCommands;
+	};
+}

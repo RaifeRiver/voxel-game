@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cmath>
 #include <vector>
 
 #include "ChunkPos.h"
@@ -10,6 +11,8 @@ namespace voxel_game::universe {
 	constexpr uint32_t CHUNK_SIZE = 32;
 	constexpr uint32_t CHUNK_SIZE2 = CHUNK_SIZE * CHUNK_SIZE;
 	constexpr uint32_t CHUNK_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
+	const uint32_t CHUNK_SHIFT = static_cast<uint32_t>(std::log2(CHUNK_SIZE));
+	constexpr uint32_t CHUNK_MASK = CHUNK_SIZE - 1;
 
 	struct ChunkPaletteEntry {
 		uint32_t id;
@@ -54,7 +57,6 @@ namespace voxel_game::universe {
 		ecs::Entity mObject;
 
 		void convertToPalette(uint32_t index, uint32_t id);
-
 
 		uint32_t getPaletteIDModifyCount(uint32_t id, int32_t countModifier);
 

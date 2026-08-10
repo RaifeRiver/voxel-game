@@ -50,7 +50,7 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Resource<T>> T& addResource(const T& resource) {
 			const uint32_t id = T::getID();
-			if (mResources.size() < id) {
+			if (mResources.size() <= id) {
 				mResources.resize(id + 1);
 			}
 			if (mResources[id]) {

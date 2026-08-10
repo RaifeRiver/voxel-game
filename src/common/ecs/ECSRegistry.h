@@ -48,7 +48,7 @@ namespace voxel_game::ecs {
 			}
 		}
 
-		template <typename T> requires std::derived_from<T, Resource<T>> T& addResource(T resource) {
+		template <typename T> requires std::derived_from<T, Resource<T>> T& addResource(const T& resource) {
 			const uint32_t id = T::getID();
 			if (mResources.size() < id) {
 				mResources.resize(id + 1);
@@ -56,7 +56,7 @@ namespace voxel_game::ecs {
 			if (mResources[id]) {
 				throw std::runtime_error("Resource already exists");
 			}
-			mResources[id] = std::make_unique<Resource<T>>(resource);
+			mResources[id] = std::make_unique<IResource>(resource);
 			return reinterpret_cast<T&>(*mResources[id].get());
 		}
 

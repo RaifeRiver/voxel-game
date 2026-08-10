@@ -11,7 +11,7 @@ namespace voxel_game::ecs {
 	};
 
 	// ReSharper disable once CppTemplateParameterNeverUsed
-	template <typename T> class Resource : IResource {
+	template <typename T> class Resource : public IResource {
 	public:
 		[[nodiscard]] static uint32_t getID() {
 			static uint32_t id = sNextID++;

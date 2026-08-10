@@ -38,6 +38,10 @@ namespace voxel_game::universe {
 			return x + y * CHUNK_SIZE + z * CHUNK_SIZE2;
 		}
 
+		[[nodiscard]] ChunkPos getPos() const {
+			return mPos;
+		}
+
 	private:
 		uint32_t mUniformType = 0;
 		uint8_t mBitsPerBlock = 0;

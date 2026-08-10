@@ -5,15 +5,15 @@
 #include <queue>
 
 namespace voxel_game::ecs {
-	class Registry;
+	class ECSRegistry;
 
-	using Command = std::function<void(Registry& registry)>;
+	using Command = std::function<void(ECSRegistry& registry)>;
 
 	class CommandQueue {
 	public:
 		void pushCommand(const Command &command);
 
-		void execute(Registry& registry);
+		void execute(ECSRegistry& registry);
 
 	private:
 		std::mutex mMutex;

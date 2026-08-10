@@ -1,7 +1,7 @@
-#include "Registry.h"
+#include "ECSRegistry.h"
 
 namespace voxel_game::ecs {
-	Entity Registry::createEntity() {
+	Entity ECSRegistry::createEntity() {
 		if (!mFreeIDs.empty()) {
 			const uint32_t id = mFreeIDs.back();
 			mFreeIDs.pop_back();
@@ -10,15 +10,15 @@ namespace voxel_game::ecs {
 		return Entity(mNextID++);
 	}
 
-	void Registry::destroyEntity(const Entity entity) {
+	void ECSRegistry::destroyEntity(const Entity entity) {
 		mFreeIDs.push_back(entity);
 	}
 
-	void Registry::pushCommand(const Command &command) {
+	void ECSRegistry::pushCommand(const Command &command) {
 		mCommandQueue.pushCommand(command);
 	}
 
-	void Registry::executeCommands() {
+	void ECSRegistry::executeCommands() {
 		mCommandQueue.execute(*this);
 	}
 }

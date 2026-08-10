@@ -6,7 +6,7 @@ namespace voxel_game::ecs {
 		mCommands.push(command);
 	}
 
-	void CommandQueue::execute(Registry &registry) {
+	void CommandQueue::execute(ECSRegistry &registry) {
 		std::unique_lock lock(mMutex);
 		while (!mCommands.empty()) {
 			mCommands.front()(registry);

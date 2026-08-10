@@ -15,6 +15,6 @@ namespace voxel_game::ecs {
 
 		explicit Entity(const uint32_t id) : mID(id) {}
 
-		friend class Registry;
+		friend class ECSRegistry;
 	};
 }

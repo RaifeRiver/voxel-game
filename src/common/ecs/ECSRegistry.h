@@ -8,7 +8,7 @@
 #include "Resource.h"
 
 namespace voxel_game::ecs {
-	class Registry {
+	class ECSRegistry {
 	public:
 		Entity createEntity();
 

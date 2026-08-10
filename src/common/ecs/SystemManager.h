@@ -3,9 +3,9 @@
 #include <functional>
 
 namespace voxel_game::ecs {
-	class Registry;
+	class ECSRegistry;
 
-	using System = std::function<void(Registry&, float)>;
+	using System = std::function<void(ECSRegistry&, float)>;
 
 	enum class Stage {
 		PRE_UPDATE,
@@ -22,7 +22,7 @@ namespace voxel_game::ecs {
 	public:
 		void registerSystem(Stage stage, const System &system);
 
-		void runStage(Stage stage, Registry& registry, float deltaTime);
+		void runStage(Stage stage, ECSRegistry& registry, float deltaTime);
 
 	private:
 		std::vector<System> mStages[static_cast<size_t>(Stage::COUNT)];

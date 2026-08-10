@@ -1,5 +1,7 @@
 #pragma once
 
+#include <vector>
+
 #include "ChunkPos.h"
 #include "common/ecs/Component.h"
 #include "common/ecs/Entity.h"
@@ -14,15 +16,15 @@ namespace voxel_game::universe {
 		int32_t count;
 	};
 
-	class Chunk : ecs::Component<Chunk> {
+	class Chunk {
 	public:
 		Chunk(ChunkPos pos, ecs::Entity object);
 
-		uint32_t getBlock(const uint32_t x, const uint32_t y, const uint32_t z) const {
+		[[nodiscard]] uint32_t getBlock(const uint32_t x, const uint32_t y, const uint32_t z) const {
 			return getBlock(getIndex(x, y, z));
 		}
 
-		uint32_t getBlock(uint32_t index) const;
+		[[nodiscard]] uint32_t getBlock(uint32_t index) const;
 
 		void setBlock(const uint32_t x, const uint32_t y, const uint32_t z, const uint32_t id) {
 			setBlock(getIndex(x, y, z), id);
@@ -30,9 +32,9 @@ namespace voxel_game::universe {
 
 		void setBlock(uint32_t index, uint32_t id);
 
-		bool isUniform() const;
+		[[nodiscard]] bool isUniform() const;
 
-		static uint32_t getIndex(const uint32_t x, const uint32_t y, const uint32_t z) {
+		[[nodiscard]] static uint32_t getIndex(const uint32_t x, const uint32_t y, const uint32_t z) {
 			return x + y * CHUNK_SIZE + z * CHUNK_SIZE2;
 		}
 
@@ -52,7 +54,7 @@ namespace voxel_game::universe {
 
 		uint32_t getPaletteIDModifyCount(uint32_t id, int32_t countModifier);
 
-		uint32_t getShrinkThreshold() const;
+		[[nodiscard]] uint32_t getShrinkThreshold() const;
 
 		uint32_t addToPalette(uint32_t id);
 

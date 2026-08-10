@@ -5,7 +5,7 @@
 namespace voxel_game::ecs {
 	class IResource {
 	public:
-		virtual void destroy() = 0;
+		virtual void destroy() {}
 
 		virtual ~IResource() = default;
 	};

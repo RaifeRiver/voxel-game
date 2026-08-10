@@ -10,9 +10,13 @@ namespace voxel_game::universe {
 		int32_t y;
 		int32_t z;
 
-		ChunkPos();
+		ChunkPos() : x(0), y(0), z(0) {}
 
-		ChunkPos(const int32_t x, const int32_t y, const int32_t z) : x(x), y(y), z(z) {};
+		ChunkPos(const int32_t x, const int32_t y, const int32_t z) : x(x), y(y), z(z) {}
+
+		bool operator==(const ChunkPos& other) const {
+			return x == other.x && y == other.y && z == other.z;
+		}
 	};
 }
 

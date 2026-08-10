@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <stdexcept>
 #include <vector>
@@ -20,11 +21,11 @@ namespace voxel_game::ecs {
 				uint32_t index = mUnusedComponents.back();
 				mUnusedComponents.pop_back();
 				mComponents[index] = component;
-				return &mComponents[index];
+				return mComponents[index];
 			}
 			uint32_t index = mComponents.size();
 			mComponents.push_back(component);
-			return &mComponents[index];
+			return mComponents[index];
 		}
 
 		[[nodiscard]] T& get(const Entity entity) {
@@ -32,11 +33,11 @@ namespace voxel_game::ecs {
 			if (index == UINT32_MAX) {
 				throw std::runtime_error("Entity does not have the requested component");
 			}
-			return &mComponents[index];
+			return mComponents[index];
 		}
 
 		[[nodiscard]] bool has(const Entity entity) const {
-			return mComponentIndices.size() < entity && mComponentIndices[entity] != UINT32_MAX;
+			return mComponentIndices.size() > entity && mComponentIndices[entity] != UINT32_MAX;
 		}
 
 		void remove(const Entity entity) {
@@ -44,6 +45,42 @@ namespace voxel_game::ecs {
 			if (index != UINT32_MAX) {
 				mUnusedComponents.push_back(index);
 			}
+		}
+
+		class Iterator {
+		public:
+			explicit Iterator(const ComponentStorage& componentStorage, const size_t current) : mComponentStorage(componentStorage), mCurrent(current) {
+				if (std::ranges::find(mComponentStorage.mUnusedComponents, mCurrent) != mComponentStorage.mUnusedComponents.end()) {
+					while (std::ranges::find(mComponentStorage.mUnusedComponents, ++mCurrent) != mComponentStorage.mUnusedComponents.end()) {}
+				}
+			}
+
+			int operator*() const {
+				return mCurrent;
+			}
+
+			Iterator& operator++() {
+				while (std::ranges::find(mComponentStorage.mUnusedComponents, ++mCurrent) != mComponentStorage.mUnusedComponents.end()) {}
+				return *this;
+			}
+
+			bool operator!=(const Iterator& other) const {
+				return mCurrent != other.mCurrent;
+			}
+
+		private:
+			const ComponentStorage& mComponentStorage;
+			size_t mCurrent;
+		};
+
+		Iterator begin() {
+			return Iterator(*this, 0);
+		}
+
+		Iterator end() {
+			size_t current = mComponents.size();
+			while (std::ranges::find(mUnusedComponents, --current) != mUnusedComponents.end()) {}
+			return Iterator(*this, current);
 		}
 
 	private:

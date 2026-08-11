@@ -8,6 +8,9 @@ namespace voxel_game::ecs {
 		virtual void destroy() {}
 
 		virtual ~IResource() = default;
+
+	protected:
+		static inline uint32_t sNextID = 0;
 	};
 
 	// ReSharper disable once CppTemplateParameterNeverUsed
@@ -17,8 +20,5 @@ namespace voxel_game::ecs {
 			static uint32_t id = sNextID++;
 			return id;
 		}
-
-	private:
-		static inline uint32_t sNextID = 0;
 	};
 }

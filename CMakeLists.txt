@@ -22,6 +22,8 @@ add_executable(VoxelGameClient ${COMMON_SRC} ${CLIENT_SRC})
 target_include_directories(VoxelGameClient PUBLIC lib)
 target_include_directories(VoxelGameClient PUBLIC src)
 
+target_compile_definitions(VoxelGameClient PUBLIC $<$<CONFIG:Debug>:VG_DEBUG>)
+
 target_link_libraries(VoxelGameClient PUBLIC glfw)
 target_link_libraries(VoxelGameClient PUBLIC glm::glm)
 target_link_libraries(VoxelGameClient PUBLIC GPUOpen::VulkanMemoryAllocator)

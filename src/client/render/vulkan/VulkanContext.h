@@ -5,12 +5,21 @@
 #include "vk_mem_alloc.h"
 
 #include "client/render/RenderContext.h"
+#include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 
 namespace voxel_game::client::render::vulkan {
+#ifdef VG_DEBUG
+	constexpr bool ENABLE_VALIDATION_LAYERS = true;
+#else
+	constexpr bool ENABLE_VALIDATION_LAYERS = false;
+#endif
+
 	class VulkanContext : public RenderContext {
 	public:
 		explicit VulkanContext(ecs::ECSRegistry& registry);
+
+		void destroy() override;
 
 	private:
 		VkInstance mInstance = nullptr;
@@ -18,13 +27,26 @@ namespace voxel_game::client::render::vulkan {
 		VkDevice mDevice = nullptr;
 		VkQueue mQueue = nullptr;
 		VmaAllocator mAllocator = nullptr;
+		VkSurfaceKHR mSurface = nullptr;
+		VkSwapchainKHR mSwapchain = nullptr;
+		std::vector<VkImage> mSwapchainImages;
+		std::vector<VkImageView> mSwapchainImageViews;
+		VkImage mDepthImage = nullptr;
+		VmaAllocation mDepthImageAllocation = nullptr;
+		VkImageView mDepthImageView = nullptr;
 
-		void createInstance(ecs::ECSRegistry& registry);
+		void createInstance(window::Window& window);
 
 		void selectPhysicalDevice();
 
-		void createDevice(ecs::ECSRegistry& registry);
+		void createDevice(window::Window& window);
 
 		void createAllocator();
+
+		void createSurface(window::Window& window);
+
+		void createSwapchain(window::Window& window);
+
+		static bool checkValidationLayerSupport();
 	};
 }

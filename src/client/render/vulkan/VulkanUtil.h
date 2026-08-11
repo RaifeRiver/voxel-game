@@ -27,10 +27,12 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 		};
 	}
 
-	inline VkInstanceCreateInfo instanceCreateInfo(const VkApplicationInfo& applicationInfo, const std::vector<const char*>& extensionNames) {
+	inline VkInstanceCreateInfo instanceCreateInfo(const VkApplicationInfo& applicationInfo, const std::vector<const char*>& extensionNames, const std::vector<const char*>& layerNames) {
 		return {
 			.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO,
 			.pApplicationInfo = &applicationInfo,
+			.enabledLayerCount = static_cast<uint32_t>(layerNames.size()),
+			.ppEnabledLayerNames = layerNames.data(),
 			.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size()),
 			.ppEnabledExtensionNames = extensionNames.data()
 		};
@@ -47,7 +49,7 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 
 	inline VkDeviceCreateInfo deviceCreateInfo(const uint32_t queueCreateInfoCount, VkDeviceQueueCreateInfo* queueCreateInfos, const std::vector<const char*>& extensions, VkPhysicalDeviceFeatures* features, const void* next = nullptr) {
 		return {
-			.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+			.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO,
 			.pNext = next,
 			.queueCreateInfoCount = queueCreateInfoCount,
 			.pQueueCreateInfos = queueCreateInfos,

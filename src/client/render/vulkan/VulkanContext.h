@@ -2,6 +2,8 @@
 
 #include <vulkan/vulkan.h>
 
+#include "vk_mem_alloc.h"
+
 #include "client/render/RenderContext.h"
 #include "common/ecs/ECSRegistry.h"
 
@@ -13,9 +15,16 @@ namespace voxel_game::client::render::vulkan {
 	private:
 		VkInstance mInstance = nullptr;
 		VkPhysicalDevice mPhysicalDevice = nullptr;
+		VkDevice mDevice = nullptr;
+		VkQueue mQueue = nullptr;
+		VmaAllocator mAllocator = nullptr;
 
 		void createInstance(ecs::ECSRegistry& registry);
 
 		void selectPhysicalDevice();
+
+		void createDevice(ecs::ECSRegistry& registry);
+
+		void createAllocator();
 	};
 }

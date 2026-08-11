@@ -11,6 +11,8 @@ FetchContent_Declare(glm GIT_REPOSITORY https://github.com/g-truc/glm.git GIT_TA
 FetchContent_MakeAvailable(glm)
 FetchContent_Declare(glfw GIT_REPOSITORY https://github.com/glfw/glfw.git GIT_TAG 3.5.1)
 FetchContent_MakeAvailable(glfw)
+FetchContent_Declare(vma GIT_REPOSITORY https://github.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator.git GIT_TAG v3.4.0)
+FetchContent_MakeAvailable(vma)
 
 file(GLOB_RECURSE COMMON_SRC CONFIGURE_DEPENDS src/common/*.cpp lib/*.cpp)
 
@@ -22,4 +24,5 @@ target_include_directories(VoxelGameClient PUBLIC src)
 
 target_link_libraries(VoxelGameClient PUBLIC glfw)
 target_link_libraries(VoxelGameClient PUBLIC glm::glm)
+target_link_libraries(VoxelGameClient PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(VoxelGameClient PUBLIC Vulkan::Vulkan)

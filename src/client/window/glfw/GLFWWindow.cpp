@@ -40,6 +40,12 @@ namespace voxel_game::client::window::glfw {
 		return {extensions, extensions + count};
 	}
 
+	// ReSharper disable CppParameterMayBeConst
+	bool GLFWWindow::getVulkanPhysicalDevicePresentationSupport(VkInstance instance, VkPhysicalDevice physicalDevice, const uint32_t queueFamily) {
+		return glfwGetPhysicalDevicePresentationSupport(instance, physicalDevice, queueFamily);
+	}
+	// ReSharper restore CppParameterMayBeConst
+
 	void GLFWWindow::init() {
 		static bool init = false;
 		if (init) {

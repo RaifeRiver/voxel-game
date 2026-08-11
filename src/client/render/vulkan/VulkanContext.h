@@ -12,7 +12,10 @@ namespace voxel_game::client::render::vulkan {
 
 	private:
 		VkInstance mInstance = nullptr;
+		VkPhysicalDevice mPhysicalDevice = nullptr;
 
 		void createInstance(ecs::ECSRegistry& registry);
+
+		void selectPhysicalDevice();
 	};
 }

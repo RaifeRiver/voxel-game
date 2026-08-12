@@ -61,13 +61,5 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 		};
 	}
 
-	inline VmaVulkanFunctions vmaVulkanFunctions() {
-		return {
-			.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
-			.vkGetDeviceProcAddr = vkGetDeviceProcAddr,
-			.vkCreateImage = vkCreateImage,
-		};
-	}
-
 	void transitionImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
 }

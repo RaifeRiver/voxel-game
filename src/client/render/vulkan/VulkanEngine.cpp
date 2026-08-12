@@ -155,12 +155,10 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::createAllocator() {
-		VmaVulkanFunctions functions = vulkan_util::vmaVulkanFunctions();
 		const VmaAllocatorCreateInfo allocatorCreateInfo = {
 			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
 			.physicalDevice = mPhysicalDevice,
 			.device = mDevice,
-			.pVulkanFunctions = &functions,
 			.instance = mInstance
 		};
 		vulkan_util::vkCheck(vmaCreateAllocator(&allocatorCreateInfo, &mAllocator));

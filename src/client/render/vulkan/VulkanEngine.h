@@ -47,7 +47,12 @@ namespace voxel_game::client::render::vulkan {
 		VkImageView mDepthImageView = nullptr;
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
-		uint32_t mFrame = 0;
+		uint64_t mFrame = 0;
+		uint32_t mCurrentSwapchainIndex = 0;
+
+		VulkanFrameData& getFrameData() {
+			return mFrameData[mFrame % FRAME_OVERLAP];
+		}
 
 		void createInstance(window::Window& window);
 
@@ -64,6 +69,10 @@ namespace voxel_game::client::render::vulkan {
 		void createCommandBuffers();
 
 		void createSyncStructures();
+
+		void preRender();
+
+		void postRender();
 
 		static bool checkValidationLayerSupport();
 	};

@@ -7,6 +7,8 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include <vulkan/vulkan.h>
 
+#include "vk_mem_alloc.h"
+
 namespace voxel_game::client::render::vulkan::vulkan_util {
 	inline bool vkCheck(const VkResult result, const bool fatal = true) {
 		if (result != VK_SUCCESS) {
@@ -66,4 +68,6 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 			.vkCreateImage = vkCreateImage,
 		};
 	}
+
+	void transitionImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
 }

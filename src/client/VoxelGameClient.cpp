@@ -7,8 +7,8 @@
 
 namespace voxel_game::client {
 	void load(ecs::ECSRegistry& registry) {
-		registry.addResource<window::Window, window::glfw::GLFWWindow>(window::glfw::GLFWWindow("Voxel Game", true, 0, 0));
-		registry.addResource<render::RenderEngine, render::vulkan::VulkanEngine>(render::vulkan::VulkanEngine(registry));
+		registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0);
+		registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
 	}
 
 	void run(ecs::ECSRegistry &registry) {

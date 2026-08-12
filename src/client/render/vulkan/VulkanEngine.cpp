@@ -52,6 +52,8 @@ namespace voxel_game::client::render::vulkan {
 			vkDestroyImageView(mDevice, mSwapchainImageView, nullptr);
 		}
 
+		vmaDestroyAllocator(mAllocator);
+
 		vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
 		vkDestroyDevice(mDevice, nullptr);
 

@@ -1,4 +1,4 @@
-#include "VulkanContext.h"
+#include "VulkanEngine.h"
 
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
@@ -7,7 +7,7 @@
 #include "client/window/Window.h"
 
 namespace voxel_game::client::render::vulkan {
-	VulkanContext::VulkanContext(ecs::ECSRegistry& registry) {
+	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) {
 		auto& window = registry.getResource<window::Window>();
 
 		createInstance(window);
@@ -22,7 +22,7 @@ namespace voxel_game::client::render::vulkan {
 		window.setVisible(true);
 	}
 
-	void VulkanContext::destroy() {
+	void VulkanEngine::destroy() {
 		vkDeviceWaitIdle(mDevice);
 
 		for (const VulkanFrameData& frameData: mFrameData) {
@@ -41,7 +41,7 @@ namespace voxel_game::client::render::vulkan {
 		vkDestroyInstance(mInstance, nullptr);
 	}
 
-	void VulkanContext::createInstance(window::Window& window) {
+	void VulkanEngine::createInstance(window::Window& window) {
 		const VkApplicationInfo applicationInfo = vulkan_util::applicationInfo("Voxel Game", VK_API_VERSION_1_3);
 
 		const std::vector<const char*> extensions = window.getRequiredVulkanExtensions();
@@ -56,7 +56,7 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkCreateInstance(&instanceCreateInfo, nullptr, &mInstance));
 	}
 
-	void VulkanContext::selectPhysicalDevice() {
+	void VulkanEngine::selectPhysicalDevice() {
 		uint32_t deviceCount = 0;
 		vulkan_util::vkCheck(vkEnumeratePhysicalDevices(mInstance, &deviceCount, nullptr));
 		std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -94,7 +94,7 @@ namespace voxel_game::client::render::vulkan {
 		std::cout << "Using Vulkan device: " << deviceName << std::endl;
 	}
 
-	void VulkanContext::createDevice(window::Window& window) {
+	void VulkanEngine::createDevice(window::Window& window) {
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice, &queueFamilyCount, nullptr);
 		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -135,7 +135,7 @@ namespace voxel_game::client::render::vulkan {
 		mGraphicsQueueFamily = queueFamily;
 	}
 
-	void VulkanContext::createAllocator() {
+	void VulkanEngine::createAllocator() {
 		VmaVulkanFunctions functions = vulkan_util::vmaVulkanFunctions();
 		const VmaAllocatorCreateInfo allocatorCreateInfo = {
 			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
@@ -147,11 +147,11 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vmaCreateAllocator(&allocatorCreateInfo, &mAllocator));
 	}
 
-	void VulkanContext::createSurface(window::Window& window) {
+	void VulkanEngine::createSurface(window::Window& window) {
 		vulkan_util::vkCheck(window.createVulkanSurface(mInstance, &mSurface));
 	}
 
-	void VulkanContext::createSwapchain(window::Window& window) {
+	void VulkanEngine::createSwapchain(window::Window& window) {
 		VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
 		vulkan_util::vkCheck(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mPhysicalDevice, mSurface, &surfaceCapabilities));
 
@@ -227,7 +227,7 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkCreateImageView(mDevice, &depthImageViewCreateInfo, nullptr, &mDepthImageView));
 	}
 
-	void VulkanContext::createCommandBuffers() {
+	void VulkanEngine::createCommandBuffers() {
 		const VkCommandPoolCreateInfo commandPoolCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
@@ -246,7 +246,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	void VulkanContext::createSyncStructures() {
+	void VulkanEngine::createSyncStructures() {
 		constexpr VkFenceCreateInfo fenceCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
@@ -265,7 +265,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	bool VulkanContext::checkValidationLayerSupport() {
+	bool VulkanEngine::checkValidationLayerSupport() {
 		uint32_t layerCount = 0;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 		std::vector<VkLayerProperties> layerProperties(layerCount);

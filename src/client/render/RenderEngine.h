@@ -3,7 +3,7 @@
 #include "common/ecs/Resource.h"
 
 namespace voxel_game::client::render {
-	class RenderContext : public ecs::Resource<RenderContext> {
+	class RenderEngine : public ecs::Resource<RenderEngine> {
 
 	};
 }

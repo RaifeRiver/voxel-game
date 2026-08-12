@@ -4,7 +4,7 @@
 
 #include "vk_mem_alloc.h"
 
-#include "client/render/RenderContext.h"
+#include "client/render/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 
@@ -25,9 +25,9 @@ namespace voxel_game::client::render::vulkan {
 		VkFence renderFence;
 	};
 
-	class VulkanContext : public RenderContext {
+	class VulkanEngine : public RenderEngine {
 	public:
-		explicit VulkanContext(ecs::ECSRegistry& registry);
+		explicit VulkanEngine(ecs::ECSRegistry& registry);
 
 		void destroy() override;
 

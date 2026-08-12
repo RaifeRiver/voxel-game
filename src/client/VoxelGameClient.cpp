@@ -1,14 +1,14 @@
 #include "VoxelGameClient.h"
 
-#include "render/RenderContext.h"
-#include "render/vulkan/VulkanContext.h"
+#include "render/RenderEngine.h"
+#include "render/vulkan/VulkanEngine.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
 	void load(ecs::ECSRegistry &registry) {
 		registry.addResource<window::Window, window::glfw::GLFWWindow>(window::glfw::GLFWWindow("Voxel Game", true, 0, 0));
-		registry.addResource<render::RenderContext, render::vulkan::VulkanContext>(render::vulkan::VulkanContext(registry));
+		registry.addResource<render::RenderEngine, render::vulkan::VulkanEngine>(render::vulkan::VulkanEngine(registry));
 	}
 
 	void run(ecs::ECSRegistry &registry) {
@@ -19,7 +19,7 @@ namespace voxel_game::client {
 	}
 
 	void destroy(ecs::ECSRegistry &registry) {
-		registry.removeResource<render::RenderContext>();
+		registry.removeResource<render::RenderEngine>();
 		registry.removeResource<window::Window>();
 	}
 }

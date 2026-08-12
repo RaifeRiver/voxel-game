@@ -15,7 +15,7 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 			if (fatal) {
 				throw std::runtime_error("VK error: " + std::string(string_VkResult(result)));
 			}
-			std::cerr << "VK error: " << result << std::endl;
+			std::cerr << "VK error: " << string_VkResult(result) << std::endl;
 			return false;
 		}
 		return true;

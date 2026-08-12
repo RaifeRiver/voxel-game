@@ -280,7 +280,7 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkWaitForFences(mDevice, 1, &frameData.renderFence, true, 1000000000));
 		vulkan_util::vkCheck(vkResetFences(mDevice, 1, &frameData.renderFence));
 
-		vulkan_util::vkCheck(vkAcquireNextImageKHR(mDevice, mSwapchain, 1000000000, frameData.swapchainSemaphore, nullptr, &mCurrentSwapchainIndex));
+		vulkan_util::vkCheck(vkAcquireNextImageKHR(mDevice, mSwapchain, 1000000000, frameData.swapchainSemaphore, nullptr, &mCurrentSwapchainIndex), false);
 
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;
@@ -349,7 +349,7 @@ namespace voxel_game::client::render::vulkan {
 			.pSwapchains = &mSwapchain,
 			.pImageIndices = &mCurrentSwapchainIndex,
 		};
-		vulkan_util::vkCheck(vkQueuePresentKHR(mGraphicsQueue, &presentInfo));
+		vulkan_util::vkCheck(vkQueuePresentKHR(mGraphicsQueue, &presentInfo), false);
 
 		mFrame++;
 	}

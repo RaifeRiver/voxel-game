@@ -142,6 +142,7 @@ namespace voxel_game::client::render::vulkan {
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.pNext = &features12;
+		features13.synchronization2 = true;
 
 		VkPhysicalDeviceFeatures features = {};
 
@@ -188,7 +189,7 @@ namespace voxel_game::client::render::vulkan {
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 			.imageExtent = swapchainExtent,
 			.imageArrayLayers = 1,
-			.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+			.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
 			.presentMode = VK_PRESENT_MODE_FIFO_KHR

@@ -13,12 +13,4 @@ namespace voxel_game::ecs {
 	void ECSRegistry::destroyEntity(const Entity entity) {
 		mFreeIDs.push_back(entity);
 	}
-
-	void ECSRegistry::pushCommand(const Command &command) {
-		mCommandQueue.pushCommand(command);
-	}
-
-	void ECSRegistry::executeCommands() {
-		mCommandQueue.execute(*this);
-	}
 }

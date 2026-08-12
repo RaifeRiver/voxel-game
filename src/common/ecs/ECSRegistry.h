@@ -6,6 +6,7 @@
 #include "CommandQueue.h"
 #include "ComponentStorage.h"
 #include "Resource.h"
+#include "SystemManager.h"
 
 namespace voxel_game::ecs {
 	class ECSRegistry {
@@ -88,15 +89,20 @@ namespace voxel_game::ecs {
 			mResources[id] = nullptr;
 		}
 
-		void pushCommand(const Command &command);
+		CommandQueue& getCommandQueue() {
+			return mCommandQueue;
+		}
 
-		void executeCommands();
+		SystemManager& getSystemManager() {
+			return mSystemManager;
+		}
 
 	private:
 		std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;
 		std::vector<uint32_t> mFreeIDs;
 		std::vector<std::unique_ptr<IResource>> mResources;
 		CommandQueue mCommandQueue;
+		SystemManager mSystemManager;
 		uint32_t mNextID = 0;
 	};
 }

@@ -8,13 +8,8 @@ namespace voxel_game::ecs {
 	using System = std::function<void(ECSRegistry&, float)>;
 
 	enum class Stage {
-		PRE_UPDATE,
-		BLOCK_UPDATE,
-		ENTITY_UPDATE,
-		PHYSICS,
-		POST_UPDATE,
-		WORLD_RENDER,
-		UI_RENDER,
+		PRE_RENDER,
+		POST_RENDER,
 		COUNT
 	};
 

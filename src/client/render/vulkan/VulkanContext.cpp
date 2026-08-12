@@ -16,11 +16,19 @@ namespace voxel_game::client::render::vulkan {
 		createAllocator();
 		createSurface(window);
 		createSwapchain(window);
+		createCommandBuffers();
+		createSyncStructures();
 
 		window.setVisible(true);
 	}
 
 	void VulkanContext::destroy() {
+		vkDeviceWaitIdle(mDevice);
+
+		for (const VulkanFrameData& frameData: mFrameData) {
+			vkDestroyCommandPool(mDevice, frameData.commandPool, nullptr);
+		}
+
 		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 
 		for (const VkImageView& mSwapchainImageView: mSwapchainImageViews) {
@@ -123,7 +131,8 @@ namespace voxel_game::client::render::vulkan {
 		VkDeviceCreateInfo deviceCreateInfo = vulkan_util::deviceCreateInfo(1, &deviceQueueCreateInfo, extensions, &features, &features13);
 		vulkan_util::vkCheck(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
 
-		vkGetDeviceQueue(mDevice, queueFamily, 0, &mQueue);
+		vkGetDeviceQueue(mDevice, queueFamily, 0, &mGraphicsQueue);
+		mGraphicsQueueFamily = queueFamily;
 	}
 
 	void VulkanContext::createAllocator() {
@@ -216,6 +225,44 @@ namespace voxel_game::client::render::vulkan {
 			}
 		};
 		vulkan_util::vkCheck(vkCreateImageView(mDevice, &depthImageViewCreateInfo, nullptr, &mDepthImageView));
+	}
+
+	void VulkanContext::createCommandBuffers() {
+		const VkCommandPoolCreateInfo commandPoolCreateInfo = {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
+			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
+			.queueFamilyIndex = mGraphicsQueueFamily,
+		};
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo = {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+			.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+			.commandBufferCount = 1
+		};
+		for (VulkanFrameData& frameData: mFrameData) {
+			vulkan_util::vkCheck(vkCreateCommandPool(mDevice, &commandPoolCreateInfo, nullptr, &frameData.commandPool));
+
+			commandBufferAllocateInfo.commandPool = frameData.commandPool;
+			vulkan_util::vkCheck(vkAllocateCommandBuffers(mDevice, &commandBufferAllocateInfo, &frameData.commandBuffer));
+		}
+	}
+
+	void VulkanContext::createSyncStructures() {
+		constexpr VkFenceCreateInfo fenceCreateInfo = {
+			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
+		};
+		constexpr VkSemaphoreCreateInfo semaphoreCreateInfo = {.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+
+		for (VulkanFrameData& frameData: mFrameData) {
+			vulkan_util::vkCheck(vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &frameData.swapchainSemaphore));
+
+			vulkan_util::vkCheck(vkCreateFence(mDevice, &fenceCreateInfo, nullptr, &frameData.renderFence));
+		}
+
+		mRenderSemaphores.resize(mSwapchainImages.size());
+		for (VkSemaphore& renderSemaphore: mRenderSemaphores) {
+			vulkan_util::vkCheck(vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &renderSemaphore));
+		}
 	}
 
 	bool VulkanContext::checkValidationLayerSupport() {

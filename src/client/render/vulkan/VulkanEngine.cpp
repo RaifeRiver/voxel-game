@@ -65,6 +65,7 @@ namespace voxel_game::client::render::vulkan {
 
 		std::vector<const char*> layers;
 		// ReSharper disable once CppRedundantBooleanExpressionArgument
+		// ReSharper disable once CppIfCanBeReplacedByConstexprIf
 		if (ENABLE_VALIDATION_LAYERS && checkValidationLayerSupport()) {
 			layers.push_back("VK_LAYER_KHRONOS_validation");
 		}

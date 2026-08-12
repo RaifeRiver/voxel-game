@@ -29,6 +29,16 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		explicit VulkanEngine(ecs::ECSRegistry& registry);
 
+		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage::ImageUsage usage, ImageType type) override;
+
+		[[nodiscard]] VmaAllocator getVMAAllocator() const {
+			return mAllocator;
+		}
+
+		[[nodiscard]] VkDevice getDevice() const {
+			return mDevice;
+		}
+
 		void destroy() override;
 
 	private:

@@ -4,6 +4,7 @@
 
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+#include "VulkanImage.h"
 
 #include "VulkanUtil.h"
 #include "client/window/Window.h"
@@ -29,6 +30,10 @@ namespace voxel_game::client::render::vulkan {
 		registry.getSystemManager().registerSystem(ecs::Stage::POST_RENDER, [this](ecs::ECSRegistry&, float) {
 			postRender();
 		});
+	}
+
+	GPUImage* VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage::ImageUsage usage, const ImageType type) {
+		return new VulkanImage(this, size, format, usage, type);
 	}
 
 	void VulkanEngine::destroy() {

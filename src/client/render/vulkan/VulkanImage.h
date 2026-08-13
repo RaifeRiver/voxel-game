@@ -23,9 +23,12 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		VulkanImage(const VulkanEngine* vulkanEngine, glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
 
+		~VulkanImage() override;
+
 	private:
 		VkImage mImage = nullptr;
 		VkImageView mImageView = nullptr;
 		VmaAllocation mAllocation = nullptr;
+		const VulkanEngine* mVulkanEngine = nullptr;
 	};
 }

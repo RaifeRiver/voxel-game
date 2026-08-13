@@ -83,7 +83,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	VulkanImage::VulkanImage(const VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type) {
+	VulkanImage::VulkanImage(const VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type), mVulkanEngine(vulkanEngine) {
 		const VkImageCreateInfo imageCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = toVKImageType(type),
@@ -113,5 +113,10 @@ namespace voxel_game::client::render::vulkan {
 			}
 		};
 		vulkan_util::vkCheck(vkCreateImageView(vulkanEngine->getDevice(), &imageViewCreateInfo, nullptr, &mImageView));
+	}
+
+	VulkanImage::~VulkanImage() {
+		vkDestroyImageView(mVulkanEngine->getDevice(), mImageView, nullptr);
+		vmaDestroyImage(mVulkanEngine->getVMAAllocator(), mImage, mAllocation);
 	}
 }

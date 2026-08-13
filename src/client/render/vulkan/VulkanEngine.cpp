@@ -23,8 +23,8 @@ namespace voxel_game::client::render::vulkan {
 
 		window.setVisible(true);
 
-		registry.getSystemManager().registerSystem(ecs::Stage::PRE_RENDER, [this](ecs::ECSRegistry&, float) {
-			preRender();
+		registry.getSystemManager().registerSystem(ecs::Stage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
+			preRender(r.getResource<window::Window>());
 		});
 		registry.getSystemManager().registerSystem(ecs::Stage::POST_RENDER, [this](ecs::ECSRegistry&, float) {
 			postRender();
@@ -50,8 +50,7 @@ namespace voxel_game::client::render::vulkan {
 			vkDestroySemaphore(mDevice, frameData.swapchainSemaphore, nullptr);
 		}
 
-		mRenderImage = nullptr;
-		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
+		destroySwapchain();
 
 		vmaDestroyAllocator(mAllocator);
 
@@ -245,13 +244,33 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	void VulkanEngine::preRender() {
+	void VulkanEngine::resizeSwapchain(window::Window& window) {
+		vkDeviceWaitIdle(mDevice);
+
+		destroySwapchain();
+
+		createSwapchain(window);
+
+		mNeedsResize = false;
+	}
+
+	void VulkanEngine::preRender(window::Window& window) {
+		if (mNeedsResize) {
+			resizeSwapchain(window);
+		}
+
 		const VulkanFrameData& frameData = getFrameData();
 
 		vulkan_util::vkCheck(vkWaitForFences(mDevice, 1, &frameData.renderFence, true, 1000000000));
 		vulkan_util::vkCheck(vkResetFences(mDevice, 1, &frameData.renderFence));
 
-		vulkan_util::vkCheck(vkAcquireNextImageKHR(mDevice, mSwapchain, 1000000000, frameData.swapchainSemaphore, nullptr, &mCurrentSwapchainIndex), false);
+		const VkResult acquireNextImageResult = vkAcquireNextImageKHR(mDevice, mSwapchain, 1000000000, frameData.swapchainSemaphore, nullptr, &mCurrentSwapchainIndex);
+		if (acquireNextImageResult == VK_SUBOPTIMAL_KHR || acquireNextImageResult == VK_ERROR_OUT_OF_DATE_KHR) {
+			mNeedsResize = true;
+		}
+		else {
+			vulkan_util::vkCheck(acquireNextImageResult);
+		}
 
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;
@@ -317,9 +336,20 @@ namespace voxel_game::client::render::vulkan {
 			.pSwapchains = &mSwapchain,
 			.pImageIndices = &mCurrentSwapchainIndex,
 		};
-		vulkan_util::vkCheck(vkQueuePresentKHR(mGraphicsQueue, &presentInfo), false);
+		const VkResult queuePresentResult = vkQueuePresentKHR(mGraphicsQueue, &presentInfo);
+		if (queuePresentResult == VK_SUBOPTIMAL_KHR || queuePresentResult == VK_ERROR_OUT_OF_DATE_KHR) {
+			mNeedsResize = true;
+		}
+		else {
+			vulkan_util::vkCheck(queuePresentResult);
+		}
 
 		mFrame++;
+	}
+
+	void VulkanEngine::destroySwapchain() {
+		mRenderImage = nullptr;
+		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 	}
 
 	bool VulkanEngine::checkValidationLayerSupport() {

@@ -66,6 +66,7 @@ namespace voxel_game::client::render::vulkan {
 		uint64_t mFrame = 0;
 		uint32_t mCurrentSwapchainIndex = 0;
 		bool mRendering = false;
+		bool mNeedsResize = false;
 
 		VulkanFrameData& getFrameData() {
 			return mFrameData[mFrame % FRAME_OVERLAP];
@@ -87,9 +88,13 @@ namespace voxel_game::client::render::vulkan {
 
 		void createSyncStructures();
 
-		void preRender();
+		void resizeSwapchain(window::Window& window);
+
+		void preRender(window::Window& window);
 
 		void postRender();
+
+		void destroySwapchain();
 
 		static bool checkValidationLayerSupport();
 	};

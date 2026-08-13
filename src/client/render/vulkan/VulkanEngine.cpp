@@ -53,10 +53,6 @@ namespace voxel_game::client::render::vulkan {
 
 		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 
-		for (const VkImageView& mSwapchainImageView: mSwapchainImageViews) {
-			vkDestroyImageView(mDevice, mSwapchainImageView, nullptr);
-		}
-
 		vmaDestroyAllocator(mAllocator);
 
 		vkDestroySurfaceKHR(mInstance, mSurface, nullptr);
@@ -206,7 +202,6 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, nullptr));
 		mSwapchainImages.resize(imageCount);
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
-		mSwapchainImageViews.resize(imageCount);
 	}
 
 	void VulkanEngine::createCommandBuffers() {

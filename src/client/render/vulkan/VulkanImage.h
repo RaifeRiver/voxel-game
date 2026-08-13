@@ -31,4 +31,8 @@ namespace voxel_game::client::render::vulkan {
 		VmaAllocation mAllocation = nullptr;
 		const VulkanEngine* mVulkanEngine = nullptr;
 	};
+
+	void transitionImage(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout currentLayout, VkImageLayout newLayout);
+
+	void copyImage(VkCommandBuffer commandBuffer, VkImage src, VkImage dst, glm::uvec3 srcSize, glm::uvec3 dstSize);
 }

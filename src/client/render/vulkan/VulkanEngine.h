@@ -54,6 +54,7 @@ namespace voxel_game::client::render::vulkan {
 		std::vector<VkImage> mSwapchainImages;
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
+		std::unique_ptr<VulkanImage> mRenderImage;
 		uint64_t mFrame = 0;
 		uint32_t mCurrentSwapchainIndex = 0;
 

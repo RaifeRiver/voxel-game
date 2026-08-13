@@ -119,4 +119,61 @@ namespace voxel_game::client::render::vulkan {
 		vkDestroyImageView(mVulkanEngine->getDevice(), mImageView, nullptr);
 		vmaDestroyImage(mVulkanEngine->getVMAAllocator(), mImage, mAllocation);
 	}
+
+	// ReSharper disable CppParameterMayBeConst
+	void transitionImage(VkCommandBuffer commandBuffer, VkImage image, const VkImageLayout currentLayout, const VkImageLayout newLayout) {
+		const VkImageSubresourceRange subresourceRange = {
+			.aspectMask = newLayout == VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = VK_REMAINING_MIP_LEVELS,
+			.baseArrayLayer = 0,
+			.layerCount = VK_REMAINING_ARRAY_LAYERS,
+		};
+		VkImageMemoryBarrier2 imageMemoryBarrier = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2,
+			.srcStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+			.srcAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT,
+			.dstStageMask = VK_PIPELINE_STAGE_2_ALL_COMMANDS_BIT,
+			.dstAccessMask = VK_ACCESS_2_MEMORY_WRITE_BIT,
+			.oldLayout = currentLayout,
+			.newLayout = newLayout,
+			.image = image,
+			.subresourceRange = subresourceRange
+		};
+
+		const VkDependencyInfo dependencyInfo = {
+			.sType = VK_STRUCTURE_TYPE_DEPENDENCY_INFO,
+			.imageMemoryBarrierCount = 1,
+			.pImageMemoryBarriers = &imageMemoryBarrier,
+		};
+		vkCmdPipelineBarrier2(commandBuffer, &dependencyInfo);
+	}
+
+	void copyImage(VkCommandBuffer commandBuffer, VkImage src, VkImage dst, const glm::uvec3 srcSize, const glm::uvec3 dstSize) {
+		const VkImageBlit2 imageBlit = {
+			.sType = VK_STRUCTURE_TYPE_IMAGE_BLIT_2,
+			.srcSubresource = {
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.layerCount = 1
+			},
+			.srcOffsets = {{}, {.x = static_cast<int>(srcSize.x), .y = static_cast<int>(srcSize.y), .z = static_cast<int>(srcSize.z)}},
+			.dstSubresource = {
+				.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+				.layerCount = 1
+			},
+			.dstOffsets = {{}, {.x = static_cast<int>(dstSize.x), .y = static_cast<int>(dstSize.y), .z = static_cast<int>(dstSize.z)}}
+		};
+		const VkBlitImageInfo2 blitImageInfo = {
+			.sType = VK_STRUCTURE_TYPE_BLIT_IMAGE_INFO_2,
+			.srcImage = src,
+			.srcImageLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
+			.dstImage = dst,
+			.dstImageLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+			.regionCount = 1,
+			.pRegions = &imageBlit,
+			.filter = VK_FILTER_LINEAR
+		};
+		vkCmdBlitImage2(commandBuffer, &blitImageInfo);
+	}
+	// ReSharper restore CppParameterMayBeConst
 }

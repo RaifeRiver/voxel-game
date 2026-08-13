@@ -31,7 +31,7 @@ namespace voxel_game::client::render::vulkan {
 		});
 	}
 
-	GPUImage* VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage::ImageUsage usage, const ImageType type) {
+	GPUImage* VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) {
 		return new VulkanImage(this, size, format, usage, type);
 	}
 
@@ -50,6 +50,7 @@ namespace voxel_game::client::render::vulkan {
 			vkDestroySemaphore(mDevice, frameData.swapchainSemaphore, nullptr);
 		}
 
+		mRenderImage = nullptr;
 		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 
 		vmaDestroyAllocator(mAllocator);
@@ -201,6 +202,8 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, nullptr));
 		mSwapchainImages.resize(imageCount);
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
+
+		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::STORAGE, ImageType::IMAGE_2D);
 	}
 
 	void VulkanEngine::createCommandBuffers() {
@@ -259,7 +262,7 @@ namespace voxel_game::client::render::vulkan {
 		};
 		vulkan_util::vkCheck(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-		vulkan_util::transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
 
 		const VkClearColorValue clearColorValue = {std::abs(std::sin(static_cast<float>(mFrame) / 300.0f)), 0.0f, 0.0f, 1.0f};
 		constexpr VkImageSubresourceRange subresourceRange = {
@@ -277,7 +280,7 @@ namespace voxel_game::client::render::vulkan {
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;
 
-		vulkan_util::transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		vulkan_util::vkCheck(vkEndCommandBuffer(commandBuffer));
 

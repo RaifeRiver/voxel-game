@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/vec3.hpp"
+#include "glm/vec4.hpp"
 
 namespace voxel_game::client::render {
 	enum class ImageFormat {
@@ -18,14 +19,14 @@ namespace voxel_game::client::render {
 		SAMPLED = 1 << 2,
 		STORAGE = 1 << 3,
 		COLOUR_ATTACHMENT = 1 << 4,
-		DEPTH_STENCIL_ATTACHMENT = 1 << 5
+		DEPTH_ATTACHMENT = 1 << 5
 	};
 
 	inline ImageUsage operator|(ImageUsage a, ImageUsage b) {
 		return static_cast<ImageUsage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
 	}
 
-	inline bool operator&(ImageUsage a, ImageUsage b) {
+	inline uint32_t operator&(ImageUsage a, ImageUsage b) {
 		return static_cast<uint32_t>(a) & static_cast<uint32_t>(b);
 	}
 
@@ -38,6 +39,8 @@ namespace voxel_game::client::render {
 	class GPUImage {
 	public:
 		GPUImage(glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
+
+		virtual void clearColour(glm::vec4 colour) = 0;
 
 		[[nodiscard]] const glm::uvec3& getSize() const {
 			return mSize;

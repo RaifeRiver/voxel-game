@@ -38,10 +38,32 @@ namespace voxel_game::client::render::vulkan {
 		if (usage & ImageUsage::COLOUR_ATTACHMENT) {
 			imageUsage |= VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 		}
-		if (usage & ImageUsage::DEPTH_STENCIL_ATTACHMENT) {
+		if (usage & ImageUsage::DEPTH_ATTACHMENT) {
 			imageUsage |= VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		}
 		return static_cast<VkImageUsageFlagBits>(imageUsage);
+	}
+
+	VkImageLayout toVKImageLayout(const ImageUsage usage) {
+		if (usage & ImageUsage::TRANSFER_SRC) {
+			return VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
+		}
+		if (usage & ImageUsage::TRANSFER_DST) {
+			return VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL;
+		}
+		if (usage & ImageUsage::SAMPLED) {
+			return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+		}
+		if (usage & ImageUsage::STORAGE) {
+			return VK_IMAGE_LAYOUT_GENERAL;
+		}
+		if (usage & ImageUsage::COLOUR_ATTACHMENT) {
+			return VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+		}
+		if (usage & ImageUsage::DEPTH_ATTACHMENT) {
+			return VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL;
+		}
+		throw std::runtime_error("Unsupported image usage");
 	}
 
 	VkImageType toVKImageType(const ImageType type) {
@@ -83,7 +105,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	VulkanImage::VulkanImage(const VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type), mVulkanEngine(vulkanEngine) {
+	VulkanImage::VulkanImage(VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type), mVulkanEngine(vulkanEngine) {
 		const VkImageCreateInfo imageCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = toVKImageType(type),
@@ -113,6 +135,36 @@ namespace voxel_game::client::render::vulkan {
 			}
 		};
 		vulkan_util::vkCheck(vkCreateImageView(vulkanEngine->getDevice(), &imageViewCreateInfo, nullptr, &mImageView));
+	}
+
+	void VulkanImage::transition(const ImageUsage usage) {
+		if (usage != mCurrentUsage) {
+			if ((usage & mUsage) == static_cast<uint32_t>(mUsage)) {
+				throw std::runtime_error("Image must be created with usage");
+			}
+			const VkImageLayout layout = toVKImageLayout(usage);
+			transitionImage(mVulkanEngine->getCommandBuffer(), mImage, mCurrentLayout, layout);
+			mCurrentLayout = layout;
+		}
+	}
+
+	void VulkanImage::clearColour(const glm::vec4 colour) {
+		if (!(mUsage & ImageUsage::TRANSFER_DST)) {
+			throw std::runtime_error("Image must have ImageUsage::TRANSFER_DST");
+		}
+		if (mCurrentUsage != ImageUsage::TRANSFER_DST && mCurrentUsage != ImageUsage::STORAGE) {
+			transition(ImageUsage::TRANSFER_DST);
+		}
+
+		const VkClearColorValue clearColorValue = {colour.x, colour.y, colour.z, colour.a};
+		constexpr VkImageSubresourceRange subresourceRange = {
+			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+			.baseMipLevel = 0,
+			.levelCount = VK_REMAINING_MIP_LEVELS,
+			.baseArrayLayer = 0,
+			.layerCount = VK_REMAINING_ARRAY_LAYERS,
+		};
+		vkCmdClearColorImage(mVulkanEngine->getCommandBuffer(), mImage, mCurrentLayout, &clearColorValue, 1, &subresourceRange);
 	}
 
 	VulkanImage::~VulkanImage() {

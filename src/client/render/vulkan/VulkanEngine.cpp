@@ -159,7 +159,7 @@ namespace voxel_game::client::render::vulkan {
 
 	void VulkanEngine::createAllocator() {
 		const VmaAllocatorCreateInfo allocatorCreateInfo = {
-			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
+			.flags = 0,
 			.physicalDevice = mPhysicalDevice,
 			.device = mDevice,
 			.instance = mInstance
@@ -181,6 +181,7 @@ namespace voxel_game::client::render::vulkan {
 			swapchainExtent.width = windowSize.x;
 			swapchainExtent.height = windowSize.y;
 		}
+		mSwapchainExtent = {swapchainExtent.width, swapchainExtent.height, 1};
 
 		constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 		const VkSwapchainCreateInfoKHR swapchainCreateInfo = {
@@ -203,7 +204,7 @@ namespace voxel_game::client::render::vulkan {
 		mSwapchainImages.resize(imageCount);
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
 
-		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::STORAGE, ImageType::IMAGE_2D);
+		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::TRANSFER_DST | ImageUsage::STORAGE, ImageType::IMAGE_2D);
 	}
 
 	void VulkanEngine::createCommandBuffers() {
@@ -262,17 +263,9 @@ namespace voxel_game::client::render::vulkan {
 		};
 		vulkan_util::vkCheck(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
-		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_GENERAL);
+		mRendering = true;
 
-		const VkClearColorValue clearColorValue = {std::abs(std::sin(static_cast<float>(mFrame) / 300.0f)), 0.0f, 0.0f, 1.0f};
-		constexpr VkImageSubresourceRange subresourceRange = {
-			.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-			.baseMipLevel = 0,
-			.levelCount = VK_REMAINING_MIP_LEVELS,
-			.baseArrayLayer = 0,
-			.layerCount = VK_REMAINING_ARRAY_LAYERS,
-		};
-		vkCmdClearColorImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_GENERAL, &clearColorValue, 1, &subresourceRange);
+		mRenderImage->clearColour({std::abs(std::sin(static_cast<float>(mFrame) / 300.0f)), 0.0f, 0.0f, 1.0f});
 	}
 
 	void VulkanEngine::postRender() {
@@ -280,7 +273,12 @@ namespace voxel_game::client::render::vulkan {
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;
 
-		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_GENERAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+		mRenderImage->transition(ImageUsage::TRANSFER_SRC);
+		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		copyImage(commandBuffer, mRenderImage->getImage(), mSwapchainImages[mCurrentSwapchainIndex], mSwapchainExtent, mRenderImage->getSize());
+		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+
+		mRendering = false;
 
 		vulkan_util::vkCheck(vkEndCommandBuffer(commandBuffer));
 

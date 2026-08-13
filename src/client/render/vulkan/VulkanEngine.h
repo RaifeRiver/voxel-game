@@ -40,6 +40,13 @@ namespace voxel_game::client::render::vulkan {
 			return mDevice;
 		}
 
+		[[nodiscard]] VkCommandBuffer getCommandBuffer() {
+			if (!mRendering) {
+				throw std::runtime_error("Must be called after preRender() and before postRender()");
+			}
+			return getFrameData().commandBuffer;
+		}
+
 		void destroy() override;
 
 	private:
@@ -52,11 +59,13 @@ namespace voxel_game::client::render::vulkan {
 		VkSurfaceKHR mSurface = nullptr;
 		VkSwapchainKHR mSwapchain = nullptr;
 		std::vector<VkImage> mSwapchainImages;
+		glm::uvec3 mSwapchainExtent = {};
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
 		std::unique_ptr<VulkanImage> mRenderImage;
 		uint64_t mFrame = 0;
 		uint32_t mCurrentSwapchainIndex = 0;
+		bool mRendering = false;
 
 		VulkanFrameData& getFrameData() {
 			return mFrameData[mFrame % FRAME_OVERLAP];

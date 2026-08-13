@@ -28,3 +28,16 @@ target_link_libraries(VoxelGameClient PUBLIC glfw)
 target_link_libraries(VoxelGameClient PUBLIC glm::glm)
 target_link_libraries(VoxelGameClient PUBLIC GPUOpen::VulkanMemoryAllocator)
 target_link_libraries(VoxelGameClient PUBLIC Vulkan::Vulkan)
+
+find_program(GLSL_VALIDATOR glslangValidator)
+
+file(GLOB_RECURSE SHADER_SRC CONFIGURE_DEPENDS res/assets/voxel_game/shaders/*.frag res/assets/voxel_game/shaders/*.vert res/assets/voxel_game/shaders/*.comp)
+
+foreach(SHADER ${SHADER_SRC})
+    set(SPIRV "${SHADER}.spv")
+    add_custom_command(OUTPUT ${SPIRV} COMMAND ${GLSL_VALIDATOR} --target-env vulkan1.3 -V ${SHADER} -o ${SPIRV} DEPENDS ${SHADER})
+    list(APPEND SPIRV_FILES ${SPIRV})
+endforeach (SHADER)
+add_custom_target(Shaders DEPENDS ${SPIRV_FILES})
+
+add_dependencies(VoxelGameClient Shaders)

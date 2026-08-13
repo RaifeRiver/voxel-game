@@ -4,7 +4,6 @@
 
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
-#include "VulkanImage.h"
 
 #include "VulkanUtil.h"
 #include "client/window/Window.h"

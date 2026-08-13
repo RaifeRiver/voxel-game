@@ -8,6 +8,6 @@
 namespace voxel_game::client::render {
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:
-		virtual GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage::ImageUsage usage, ImageType type) = 0;
+		virtual GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) = 0;
 	};
 }

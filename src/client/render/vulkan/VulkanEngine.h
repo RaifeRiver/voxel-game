@@ -4,6 +4,7 @@
 
 #include "vk_mem_alloc.h"
 
+#include "VulkanImage.h"
 #include "client/render/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
@@ -29,7 +30,7 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		explicit VulkanEngine(ecs::ECSRegistry& registry);
 
-		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage::ImageUsage usage, ImageType type) override;
+		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
 
 		[[nodiscard]] VmaAllocator getVMAAllocator() const {
 			return mAllocator;

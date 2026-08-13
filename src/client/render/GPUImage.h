@@ -11,16 +11,22 @@ namespace voxel_game::client::render {
 	};
 
 
-	namespace ImageUsage {
-		enum ImageUsage {
-			NONE = 0,
-			TRANSFER_SRC = 1 << 0,
-			TRANSFER_DST = 1 << 1,
-			SAMPLED = 1 << 2,
-			STORAGE = 1 << 3,
-			COLOUR_ATTACHMENT = 1 << 4,
-			DEPTH_STENCIL_ATTACHMENT = 1 << 5
-		};
+	enum class ImageUsage : uint32_t {
+		NONE = 0,
+		TRANSFER_SRC = 1 << 0,
+		TRANSFER_DST = 1 << 1,
+		SAMPLED = 1 << 2,
+		STORAGE = 1 << 3,
+		COLOUR_ATTACHMENT = 1 << 4,
+		DEPTH_STENCIL_ATTACHMENT = 1 << 5
+	};
+
+	inline ImageUsage operator|(ImageUsage a, ImageUsage b) {
+		return static_cast<ImageUsage>(static_cast<uint32_t>(a) | static_cast<uint32_t>(b));
+	}
+
+	inline bool operator&(ImageUsage a, ImageUsage b) {
+		return static_cast<uint32_t>(a) & static_cast<uint32_t>(b);
 	}
 
 	enum class ImageType {
@@ -31,7 +37,7 @@ namespace voxel_game::client::render {
 
 	class GPUImage {
 	public:
-		GPUImage(glm::uvec3 size, ImageFormat format, ImageUsage::ImageUsage usage, ImageType type);
+		GPUImage(glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
 
 		[[nodiscard]] const glm::uvec3& getSize() const {
 			return mSize;
@@ -41,7 +47,7 @@ namespace voxel_game::client::render {
 			return mFormat;
 		}
 
-		[[nodiscard]] ImageUsage::ImageUsage getUsage() const {
+		[[nodiscard]] ImageUsage getUsage() const {
 			return mUsage;
 		}
 
@@ -54,7 +60,7 @@ namespace voxel_game::client::render {
 	protected:
 		glm::uvec3 mSize{};
 		ImageFormat mFormat = ImageFormat::UNKNOWN;
-		ImageUsage::ImageUsage mUsage = ImageUsage::NONE;
+		ImageUsage mUsage = ImageUsage::NONE;
 		ImageType mType = ImageType::IMAGE_2D;
 	};
 }

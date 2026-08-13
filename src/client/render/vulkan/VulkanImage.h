@@ -11,7 +11,7 @@ namespace voxel_game::client::render::vulkan {
 
 	VkFormat toVKImageFormat(ImageFormat format);
 
-	VkImageUsageFlagBits toVKImageUsage(ImageUsage::ImageUsage usage);
+	VkImageUsageFlagBits toVKImageUsage(ImageUsage usage);
 
 	VkImageType toVKImageType(ImageType type);
 
@@ -21,7 +21,7 @@ namespace voxel_game::client::render::vulkan {
 
 	class VulkanImage : public GPUImage {
 	public:
-		VulkanImage(const VulkanEngine* vulkanEngine, glm::uvec3 size, ImageFormat format, ImageUsage::ImageUsage usage, ImageType type);
+		VulkanImage(const VulkanEngine* vulkanEngine, glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
 
 	private:
 		VkImage mImage = nullptr;

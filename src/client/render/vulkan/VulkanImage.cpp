@@ -21,7 +21,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	VkImageUsageFlagBits toVKImageUsage(const ImageUsage::ImageUsage usage) {
+	VkImageUsageFlagBits toVKImageUsage(const ImageUsage usage) {
 		uint32_t imageUsage = 0;
 		if (usage & ImageUsage::TRANSFER_SRC) {
 			imageUsage |= VK_IMAGE_USAGE_TRANSFER_SRC_BIT;
@@ -83,7 +83,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	VulkanImage::VulkanImage(const VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage::ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type) {
+	VulkanImage::VulkanImage(const VulkanEngine* vulkanEngine, const glm::uvec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) : GPUImage(size, format, usage, type) {
 		const VkImageCreateInfo imageCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
 			.imageType = toVKImageType(type),

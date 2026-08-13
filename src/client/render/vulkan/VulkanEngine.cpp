@@ -1,7 +1,5 @@
 #include "VulkanEngine.h"
 
-#include <cmath>
-
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -283,8 +281,6 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo));
 
 		mRendering = true;
-
-		mRenderImage->clearColour({std::abs(std::sin(static_cast<float>(mFrame) / 300.0f)), 0.0f, 0.0f, 1.0f});
 	}
 
 	void VulkanEngine::postRender() {

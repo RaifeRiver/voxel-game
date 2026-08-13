@@ -3,14 +3,21 @@
 #include <stdexcept>
 
 namespace voxel_game::client::window::glfw {
-	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height) {
+	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
 		init();
 
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
 		const GLFWvidmode *videoMode = glfwGetVideoMode(monitor);
 
 		glfwDefaultWindowHints();
-		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		if (context) {
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+		}
+		else {
+			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+		}
 		glfwWindowHint(GLFW_REFRESH_RATE, videoMode->refreshRate);
 		glfwWindowHint(GLFW_RED_BITS, videoMode->redBits);
 		glfwWindowHint(GLFW_GREEN_BITS, videoMode->greenBits);
@@ -26,6 +33,22 @@ namespace voxel_game::client::window::glfw {
 		if (!mWindow) {
 			throw std::runtime_error("Failed to create GLFW window");
 		}
+
+		glfwSetWindowUserPointer(mWindow, this);
+		glfwSetWindowSizeCallback(mWindow, [](GLFWwindow* window, int w, int h) {
+			const GLFWWindow* window2 = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+			if (window2->mResizeCallback) {
+				window2->mResizeCallback({w, h});
+			}
+		});
+
+		if (context) {
+			glfwMakeContextCurrent(mWindow);
+		}
+	}
+
+	void GLFWWindow::swapOpenGLBuffers() {
+		glfwSwapBuffers(mWindow);
 	}
 
 	std::vector<const char*> GLFWWindow::getRequiredVulkanExtensions() {
@@ -42,6 +65,7 @@ namespace voxel_game::client::window::glfw {
 	VkResult GLFWWindow::createVulkanSurface(VkInstance instance, VkSurfaceKHR* surface) {
 		return glfwCreateWindowSurface(instance, mWindow, nullptr, surface);
 	}
+	// ReSharper restore CppParameterMayBeConst
 
 	glm::uvec2 GLFWWindow::getSize() {
 		int width;
@@ -58,7 +82,7 @@ namespace voxel_game::client::window::glfw {
 		glfwPollEvents();
 	}
 
-	void GLFWWindow::setVisible(bool visible) {
+	void GLFWWindow::setVisible(const bool visible) {
 		if (visible) {
 			glfwShowWindow(mWindow);
 		}
@@ -67,11 +91,13 @@ namespace voxel_game::client::window::glfw {
 		}
 	}
 
+	void GLFWWindow::setResizeCallback(const WindowResizeCallback& callback) {
+		mResizeCallback = callback;
+	}
+
 	void GLFWWindow::destroy() {
 		glfwDestroyWindow(mWindow);
 	}
-
-	// ReSharper restore CppParameterMayBeConst
 
 	void GLFWWindow::init() {
 		static bool init = false;

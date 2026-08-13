@@ -10,7 +10,9 @@
 namespace voxel_game::client::window::glfw {
 	class GLFWWindow : public Window {
 	public:
-		GLFWWindow(const std::string& name, bool fullscreen, int width, int height);
+		GLFWWindow(const std::string& name, bool fullscreen, int width, int height, bool context = false);
+
+		void swapOpenGLBuffers() override;
 
 		std::vector<const char*> getRequiredVulkanExtensions() override;
 
@@ -26,10 +28,13 @@ namespace voxel_game::client::window::glfw {
 
 		void setVisible(bool visible) override;
 
+		void setResizeCallback(const WindowResizeCallback& callback) override;
+
 		void destroy() override;
 
 	private:
 		GLFWwindow* mWindow;
+		WindowResizeCallback mResizeCallback;
 
 		static void init();
 	};

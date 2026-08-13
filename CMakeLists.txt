@@ -4,6 +4,7 @@ project(VoxelGame)
 
 set(CMAKE_CXX_STANDARD 20)
 
+find_package(OpenGL REQUIRED)
 find_package(Vulkan REQUIRED)
 
 include(FetchContent)
@@ -27,6 +28,7 @@ target_compile_definitions(VoxelGameClient PUBLIC $<$<CONFIG:Debug>:VG_DEBUG>)
 target_link_libraries(VoxelGameClient PUBLIC glfw)
 target_link_libraries(VoxelGameClient PUBLIC glm::glm)
 target_link_libraries(VoxelGameClient PUBLIC GPUOpen::VulkanMemoryAllocator)
+target_link_libraries(VoxelGameClient PUBLIC OpenGL::GL)
 target_link_libraries(VoxelGameClient PUBLIC Vulkan::Vulkan)
 
 find_program(GLSL_VALIDATOR glslangValidator)

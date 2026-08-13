@@ -32,6 +32,10 @@ namespace voxel_game::client::render::vulkan {
 
 		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
 
+		[[nodiscard]] GPUImage& getRenderImage() override {
+			return *mRenderImage;
+		}
+
 		[[nodiscard]] VmaAllocator getVMAAllocator() const {
 			return mAllocator;
 		}

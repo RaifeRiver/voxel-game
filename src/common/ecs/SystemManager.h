@@ -9,6 +9,7 @@ namespace voxel_game::ecs {
 
 	enum class Stage {
 		PRE_RENDER,
+		BACKGROUND_RENDER,
 		POST_RENDER,
 		COUNT
 	};

@@ -38,10 +38,11 @@ target_link_libraries(VoxelGameClient PUBLIC volk)
 find_program(GLSL_VALIDATOR glslangValidator)
 
 file(GLOB_RECURSE SHADER_SRC CONFIGURE_DEPENDS res/assets/voxel_game/shaders/*.frag res/assets/voxel_game/shaders/*.vert res/assets/voxel_game/shaders/*.comp)
+file(GLOB_RECURSE SHADER_DEPENDENCIES CONFIGURE_DEPENDS res/assets/voxel_game/shaders/*.glsl)
 
 foreach(SHADER ${SHADER_SRC})
     set(SPIRV "${SHADER}.spv")
-    add_custom_command(OUTPUT ${SPIRV} COMMAND ${GLSL_VALIDATOR} --target-env vulkan1.3 -V ${SHADER} -o ${SPIRV} DEPENDS ${SHADER})
+    add_custom_command(OUTPUT ${SPIRV} COMMAND ${GLSL_VALIDATOR} --target-env vulkan1.3 -V ${SHADER} -o ${SPIRV} DEPENDS ${SHADER} ${SHADER_DEPENDENCIES})
     list(APPEND SPIRV_FILES ${SPIRV})
 endforeach(SHADER)
 add_custom_target(Shaders DEPENDS ${SPIRV_FILES})

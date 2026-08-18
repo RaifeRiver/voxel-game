@@ -1,6 +1,6 @@
 #include "OpenGLRenderImage.h"
 
-#include <GL/gl.h>
+#include "glad/glad.h"
 
 namespace voxel_game::client::render::opengl {
 	OpenGLRenderImage::OpenGLRenderImage(const glm::uvec3 &size) : GPUImage(size, ImageFormat::RGBA8_SRGB, ImageUsage::NONE, ImageType::IMAGE_2D) {}

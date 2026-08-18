@@ -10,7 +10,11 @@ namespace voxel_game::client::render::opengl {
 	public:
 		explicit OpenGLEngine(ecs::ECSRegistry& registry);
 
-		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
+		std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
+
+		std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) override;
+
+		std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() override;
 
 		GPUImage& getRenderImage() override {
 			return *mRenderImage;

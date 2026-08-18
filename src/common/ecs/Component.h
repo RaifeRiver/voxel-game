@@ -9,7 +9,7 @@ namespace voxel_game::ecs {
 	};
 
 	// ReSharper disable once CppTemplateParameterNeverUsed
-	template <typename T> struct Component : public IComponent {
+	template <typename T> struct Component : IComponent {
 		[[nodiscard]] static uint32_t getID() {
 			static uint32_t id = sNextID++;
 			return id;

@@ -3,6 +3,8 @@
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
+#include "VulkanComputePipeline.h"
+#include "VulkanDescriptorAllocator.h"
 #include "VulkanUtil.h"
 #include "client/window/Window.h"
 
@@ -29,8 +31,16 @@ namespace voxel_game::client::render::vulkan {
 		});
 	}
 
-	GPUImage* VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) {
-		return new VulkanImage(this, size, format, usage, type);
+	std::unique_ptr<GPUImage> VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) {
+		return std::make_unique<VulkanImage>(this, size, format, usage, type);
+	}
+
+	std::unique_ptr<ComputePipeline> VulkanEngine::createComputePipeline(const std::string& computeShader) {
+		return std::make_unique<VulkanComputePipeline>(this, computeShader);
+	}
+
+	std::unique_ptr<DescriptorAllocatorBuilder> VulkanEngine::createDescriptorAllocatorBuilder() {
+		return std::make_unique<VulkanDescriptorAllocatorBuilder>(this);
 	}
 
 	void VulkanEngine::destroy() {
@@ -59,6 +69,8 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::createInstance(window::Window& window) {
+		vulkan_util::vkCheck(volkInitialize());
+
 		const VkApplicationInfo applicationInfo = vulkan_util::applicationInfo("Voxel Game", VK_API_VERSION_1_3);
 
 		const std::vector<const char*> extensions = window.getRequiredVulkanExtensions();
@@ -72,6 +84,8 @@ namespace voxel_game::client::render::vulkan {
 
 		const VkInstanceCreateInfo instanceCreateInfo = vulkan_util::instanceCreateInfo(applicationInfo, extensions, layers);
 		vulkan_util::vkCheck(vkCreateInstance(&instanceCreateInfo, nullptr, &mInstance));
+
+		volkLoadInstance(mInstance);
 	}
 
 	void VulkanEngine::selectPhysicalDevice() {
@@ -150,15 +164,23 @@ namespace voxel_game::client::render::vulkan {
 		VkDeviceCreateInfo deviceCreateInfo = vulkan_util::deviceCreateInfo(1, &deviceQueueCreateInfo, extensions, &features, &features13);
 		vulkan_util::vkCheck(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
 
+		volkLoadDevice(mDevice);
+
 		vkGetDeviceQueue(mDevice, queueFamily, 0, &mGraphicsQueue);
 		mGraphicsQueueFamily = queueFamily;
 	}
 
 	void VulkanEngine::createAllocator() {
+		const VmaVulkanFunctions vulkanFunctions = {
+			.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
+			.vkGetDeviceProcAddr = vkGetDeviceProcAddr
+		};
+
 		const VmaAllocatorCreateInfo allocatorCreateInfo = {
 			.flags = 0,
 			.physicalDevice = mPhysicalDevice,
 			.device = mDevice,
+			.pVulkanFunctions = &vulkanFunctions,
 			.instance = mInstance
 		};
 		vulkan_util::vkCheck(vmaCreateAllocator(&allocatorCreateInfo, &mAllocator));

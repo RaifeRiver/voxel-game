@@ -1,15 +1,16 @@
 #include "VoxelGameClient.h"
 
-#include <cmath>
-
 #include "render/RenderEngine.h"
 #include "render/opengl/OpenGLEngine.h"
 #include "render/vulkan/VulkanEngine.h"
+#include "system/BackgroundRenderSystem.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	constexpr bool USE_OPENGL = true;
+	constexpr bool USE_OPENGL = false;
+
+	static uint32_t backgroundRenderSystemID;
 
 	void load(ecs::ECSRegistry& registry) {
 		if (USE_OPENGL) {
@@ -21,11 +22,7 @@ namespace voxel_game::client {
 			registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
 		}
 
-		registry.getSystemManager().registerSystem(ecs::Stage::BACKGROUND_RENDER, [](ecs::ECSRegistry& r, const float dt) {
-			static float mTime = 0.0f;
-			mTime += dt;
-			r.getResource<render::RenderEngine>().getRenderImage().clearColour({std::abs(std::sin(mTime)), 0.0f, 0.0f, 1.0f});
-		});
+		backgroundRenderSystemID = registry.getSystemManager().createSystem<system::BackgroundRenderSystem>(registry);
 	}
 
 	void run(ecs::ECSRegistry &registry) {
@@ -45,6 +42,8 @@ namespace voxel_game::client {
 	}
 
 	void destroy(ecs::ECSRegistry &registry) {
+		registry.getSystemManager().removeSystem(backgroundRenderSystemID);
+
 		registry.removeResource<render::RenderEngine>();
 		registry.removeResource<window::Window>();
 	}

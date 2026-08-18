@@ -1,8 +1,11 @@
 #pragma once
 
 #include <string>
-#include <vulkan/vulkan.h>
 
+// ReSharper disable CppUnusedIncludeDirective
+#include "glad/glad.h"
+#include "volk.h"
+// ReSharper restore CppUnusedIncludeDirective
 #include "GLFW/glfw3.h"
 
 #include "client/window/Window.h"

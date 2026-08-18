@@ -1,10 +1,11 @@
 #pragma once
 
-#include <vulkan/vulkan.h>
-
+// ReSharper disable once CppUnusedIncludeDirective
+#include "volk.h"
 #include "vk_mem_alloc.h"
 
 #include "VulkanImage.h"
+#include "client/render/DescriptorAllocator.h"
 #include "client/render/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
@@ -30,7 +31,11 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		explicit VulkanEngine(ecs::ECSRegistry& registry);
 
-		GPUImage* allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
+		std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
+
+		std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) override;
+
+		std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() override;
 
 		[[nodiscard]] GPUImage& getRenderImage() override {
 			return *mRenderImage;
@@ -49,6 +54,10 @@ namespace voxel_game::client::render::vulkan {
 				throw std::runtime_error("Must be called after preRender() and before postRender()");
 			}
 			return getFrameData().commandBuffer;
+		}
+
+		[[nodiscard]] uint64_t getFrame() const {
+			return mFrame;
 		}
 
 		void destroy() override;

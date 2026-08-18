@@ -32,6 +32,10 @@ namespace voxel_game::client::render::opengl {
 		throw std::runtime_error("Not implemented");
 	}
 
+	void OpenGLEngine::waitForGPU() {
+		throw std::runtime_error("Not implemented");
+	}
+
 	void OpenGLEngine::initOpenGL(window::Window& window) {
 		if (gladLoadGL() == 0) {
 			throw std::runtime_error("Failed to initialise GLAD");

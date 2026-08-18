@@ -18,10 +18,13 @@ namespace voxel_game::ecs {
 				switch (static_cast<Stage>(i)) {
 					case Stage::PRE_RENDER:
 						system->preRender(registry, deltaTime);
+						break;
 					case Stage::BACKGROUND_RENDER:
 						system->backgroundRender(registry, deltaTime);
+						break;
 					case Stage::POST_RENDER:
 						system->postRender(registry, deltaTime);
+						break;
 					default:
 						break;
 				}

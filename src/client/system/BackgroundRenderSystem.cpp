@@ -2,6 +2,7 @@
 
 #include "client/render/RenderEngine.h"
 #include "client/render/Shader.h"
+#include "client/window/Window.h"
 
 namespace voxel_game::client::system {
 	BackgroundRenderSystem::BackgroundRenderSystem(ecs::ECSRegistry& registry) {
@@ -9,7 +10,8 @@ namespace voxel_game::client::system {
 
 		mPipeline = renderEngine.createComputePipeline("res/assets/voxel_game/shaders/gradient.comp.spv");
 
-		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->addBinding(0, render::DescriptorType::IMAGE)->build(render::vulkan::FRAME_OVERLAP, render::ShaderStage::COMPUTE);
+		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->addBinding(0, render::DescriptorType::IMAGE)->build(render::FRAME_OVERLAP, render::ShaderStage::COMPUTE);
+
 		for (std::unique_ptr<render::DescriptorSet>& descriptorSet : mDescriptorSets) {
 			descriptorSet = mDescriptorAllocator->allocate();
 		}
@@ -17,6 +19,17 @@ namespace voxel_game::client::system {
 
 	void BackgroundRenderSystem::backgroundRender(ecs::ECSRegistry& registry, float) {
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
-		renderEngine.getRenderImage().clearColour({0.1, 0, 0.5, 1});
+		auto& window = registry.getResource<window::Window>();
+
+		const glm::uvec2 windowSize = window.getSize();
+
+		render::DescriptorSet* descriptorSet = mDescriptorSets[renderEngine.getFrame() % render::FRAME_OVERLAP].get();
+		descriptorSet->setBinding(0, &renderEngine.getRenderImage());
+
+		renderEngine.getRenderImage().transition(render::ImageUsage::STORAGE);
+
+		mPipeline->bind();
+		mPipeline->bindDescriptorSet(0, descriptorSet);
+		mPipeline->dispatch(windowSize.x / 16, windowSize.y / 16);
 	}
 }

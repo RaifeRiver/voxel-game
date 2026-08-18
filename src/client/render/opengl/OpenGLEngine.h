@@ -20,6 +20,8 @@ namespace voxel_game::client::render::opengl {
 			return *mRenderImage;
 		}
 
+		void waitForGPU() override;
+
 	private:
 		std::unique_ptr<OpenGLRenderImage> mRenderImage;
 

@@ -43,6 +43,10 @@ namespace voxel_game::client::render::vulkan {
 		return std::make_unique<VulkanDescriptorAllocatorBuilder>(this);
 	}
 
+	void VulkanEngine::waitForGPU() {
+		vkDeviceWaitIdle(mDevice);
+	}
+
 	void VulkanEngine::destroy() {
 		vkDeviceWaitIdle(mDevice);
 

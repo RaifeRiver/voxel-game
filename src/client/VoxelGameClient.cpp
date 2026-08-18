@@ -42,6 +42,8 @@ namespace voxel_game::client {
 	}
 
 	void destroy(ecs::ECSRegistry &registry) {
+		registry.getResource<render::RenderEngine>().waitForGPU();
+
 		registry.getSystemManager().removeSystem(backgroundRenderSystemID);
 
 		registry.removeResource<render::RenderEngine>();

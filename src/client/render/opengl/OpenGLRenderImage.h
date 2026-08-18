@@ -7,6 +7,8 @@ namespace voxel_game::client::render::opengl {
 	public:
 		explicit OpenGLRenderImage(const glm::uvec3 &size);
 
+		void transition(ImageUsage usage) override;
+
 		void clearColour(glm::vec4 colour) override;
 	};
 }

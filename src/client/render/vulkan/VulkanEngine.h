@@ -17,8 +17,6 @@ namespace voxel_game::client::render::vulkan {
 	constexpr bool ENABLE_VALIDATION_LAYERS = false;
 #endif
 
-	constexpr uint32_t FRAME_OVERLAP = 2;
-
 	struct VulkanFrameData {
 		VkCommandPool commandPool;
 		VkCommandBuffer commandBuffer;
@@ -41,6 +39,8 @@ namespace voxel_game::client::render::vulkan {
 			return *mRenderImage;
 		}
 
+		void waitForGPU() override;
+
 		[[nodiscard]] VmaAllocator getVMAAllocator() const {
 			return mAllocator;
 		}
@@ -51,13 +51,9 @@ namespace voxel_game::client::render::vulkan {
 
 		[[nodiscard]] VkCommandBuffer getCommandBuffer() {
 			if (!mRendering) {
-				throw std::runtime_error("Must be called after preRender() and before postRender()");
+				throw std::runtime_error("Must be called between preRender() and postRender()");
 			}
 			return getFrameData().commandBuffer;
-		}
-
-		[[nodiscard]] uint64_t getFrame() const {
-			return mFrame;
 		}
 
 		void destroy() override;
@@ -76,7 +72,6 @@ namespace voxel_game::client::render::vulkan {
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
 		std::unique_ptr<VulkanImage> mRenderImage;
-		uint64_t mFrame = 0;
 		uint32_t mCurrentSwapchainIndex = 0;
 		bool mRendering = false;
 		bool mNeedsResize = false;

@@ -24,7 +24,7 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		VulkanImage(VulkanEngine* vulkanEngine, glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
 
-		void transition(ImageUsage usage);
+		void transition(ImageUsage usage) override;
 
 		void clearColour(glm::vec4 colour) override;
 
@@ -32,6 +32,14 @@ namespace voxel_game::client::render::vulkan {
 
 		[[nodiscard]] VkImage getImage() const {
 			return mImage;
+		}
+
+		[[nodiscard]] VkImageLayout getCurrentLayout() const {
+			return mCurrentLayout;
+		}
+
+		[[nodiscard]] VkImageView getImageView() const {
+			return mImageView;
 		}
 
 	private:

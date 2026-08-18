@@ -40,6 +40,8 @@ namespace voxel_game::client::render {
 	public:
 		GPUImage(glm::uvec3 size, ImageFormat format, ImageUsage usage, ImageType type);
 
+		virtual void transition(ImageUsage usage) = 0;
+
 		virtual void clearColour(glm::vec4 colour) = 0;
 
 		[[nodiscard]] const glm::uvec3& getSize() const {

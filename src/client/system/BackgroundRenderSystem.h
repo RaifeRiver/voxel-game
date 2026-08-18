@@ -1,7 +1,8 @@
 #pragma once
 
+#include "client/render/ComputePipeline.h"
 #include "client/render/DescriptorAllocator.h"
-#include "client/render/vulkan/VulkanEngine.h"
+#include "client/render/RenderEngine.h"
 #include "common/ecs/ECSRegistry.h"
 
 namespace voxel_game::client::system {
@@ -14,6 +15,6 @@ namespace voxel_game::client::system {
 	private:
 		std::unique_ptr<render::ComputePipeline> mPipeline = nullptr;
 		std::unique_ptr<render::DescriptorAllocator> mDescriptorAllocator = nullptr;
-		std::unique_ptr<render::DescriptorSet> mDescriptorSets[render::vulkan::FRAME_OVERLAP];
+		std::unique_ptr<render::DescriptorSet> mDescriptorSets[render::FRAME_OVERLAP];
 	};
 }

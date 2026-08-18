@@ -28,7 +28,19 @@ namespace voxel_game::client::render::vulkan {
 		}
 	}
 
-	VulkanDescriptorAllocator::VulkanDescriptorAllocator(VulkanEngine* vulkanEngine, const std::vector<DescriptorBinding>& bindings, const uint32_t maxSets, const ShaderStage shaderStages) : mVulkanEngine(vulkanEngine) {
+	VkImageLayout toVKImageLayout(const DescriptorType type) {
+		switch (type) {
+			case DescriptorType::SAMPLED_TEXTURE:
+			case DescriptorType::TEXTURE:
+				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			case DescriptorType::IMAGE:
+				return VK_IMAGE_LAYOUT_GENERAL;
+			default:
+				throw std::runtime_error("Unsupported descriptor type");
+		}
+	}
+
+	VulkanDescriptorAllocator::VulkanDescriptorAllocator(VulkanEngine* vulkanEngine, const std::vector<DescriptorBinding>& bindings, const uint32_t maxSets, const ShaderStage shaderStages) : mVulkanEngine(vulkanEngine), mBindings(bindings) {
 		std::unordered_map<DescriptorType, uint32_t> typeCounts;
 		for (const auto &type: bindings | std::views::values) {
 			auto it = typeCounts.find(type);
@@ -87,7 +99,16 @@ namespace voxel_game::client::render::vulkan {
 		};
 		VkDescriptorSet descriptorSet;
 		vulkan_util::vkCheck(vkAllocateDescriptorSets(mVulkanEngine->getDevice(), &descriptorSetAllocateInfo, &descriptorSet));
-		return std::make_unique<VulkanDescriptorSet>(mVulkanEngine, mDescriptorPool, descriptorSet);
+		return std::make_unique<VulkanDescriptorSet>(mVulkanEngine, this, mDescriptorPool, descriptorSet);
+	}
+
+	DescriptorType VulkanDescriptorAllocator::getDescriptorType(const uint32_t binding) {
+		for (auto& [b, type] : mBindings) {
+			if (b == binding) {
+				return type;
+			}
+		}
+		throw std::runtime_error("No binding at index " + std::to_string(binding));
 	}
 
 	VulkanDescriptorAllocator::~VulkanDescriptorAllocator() {

@@ -11,6 +11,8 @@
 #include "common/ecs/Resource.h"
 
 namespace voxel_game::client::render {
+	constexpr uint32_t FRAME_OVERLAP = 2;
+
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:
 		virtual std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) = 0;
@@ -20,5 +22,14 @@ namespace voxel_game::client::render {
 		virtual std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() = 0;
 
 		virtual GPUImage& getRenderImage() = 0;
+
+		virtual void waitForGPU() = 0;
+
+		[[nodiscard]] uint64_t getFrame() const {
+			return mFrame;
+		}
+
+	protected:
+		uint64_t mFrame = 0;
 	};
 }

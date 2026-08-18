@@ -26,7 +26,19 @@ namespace voxel_game::client::render::opengl {
 		glLinkProgram(mShaderProgram);
 	}
 
+	void OpenGLComputePipeline::bind() {
+		throw std::runtime_error("Not implemented");
+	}
+
+	void OpenGLComputePipeline::bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) {
+		throw std::runtime_error("Not implemented");
+	}
+
 	OpenGLComputePipeline::~OpenGLComputePipeline() {
 		glDeleteProgram(mShaderProgram);
+	}
+
+	void OpenGLComputePipeline::dispatch_(uint32_t x, uint32_t y, uint32_t z) {
+		throw std::runtime_error("Not implemented");
 	}
 }

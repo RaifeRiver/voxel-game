@@ -12,6 +12,7 @@ namespace voxel_game::client::system {
 		void backgroundRender(ecs::ECSRegistry& registry, float deltaTime) override;
 
 	private:
+		std::unique_ptr<render::ComputePipeline> mPipeline = nullptr;
 		std::unique_ptr<render::DescriptorAllocator> mDescriptorAllocator = nullptr;
 		std::unique_ptr<render::DescriptorSet> mDescriptorSets[render::vulkan::FRAME_OVERLAP];
 	};

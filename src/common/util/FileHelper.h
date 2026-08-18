@@ -11,7 +11,7 @@ namespace voxel_game::util {
 		if (!file.is_open()) {
 			throw std::runtime_error("Failed to open file: " + path);
 		}
-		const size_t fileSize = file.tellg();
+		const std::ifstream::pos_type fileSize = file.tellg();
 		std::vector<T> buffer(fileSize / sizeof(T));
 		file.seekg(0);
 		file.read(reinterpret_cast<char*>(buffer.data()), fileSize);

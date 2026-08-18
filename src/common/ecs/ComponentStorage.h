@@ -9,7 +9,12 @@
 #include "Entity.h"
 
 namespace voxel_game::ecs {
-	class IComponentStorage {};
+	class IComponentStorage {
+	public:
+		virtual void remove(Entity entity) = 0;
+
+		virtual ~IComponentStorage() = default;
+	};
 
 	template <typename T> requires std::derived_from<T, Component<T>> class ComponentStorage : public IComponentStorage {
 	public:
@@ -40,7 +45,7 @@ namespace voxel_game::ecs {
 			return mComponentIndices.size() > entity && mComponentIndices[entity] != UINT32_MAX;
 		}
 
-		void remove(const Entity entity) {
+		void remove(const Entity entity) override {
 			const uint32_t index = mComponentIndices.at(entity);
 			if (index != UINT32_MAX) {
 				mUnusedComponents.push_back(index);

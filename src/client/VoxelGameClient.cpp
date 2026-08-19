@@ -8,7 +8,7 @@
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	constexpr bool USE_OPENGL = false;
+	constexpr bool USE_OPENGL = true;
 
 	static uint32_t backgroundRenderSystemID;
 
@@ -28,9 +28,9 @@ namespace voxel_game::client {
 	void run(ecs::ECSRegistry &registry) {
 		auto& window = registry.getResource<window::Window>();
 
-		std::chrono::time_point<std::chrono::system_clock> lastTime = std::chrono::high_resolution_clock::now();
+		std::chrono::time_point<std::chrono::steady_clock> lastTime = std::chrono::steady_clock::now();
 		while (!window.shouldClose()) {
-			std::chrono::time_point<std::chrono::system_clock> currentTime = std::chrono::high_resolution_clock::now();
+			std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::steady_clock::now();
 			const float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 			lastTime = currentTime;
 

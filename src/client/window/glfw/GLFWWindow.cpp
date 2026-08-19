@@ -1,5 +1,6 @@
 #include "GLFWWindow.h"
 
+#include <iostream>
 #include <stdexcept>
 
 namespace voxel_game::client::window::glfw {
@@ -14,6 +15,9 @@ namespace voxel_game::client::window::glfw {
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
 			glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 			glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+#ifdef VG_DEBUG
+			glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+#endif
 		}
 		else {
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -104,6 +108,10 @@ namespace voxel_game::client::window::glfw {
 		if (init) {
 			return;
 		}
+
+		glfwSetErrorCallback([](const int errorCode, const char* description) {
+			std::cerr << "GLFW Error " << errorCode << ": " << description << std::endl;
+		});
 
 		if (!glfwInit()) {
 			throw std::runtime_error("Failed to initialise GLFW");

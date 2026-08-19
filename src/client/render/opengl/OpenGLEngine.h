@@ -1,6 +1,6 @@
 #pragma once
 
-#include "OpenGLRenderImage.h"
+#include "OpenGLImage.h"
 #include "client/render/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
@@ -22,13 +22,16 @@ namespace voxel_game::client::render::opengl {
 
 		void waitForGPU() override;
 
+		void destroy() override;
+
 	private:
-		std::unique_ptr<OpenGLRenderImage> mRenderImage;
+		std::unique_ptr<OpenGLImage> mRenderImage = nullptr;
+		GLuint mFramebufferObject = 0;
 
 		void initOpenGL(window::Window& window);
 
-		void preRender();
+		void preRender() const;
 
-		void postRender(window::Window& window);
+		void postRender(window::Window& window) const;
 	};
 }

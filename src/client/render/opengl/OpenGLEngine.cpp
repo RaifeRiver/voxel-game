@@ -73,8 +73,11 @@ namespace voxel_game::client::render::opengl {
 		const glm::uvec2 windowSize = window.getSize();
 
 		glViewport(0, 0, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
-		window.setResizeCallback([](const glm::uvec2 size) {
+		window.setResizeCallback([this](const glm::uvec2 size) {
 			glViewport(0, 0, static_cast<int>(size.x), static_cast<int>(size.y));
+			mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{size, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::NONE, ImageType::IMAGE_2D);
+			glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderImage->getImage(), 0);
 		});
 
 		mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::NONE, ImageType::IMAGE_2D);
@@ -92,7 +95,7 @@ namespace voxel_game::client::render::opengl {
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, mFramebufferObject);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		const auto windowSize = glm::ivec2(window.getSize());
-		glBlitFramebuffer(0, 0, windowSize.x, windowSize.y, 0, 0, windowSize.x, windowSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, windowSize.y, windowSize.x, 0, 0, 0, windowSize.x, windowSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
 		window.swapOpenGLBuffers();
 	}

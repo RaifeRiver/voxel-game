@@ -30,6 +30,6 @@ namespace voxel_game::client::system {
 
 		mPipeline->bind();
 		mPipeline->bindDescriptorSet(0, descriptorSet);
-		mPipeline->dispatch(windowSize.x / 16, windowSize.y / 16);
+		mPipeline->dispatch((windowSize.x + 15) >> 4, (windowSize.y + 15) >> 4);
 	}
 }

@@ -8,18 +8,20 @@
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	constexpr bool USE_OPENGL = false;
-
 	static uint32_t backgroundRenderSystemID;
 
-	void load(ecs::ECSRegistry& registry) {
-		if (USE_OPENGL) {
-			registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0, true);
-			registry.createResource<render::RenderEngine, render::opengl::OpenGLEngine>(registry);
-		}
-		else {
-			registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0);
-			registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
+	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
+		switch (args.getRenderLibrary()) {
+			case RenderLibrary::OPENGL:
+				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0, true);
+				registry.createResource<render::RenderEngine, render::opengl::OpenGLEngine>(registry);
+				break;
+			case RenderLibrary::VULKAN:
+				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0);
+				registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
+				break;
+			default:
+				throw std::runtime_error("Unsupported render library");
 		}
 
 		backgroundRenderSystemID = registry.getSystemManager().createSystem<system::BackgroundRenderSystem>(registry);

@@ -56,7 +56,7 @@ namespace voxel_game::client::render::vulkan {
 		for (auto& [type, count] : typeCounts) {
 			descriptorPoolSizes.push_back({
 				.type = toVKDescriptorType(type),
-				.descriptorCount = count
+				.descriptorCount = count * maxSets
 			});
 		}
 

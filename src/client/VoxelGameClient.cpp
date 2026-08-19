@@ -8,7 +8,7 @@
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	constexpr bool USE_OPENGL = true;
+	constexpr bool USE_OPENGL = false;
 
 	static uint32_t backgroundRenderSystemID;
 

@@ -1,5 +1,6 @@
 #include "VulkanEngine.h"
 
+#include "glm/gtx/string_cast.hpp"
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
 
@@ -228,6 +229,10 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
 
 		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::TRANSFER_DST | ImageUsage::STORAGE, ImageType::IMAGE_2D);
+
+		window.setResizeCallback([this](glm::uvec2) {
+			mNeedsResize = true;
+		});
 	}
 
 	void VulkanEngine::createCommandBuffers() {

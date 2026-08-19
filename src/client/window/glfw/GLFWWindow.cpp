@@ -74,7 +74,7 @@ namespace voxel_game::client::window::glfw {
 	glm::uvec2 GLFWWindow::getSize() {
 		int width;
 		int height;
-		glfwGetWindowSize(mWindow, &width, &height);
+		glfwGetFramebufferSize(mWindow, &width, &height);
 		return {width, height};
 	}
 

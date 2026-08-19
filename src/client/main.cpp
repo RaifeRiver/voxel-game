@@ -2,7 +2,7 @@
 #include "common/VoxelGame.h"
 
 int main(const int argc, char** argv) {
-	voxel_game::client::CommandLineArguments args(argc, argv);
+	const voxel_game::client::CommandLineArguments args(argc, argv);
 
 	voxel_game::ecs::ECSRegistry registry;
 

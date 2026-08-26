@@ -58,18 +58,20 @@ namespace voxel_game::client::render::opengl {
 #ifdef VG_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback([](GLenum, GLenum, const GLuint id, const GLenum severity, GLsizei, const GLchar* message, const void*) {
+			const size_t messageLength = strlen(message);
+			std::string_view trimmedMessage(message, message[messageLength - 1] == '\n'? messageLength - 1 : messageLength);
 			switch (severity) {
 				case GL_DEBUG_SEVERITY_LOW:
-					LOG_INFO("OpenGL Low Severity Warning: id: {}, message: {}", id, message);
+					LOG_INFO("OpenGL Low Severity Warning: id: {}, message: {}", id, trimmedMessage);
 					break;
 				case GL_DEBUG_SEVERITY_MEDIUM:
-					LOG_WARNING("OpenGL Warning: id: {}, message: {}", id, message);
+					LOG_WARNING("OpenGL Warning: id: {}, message: {}", id, trimmedMessage);
 					break;
 				case GL_DEBUG_SEVERITY_HIGH:
-					LOG_ERROR("OpenGL Error: id: {}, message: {}", id, message);
+					LOG_ERROR("OpenGL Error: id: {}, message: {}", id, trimmedMessage);
 					break;
 				default:
-					LOG_INFO("OpenGL Message: id: {}, message: {}", id, message);
+					LOG_INFO("OpenGL Message: id: {}, message: {}", id, trimmedMessage);
 					break;
 			}
 		}, nullptr);

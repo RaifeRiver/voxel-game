@@ -95,6 +95,8 @@ namespace voxel_game::client::render::opengl {
 		glGenFramebuffers(1, &mFramebufferObject);
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderImage->getImage(), 0);
+
+		glEnable(GL_FRAMEBUFFER_SRGB);
 	}
 
 	void OpenGLEngine::preRender() const {

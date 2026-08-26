@@ -37,5 +37,5 @@ constexpr std::string log_strip_file_path(const std::string& path) {
 #ifdef VG_DEBUG
 #define LOG_DEBUG(message, ...) LOG_COMMON(ANSI_BLUE, "DEBUG", message __VA_OPT__(,) __VA_ARGS__)
 #else
-#define LOG_DEBUG(message, ...)
+#define LOG_DEBUG(message, ...) do {} while (0)
 #endif

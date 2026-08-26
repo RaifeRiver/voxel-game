@@ -2,6 +2,8 @@
 
 #include <stdexcept>
 
+#include "common/util/Log.h"
+
 namespace voxel_game::client::render::opengl {
 	GLint toOpenGLImageFormat(const ImageFormat format) {
 		switch (format) {
@@ -54,7 +56,7 @@ namespace voxel_game::client::render::opengl {
 	void OpenGLImage::transition(ImageUsage) {}
 
 	void OpenGLImage::clearColour(glm::vec4) {
-		throw std::runtime_error("Not implemented");
+		throw std::runtime_error("OpenGL image clearing is not supported");
 	}
 
 	OpenGLImage::~OpenGLImage() {

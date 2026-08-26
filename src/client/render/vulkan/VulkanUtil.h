@@ -6,16 +6,19 @@
 #include <vector>
 
 #include "volk.h"
+#include "common/util/Log.h"
 
 namespace voxel_game::client::render::vulkan::vulkan_util {
 	std::string vkResultString(VkResult result);
 
 	inline bool vkCheck(const VkResult result, const bool fatal = true) {
 		if (result != VK_SUCCESS) {
+				std::string resultString = vkResultString(result);
 			if (fatal) {
-				throw std::runtime_error("VK error: " + vkResultString(result));
+				LOG_FATAL("VK fatal error: {}", resultString);
+				throw std::runtime_error("VK error: " + resultString);
 			}
-			std::cerr << "VK error: " << vkResultString(result) << std::endl;
+			LOG_ERROR("VK error: {}", resultString);
 			return false;
 		}
 		return true;

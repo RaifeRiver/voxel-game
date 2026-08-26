@@ -1,6 +1,7 @@
 #include "OpenGLDescriptorAllocator.h"
 
 #include "OpenGLDescriptorSet.h"
+#include "common/util/Log.h"
 
 namespace voxel_game::client::render::opengl {
 	OpenGLDescriptorAllocator::OpenGLDescriptorAllocator(const uint32_t maxSets) : mMaxSets(maxSets) {}
@@ -14,7 +15,7 @@ namespace voxel_game::client::render::opengl {
 
 	std::unique_ptr<DescriptorSet> OpenGLDescriptorAllocator::allocate() {
 		if (mDescriptorSets.size() == mMaxSets) {
-			throw std::runtime_error("Too many descriptor sets");
+			throw std::runtime_error("Too many descriptor sets allocated");
 		}
 		auto descriptorSet = std::make_unique<OpenGLDescriptorSet>();
 		mDescriptorSets.push_back(descriptorSet.get());

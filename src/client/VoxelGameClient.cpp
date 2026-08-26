@@ -1,5 +1,6 @@
 #include "VoxelGameClient.h"
 
+#include "common/util/Log.h"
 #include "render/RenderEngine.h"
 #include "render/opengl/OpenGLEngine.h"
 #include "render/vulkan/VulkanEngine.h"
@@ -21,6 +22,7 @@ namespace voxel_game::client {
 				registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
 				break;
 			default:
+				LOG_FATAL("Unsupported render library");
 				throw std::runtime_error("Unsupported render library");
 		}
 

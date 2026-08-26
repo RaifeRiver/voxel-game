@@ -8,9 +8,12 @@
 #include "VulkanDescriptorAllocator.h"
 #include "VulkanUtil.h"
 #include "client/window/Window.h"
+#include "common/util/Log.h"
 
 namespace voxel_game::client::render::vulkan {
 	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) {
+		LOG_INFO("Using Vulkan renderer");
+
 		auto& window = registry.getResource<window::Window>();
 
 		createInstance(window);
@@ -18,6 +21,7 @@ namespace voxel_game::client::render::vulkan {
 		createDevice(window);
 		createAllocator();
 		createSurface(window);
+		LOG_DEBUG("Creating swapchain");
 		createSwapchain(window);
 		createCommandBuffers();
 		createSyncStructures();
@@ -30,6 +34,8 @@ namespace voxel_game::client::render::vulkan {
 		registry.getSystemManager().registerSystem(ecs::Stage::POST_RENDER, [this](ecs::ECSRegistry&, float) {
 			postRender();
 		});
+
+		LOG_INFO("Vulkan renderer initialised");
 	}
 
 	std::unique_ptr<GPUImage> VulkanEngine::allocateImage(const glm::ivec3 size, const ImageFormat format, const ImageUsage usage, const ImageType type) {
@@ -74,6 +80,8 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::createInstance(window::Window& window) {
+		LOG_DEBUG("Creating Vulkan instance");
+
 		vulkan_util::vkCheck(volkInitialize());
 
 		const VkApplicationInfo applicationInfo = vulkan_util::applicationInfo("Voxel Game", VK_API_VERSION_1_3);
@@ -83,8 +91,13 @@ namespace voxel_game::client::render::vulkan {
 		std::vector<const char*> layers;
 		// ReSharper disable once CppRedundantBooleanExpressionArgument
 		// ReSharper disable once CppIfCanBeReplacedByConstexprIf
-		if (ENABLE_VALIDATION_LAYERS && checkValidationLayerSupport()) {
-			layers.push_back("VK_LAYER_KHRONOS_validation");
+		if (ENABLE_VALIDATION_LAYERS) {
+			if (checkValidationLayerSupport()) {
+				layers.push_back("VK_LAYER_KHRONOS_validation");
+			}
+			else {
+				LOG_WARNING("Vulkan validation layers requested but not supported");
+			}
 		}
 
 		const VkInstanceCreateInfo instanceCreateInfo = vulkan_util::instanceCreateInfo(applicationInfo, extensions, layers);
@@ -94,6 +107,8 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::selectPhysicalDevice() {
+		LOG_DEBUG("Selecting Vulkan device");
+
 		uint32_t deviceCount = 0;
 		vulkan_util::vkCheck(vkEnumeratePhysicalDevices(mInstance, &deviceCount, nullptr));
 		std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -124,14 +139,17 @@ namespace voxel_game::client::render::vulkan {
 		}
 
 		if (deviceScore == -1) {
+			LOG_FATAL("No suitable Vulkan devices found");
 			throw std::runtime_error("No suitable Vulkan devices found");
 		}
 
 		mPhysicalDevice = device;
-		std::cout << "Using Vulkan device: " << deviceName << std::endl;
+		LOG_INFO("Using Vulkan device: {}", deviceName);
 	}
 
 	void VulkanEngine::createDevice(window::Window& window) {
+		LOG_DEBUG("Creating Vulkan device");
+
 		uint32_t queueFamilyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(mPhysicalDevice, &queueFamilyCount, nullptr);
 		std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
@@ -148,6 +166,7 @@ namespace voxel_game::client::render::vulkan {
 		}
 
 		if (!foundQueueFamily) {
+			LOG_FATAL("No suitable Vulkan queue found");
 			throw std::runtime_error("No suitable Vulkan queue found");
 		}
 
@@ -236,6 +255,8 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::createCommandBuffers() {
+		LOG_DEBUG("Creating command buffers");
+
 		const VkCommandPoolCreateInfo commandPoolCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO,
 			.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT,
@@ -255,6 +276,8 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::createSyncStructures() {
+		LOG_DEBUG("Creating sync structures");
+
 		constexpr VkFenceCreateInfo fenceCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
 			.flags = VK_FENCE_CREATE_SIGNALED_BIT,
@@ -274,6 +297,9 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::resizeSwapchain(window::Window& window) {
+		glm::uvec2 size = window.getSize();
+		LOG_DEBUG("Resizing swapchain to {}x{}", size.x, size.y);
+
 		vkDeviceWaitIdle(mDevice);
 
 		destroySwapchain();

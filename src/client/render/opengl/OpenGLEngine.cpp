@@ -8,9 +8,12 @@
 #include "OpenGLComputePipeline.h"
 #include "OpenGLDescriptorAllocator.h"
 #include "OpenGLImage.h"
+#include "common/util/Log.h"
 
 namespace voxel_game::client::render::opengl {
 	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) {
+		LOG_INFO("Using OpenGL renderer");
+
 		auto& window = registry.getResource<window::Window>();
 
 		initOpenGL(window);
@@ -21,10 +24,12 @@ namespace voxel_game::client::render::opengl {
 		registry.getSystemManager().registerSystem(ecs::Stage::POST_RENDER, [this](ecs::ECSRegistry& r, float) {
 			postRender(r.getResource<window::Window>());
 		});
+
+		LOG_INFO("OpenGL renderer initialised");
 	}
 
 	std::unique_ptr<GPUImage> OpenGLEngine::allocateImage(glm::ivec3, ImageFormat, ImageUsage, ImageType) {
-		throw std::runtime_error("Not implemented");
+		throw std::runtime_error("OpenGL image allocation is not implemented");
 	}
 
 	std::unique_ptr<ComputePipeline> OpenGLEngine::createComputePipeline(const std::string& computeShader) {
@@ -46,6 +51,7 @@ namespace voxel_game::client::render::opengl {
 
 	void OpenGLEngine::initOpenGL(window::Window& window) {
 		if (gladLoadGL() == 0) {
+			LOG_FATAL("Failed to initialize GLAD");
 			throw std::runtime_error("Failed to initialise GLAD");
 		}
 
@@ -54,19 +60,18 @@ namespace voxel_game::client::render::opengl {
 		glDebugMessageCallback([](GLenum, GLenum, const GLuint id, const GLenum severity, GLsizei, const GLchar* message, const void*) {
 			switch (severity) {
 				case GL_DEBUG_SEVERITY_LOW:
-					std::cerr << "OpenGL Low Severity Warning: id: ";
+					LOG_INFO("OpenGL Low Severity Warning: id: {}, message: {}", id, message);
 					break;
 				case GL_DEBUG_SEVERITY_MEDIUM:
-					std::cerr << "OpenGL Warning: id: ";
+					LOG_WARNING("OpenGL Warning: id: {}, message: {}", id, message);
 					break;
 				case GL_DEBUG_SEVERITY_HIGH:
-					std::cerr << "OpenGL Error: id: ";
+					LOG_ERROR("OpenGL Error: id: {}, message: {}", id, message);
 					break;
 				default:
-					std::cerr << "OpenGL Message: id: ";
+					LOG_INFO("OpenGL Message: id: {}, message: {}", id, message);
 					break;
 			}
-			std::cerr << id << ", message: " << message << std::endl;
 		}, nullptr);
 #endif
 
@@ -79,6 +84,8 @@ namespace voxel_game::client::render::opengl {
 			glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderImage->getImage(), 0);
 		});
+
+		LOG_DEBUG("Creating framebuffer image");
 
 		mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::NONE, ImageType::IMAGE_2D);
 

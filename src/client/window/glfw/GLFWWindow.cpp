@@ -3,8 +3,12 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "common/util/Log.h"
+
 namespace voxel_game::client::window::glfw {
 	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
+		LOG_INFO("Using GLFW window");
+
 		init();
 
 		GLFWmonitor* monitor = glfwGetPrimaryMonitor();
@@ -35,6 +39,7 @@ namespace voxel_game::client::window::glfw {
 			mWindow = glfwCreateWindow(width, height, name.c_str(), nullptr, nullptr);
 		}
 		if (!mWindow) {
+			LOG_FATAL("Failed to create GLFW window");
 			throw std::runtime_error("Failed to create GLFW window");
 		}
 
@@ -110,10 +115,11 @@ namespace voxel_game::client::window::glfw {
 		}
 
 		glfwSetErrorCallback([](const int errorCode, const char* description) {
-			std::cerr << "GLFW Error " << errorCode << ": " << description << std::endl;
+			LOG_ERROR("GLFW Error {}: {}", errorCode, description);
 		});
 
 		if (!glfwInit()) {
+			LOG_FATAL("Failed to initialize GLFW");
 			throw std::runtime_error("Failed to initialise GLFW");
 		}
 		init = true;

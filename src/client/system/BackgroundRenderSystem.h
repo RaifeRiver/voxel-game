@@ -16,5 +16,7 @@ namespace voxel_game::client::system {
 		std::unique_ptr<render::ComputePipeline> mPipeline = nullptr;
 		std::unique_ptr<render::DescriptorAllocator> mDescriptorAllocator = nullptr;
 		std::unique_ptr<render::DescriptorSet> mDescriptorSets[render::FRAME_OVERLAP];
+		std::unique_ptr<render::GPUBuffer> mTimeBuffers[render::FRAME_OVERLAP];
+		float mTime = 0.0f;
 	};
 }

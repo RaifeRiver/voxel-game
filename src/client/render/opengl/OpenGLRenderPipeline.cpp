@@ -2,6 +2,7 @@
 
 #include "glad/glad.h"
 
+#include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
 
 namespace voxel_game::client::render::opengl {
@@ -36,8 +37,8 @@ namespace voxel_game::client::render::opengl {
 		glBindVertexArray(mVertexArray);
 	}
 
-	void OpenGLRenderPipeline::bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) {
-
+	void OpenGLRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
+		dynamic_cast<OpenGLDescriptorSet*>(descriptorSet)->bind(set);
 	}
 
 	OpenGLRenderPipeline::~OpenGLRenderPipeline() {

@@ -6,6 +6,25 @@
 #include "OpenGLUtil.h"
 
 namespace voxel_game::client::render::opengl {
+	unsigned int toOpenGLPrimitiveTopology(const PrimitiveTopology topology) {
+		switch (topology) {
+			case PrimitiveTopology::POINT_LIST:
+				return GL_POINTS;
+			case PrimitiveTopology::LINE_LIST:
+				return GL_LINES;
+			case PrimitiveTopology::LINE_STRIP:
+				return GL_LINE_STRIP;
+			case PrimitiveTopology::TRIANGLE_LIST:
+				return GL_TRIANGLES;
+			case PrimitiveTopology::TRIANGLE_STRIP:
+				return GL_TRIANGLE_STRIP;
+			case PrimitiveTopology::TRIANGLE_FAN:
+				return GL_TRIANGLE_FAN;
+			default:
+				throw std::runtime_error("Unsupported primitive topology");
+		}
+	}
+
 	unsigned int toOpenGLPolygonMode(const PolygonMode mode) {
 		switch (mode) {
 			case PolygonMode::FILL:
@@ -44,6 +63,7 @@ namespace voxel_game::client::render::opengl {
 
 		glGenVertexArrays(1, &mVertexArray);
 
+		mPrimitiveTopology = toOpenGLPrimitiveTopology(builder->getPrimitiveTopology());
 		mPolygonMode = toOpenGLPolygonMode(builder->getPolygonMode());
 		mLineWidth = builder->getLineWidth();
 	}

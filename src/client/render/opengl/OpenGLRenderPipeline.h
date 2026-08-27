@@ -3,6 +3,8 @@
 #include "client/render/RenderPipeline.h"
 
 namespace voxel_game::client::render::opengl {
+	unsigned int toOpenGLPolygonMode(PolygonMode mode);
+
 	class OpenGLRenderPipeline : public RenderPipeline {
 	public:
 		explicit OpenGLRenderPipeline(const RenderPipelineBuilder* builder);
@@ -19,6 +21,9 @@ namespace voxel_game::client::render::opengl {
 	private:
 		unsigned int mShaderProgram;
 		unsigned int mVertexArray = 0;
+
+		unsigned int mPolygonMode = 0;
+		float mLineWidth = 1.0f;
 	};
 
 	class OpenGLRenderPipelineBuilder : public RenderPipelineBuilder {

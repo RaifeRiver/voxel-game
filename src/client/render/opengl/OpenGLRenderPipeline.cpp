@@ -6,6 +6,19 @@
 #include "OpenGLUtil.h"
 
 namespace voxel_game::client::render::opengl {
+	unsigned int toOpenGLPolygonMode(const PolygonMode mode) {
+		switch (mode) {
+			case PolygonMode::FILL:
+				return GL_FILL;
+			case PolygonMode::LINE:
+				return GL_LINE;
+			case PolygonMode::POINT:
+				return GL_POINT;
+			default:
+				throw std::runtime_error("Unsupported polygon mode");
+		}
+	}
+
 	OpenGLRenderPipeline::OpenGLRenderPipeline(const RenderPipelineBuilder* builder) {
 		const std::string vertexShaderCode = opengl_util::loadShaderCode(builder->getVertexShader());
 		const std::string fragmentShaderCode = opengl_util::loadShaderCode(builder->getFragmentShader());
@@ -30,11 +43,17 @@ namespace voxel_game::client::render::opengl {
 		glDeleteShader(fragmentShader);
 
 		glGenVertexArrays(1, &mVertexArray);
+
+		mPolygonMode = toOpenGLPolygonMode(builder->getPolygonMode());
+		mLineWidth = builder->getLineWidth();
 	}
 
 	void OpenGLRenderPipeline::bind() {
 		glUseProgram(mShaderProgram);
 		glBindVertexArray(mVertexArray);
+
+		glPolygonMode(GL_FRONT_AND_BACK, mPolygonMode);
+		glLineWidth(mLineWidth);
 	}
 
 	void OpenGLRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {

@@ -9,6 +9,7 @@
 #include "OpenGLComputePipeline.h"
 #include "OpenGLDescriptorAllocator.h"
 #include "OpenGLImage.h"
+#include "OpenGLRenderPipeline.h"
 #include "common/util/Log.h"
 
 namespace voxel_game::client::render::opengl {
@@ -38,20 +39,16 @@ namespace voxel_game::client::render::opengl {
 	}
 
 	std::unique_ptr<RenderPipelineBuilder> OpenGLEngine::createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) {
-		throw std::runtime_error("OpenGL render pipelines are not implemented");
+		return std::make_unique<OpenGLRenderPipelineBuilder>(vertexShader, fragmentShader);
 	}
 
 	std::unique_ptr<DescriptorAllocatorBuilder> OpenGLEngine::createDescriptorAllocatorBuilder() {
 		return std::make_unique<OpenGLDescriptorAllocatorBuilder>();
 	}
 
-	void OpenGLEngine::beginRendering() {
-		throw std::runtime_error("OpenGL render pipelines are not implemented");
-	}
+	void OpenGLEngine::beginRendering() {}
 
-	void OpenGLEngine::endRendering() {
-		throw std::runtime_error("OpenGL render pipelines are not implemented");
-	}
+	void OpenGLEngine::endRendering() {}
 
 	void OpenGLEngine::waitForGPU() {
 		glFinish();

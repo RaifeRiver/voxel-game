@@ -186,6 +186,7 @@ namespace voxel_game::client::render::vulkan {
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.pNext = &features12;
+		features13.dynamicRendering = true;
 		features13.synchronization2 = true;
 
 		VkPhysicalDeviceFeatures features = {};

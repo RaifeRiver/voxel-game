@@ -38,6 +38,32 @@ namespace voxel_game::client::render::opengl {
 		}
 	}
 
+	unsigned int toOpenGLCullFace(const CullMode mode) {
+		switch (mode) {
+			case CullMode::NONE:
+				return 0;
+			case CullMode::FRONT:
+				return GL_FRONT;
+			case CullMode::BACK:
+				return GL_BACK;
+			case CullMode::FRONT_AND_BACK:
+				return GL_FRONT_AND_BACK;
+			default:
+				throw std::runtime_error("Unsupported cull mode");
+		}
+	}
+
+	unsigned int toOpenGLFrontFace(const FrontFace face) {
+		switch (face) {
+			case FrontFace::COUNTER_CLOCKWISE:
+				return GL_CCW;
+			case FrontFace::CLOCKWISE:
+				return GL_CW;
+			default:
+				throw std::runtime_error("Unsupported front face");
+		}
+	}
+
 	OpenGLRenderPipeline::OpenGLRenderPipeline(const RenderPipelineBuilder* builder) {
 		const std::string vertexShaderCode = opengl_util::loadShaderCode(builder->getVertexShader());
 		const std::string fragmentShaderCode = opengl_util::loadShaderCode(builder->getFragmentShader());
@@ -66,6 +92,8 @@ namespace voxel_game::client::render::opengl {
 		mPrimitiveTopology = toOpenGLPrimitiveTopology(builder->getPrimitiveTopology());
 		mPolygonMode = toOpenGLPolygonMode(builder->getPolygonMode());
 		mLineWidth = builder->getLineWidth();
+		mCullFace = toOpenGLCullFace(builder->getCullMode());
+		mFrontFace = toOpenGLFrontFace(builder->getFrontFace());
 	}
 
 	void OpenGLRenderPipeline::bind() {
@@ -74,6 +102,14 @@ namespace voxel_game::client::render::opengl {
 
 		glPolygonMode(GL_FRONT_AND_BACK, mPolygonMode);
 		glLineWidth(mLineWidth);
+		if (mCullFace == 0) {
+			glDisable(GL_CULL_FACE);
+		}
+		else {
+			glEnable(GL_CULL_FACE);
+			glCullFace(mCullFace);
+			glFrontFace(mFrontFace);
+		}
 	}
 
 	void OpenGLRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {

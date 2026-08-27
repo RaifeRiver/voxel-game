@@ -7,6 +7,10 @@ namespace voxel_game::client::render::opengl {
 
 	unsigned int toOpenGLPolygonMode(PolygonMode mode);
 
+	unsigned int toOpenGLCullFace(CullMode mode);
+
+	unsigned int toOpenGLFrontFace(FrontFace face);
+
 	class OpenGLRenderPipeline : public RenderPipeline {
 	public:
 		explicit OpenGLRenderPipeline(const RenderPipelineBuilder* builder);
@@ -27,6 +31,8 @@ namespace voxel_game::client::render::opengl {
 		unsigned int mPrimitiveTopology = 0;
 		unsigned int mPolygonMode = 0;
 		float mLineWidth = 1.0f;
+		unsigned int mCullFace = 0;
+		unsigned int mFrontFace = 0;
 	};
 
 	class OpenGLRenderPipelineBuilder : public RenderPipelineBuilder {

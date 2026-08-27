@@ -86,7 +86,7 @@ namespace voxel_game::client::render::opengl {
 	}
 
 	void OpenGLRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
-		glDrawArrays(GL_TRIANGLES, static_cast<int>(firstVertex), static_cast<int>(vertexCount));
+		glDrawArrays(mPrimitiveTopology, static_cast<int>(firstVertex), static_cast<int>(vertexCount));
 	}
 
 	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}

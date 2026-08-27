@@ -22,6 +22,10 @@ namespace voxel_game::client::render::opengl {
 			return *mRenderImage;
 		}
 
+		void beginRendering() override;
+
+		void endRendering() override;
+
 		void waitForGPU() override;
 
 		void destroy() override;

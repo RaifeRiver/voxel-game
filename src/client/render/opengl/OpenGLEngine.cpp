@@ -45,6 +45,14 @@ namespace voxel_game::client::render::opengl {
 		return std::make_unique<OpenGLDescriptorAllocatorBuilder>();
 	}
 
+	void OpenGLEngine::beginRendering() {
+		throw std::runtime_error("OpenGL render pipelines are not implemented");
+	}
+
+	void OpenGLEngine::endRendering() {
+		throw std::runtime_error("OpenGL render pipelines are not implemented");
+	}
+
 	void OpenGLEngine::waitForGPU() {
 		glFinish();
 	}

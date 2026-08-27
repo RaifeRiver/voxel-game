@@ -55,6 +55,34 @@ namespace voxel_game::client::render::vulkan {
 		return std::make_unique<VulkanDescriptorAllocatorBuilder>(this);
 	}
 
+	void VulkanEngine::beginRendering() {
+		VkRenderingAttachmentInfo renderingAttachmentInfo = {
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+			.imageView = mRenderImage->getImageView(),
+			.imageLayout = mRenderImage->getCurrentLayout(),
+			.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
+			.storeOp = VK_ATTACHMENT_STORE_OP_STORE
+		};
+		const glm::uvec3 renderImageSize = mRenderImage->getSize();
+		const VkRenderingInfo renderingInfo = {
+			.sType = VK_STRUCTURE_TYPE_RENDERING_INFO,
+			.renderArea = {
+				.extent = {
+					.width = renderImageSize.x,
+					.height = renderImageSize.y
+				}
+			},
+			.layerCount = 1,
+			.colorAttachmentCount = 1,
+			.pColorAttachments = &renderingAttachmentInfo
+		};
+		vkCmdBeginRendering(getFrameData().commandBuffer, &renderingInfo);
+	}
+
+	void VulkanEngine::endRendering() {
+		vkCmdEndRendering(getFrameData().commandBuffer);
+	}
+
 	void VulkanEngine::waitForGPU() {
 		vkDeviceWaitIdle(mDevice);
 	}

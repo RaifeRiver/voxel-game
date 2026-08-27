@@ -26,6 +26,10 @@ namespace voxel_game::client::render {
 
 		virtual GPUImage& getRenderImage() = 0;
 
+		virtual void beginRendering() = 0;
+
+		virtual void endRendering() = 0;
+
 		virtual void waitForGPU() = 0;
 
 		[[nodiscard]] uint64_t getFrame() const {

@@ -41,6 +41,10 @@ namespace voxel_game::client::render::vulkan {
 			return *mRenderImage;
 		}
 
+		void beginRendering() override;
+
+		void endRendering() override;
+
 		void waitForGPU() override;
 
 		[[nodiscard]] VmaAllocator getVMAAllocator() const {

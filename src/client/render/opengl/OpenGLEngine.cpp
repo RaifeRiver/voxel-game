@@ -4,6 +4,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "OpenGLBuffer.h"
 #include "glad/glad.h"
 
 #include "OpenGLComputePipeline.h"
@@ -60,7 +61,7 @@ namespace voxel_game::client::render::opengl {
 	}
 
 	std::unique_ptr<GPUBuffer> OpenGLEngine::allocateBuffer_(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType) {
-		throw std::runtime_error("Buffer allocation is not implemented");
+		return std::make_unique<OpenGLBuffer>(size, usage, memoryType, mappedType);
 	}
 
 	void OpenGLEngine::initOpenGL(window::Window& window) {
@@ -112,15 +113,27 @@ namespace voxel_game::client::render::opengl {
 		glEnable(GL_FRAMEBUFFER_SRGB);
 	}
 
-	void OpenGLEngine::preRender() const {
+	void OpenGLEngine::preRender() {
+		const uint64_t frame = mFrame % FRAME_OVERLAP;
+
+		if (mRenderFences[frame] != nullptr) {
+			glClientWaitSync(mRenderFences[frame], GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+			glDeleteSync(mRenderFences[frame]);
+			mRenderFences[frame] = nullptr;
+		}
+
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 	}
 
-	void OpenGLEngine::postRender(window::Window& window) const {
+	void OpenGLEngine::postRender(window::Window& window) {
+		const uint64_t frame = mFrame % FRAME_OVERLAP;
+
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, mFramebufferObject);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		const auto windowSize = glm::ivec2(window.getSize());
 		glBlitFramebuffer(0, windowSize.y, windowSize.x, 0, 0, 0, windowSize.x, windowSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+
+		mRenderFences[frame] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		window.swapOpenGLBuffers();
 	}

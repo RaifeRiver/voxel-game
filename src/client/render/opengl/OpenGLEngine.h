@@ -36,11 +36,12 @@ namespace voxel_game::client::render::opengl {
 	private:
 		std::unique_ptr<OpenGLImage> mRenderImage = nullptr;
 		GLuint mFramebufferObject = 0;
+		GLsync mRenderFences[FRAME_OVERLAP] = {};
 
 		void initOpenGL(window::Window& window);
 
-		void preRender() const;
+		void preRender();
 
-		void postRender(window::Window& window) const;
+		void postRender(window::Window& window);
 	};
 }

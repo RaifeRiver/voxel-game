@@ -15,5 +15,6 @@ namespace voxel_game::client::render::opengl {
 
 	private:
 		std::vector<GPUImage*> mImageBindings;
+		std::vector<GPUBuffer*> mBufferBindings;
 	};
 }

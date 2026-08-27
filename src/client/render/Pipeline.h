@@ -4,7 +4,8 @@
 
 namespace voxel_game::client::render {
     enum class PipelineType {
-        COMPUTE
+        COMPUTE,
+    	RENDER
     };
 
     class Pipeline {

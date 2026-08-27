@@ -1,5 +1,6 @@
 #include "VulkanRenderPipeline.h"
 
+#include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
 #include "common/util/FileHelper.h"
@@ -183,6 +184,16 @@ namespace voxel_game::client::render::vulkan {
 
 		vkDestroyShaderModule(mVulkanEngine->getDevice(), vertexShaderModule, nullptr);
 		vkDestroyShaderModule(mVulkanEngine->getDevice(), fragmentShaderModule, nullptr);
+	}
+
+	void VulkanRenderPipeline::bind() {
+		vkCmdBindPipeline(mVulkanEngine->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline);
+	}
+
+	void VulkanRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
+		// ReSharper disable once CppLocalVariableMayBeConst
+		VkDescriptorSet vulkanDescriptorSet = dynamic_cast<VulkanDescriptorSet*>(descriptorSet)->getDescriptorSet();
+		vkCmdBindDescriptorSets(mVulkanEngine->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, set, 1, &vulkanDescriptorSet, 0, nullptr);
 	}
 
 	VulkanRenderPipeline::~VulkanRenderPipeline() {

@@ -4,6 +4,7 @@
 #include <string>
 
 #include "GPUImage.h"
+#include "Pipeline.h"
 
 namespace voxel_game::client::render {
 	enum class PrimitiveTopology {
@@ -33,9 +34,9 @@ namespace voxel_game::client::render {
 		CLOCKWISE
 	};
 
-	class RenderPipeline {
+	class RenderPipeline : public Pipeline {
 	public:
-		virtual ~RenderPipeline() = default;
+		RenderPipeline();
 	};
 
 	class RenderPipelineBuilder {

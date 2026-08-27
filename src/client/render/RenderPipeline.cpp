@@ -4,6 +4,8 @@
 #include <utility>
 
 namespace voxel_game::client::render {
+	RenderPipeline::RenderPipeline() : Pipeline(PipelineType::RENDER) {}
+
 	RenderPipelineBuilder::RenderPipelineBuilder(std::string vertexShader, std::string fragmentShader) : mVertexShader(std::move(vertexShader)), mFragmentShader(std::move(fragmentShader)) {}
 
 	RenderPipelineBuilder* RenderPipelineBuilder::primitiveTopology(const PrimitiveTopology primitiveTopology) {

@@ -19,6 +19,10 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		VulkanRenderPipeline(VulkanEngine* vulkanEngine, const RenderPipelineBuilder* builder);
 
+		void bind() override;
+
+		void bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) override;
+
 		~VulkanRenderPipeline() override;
 
 	private:

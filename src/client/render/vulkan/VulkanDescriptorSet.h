@@ -12,6 +12,8 @@ namespace voxel_game::client::render::vulkan {
 
 	    void setBinding(uint32_t binding, GPUImage* image) override;
 
+		void setBinding(uint32_t binding, GPUBuffer* buffer) override;
+
 	    [[nodiscard]] VkDescriptorSet getDescriptorSet() const {
 		    return mDescriptorSet;
 	    }

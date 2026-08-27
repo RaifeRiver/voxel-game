@@ -3,6 +3,7 @@
 #include "glm/gtx/string_cast.hpp"
 #define VMA_IMPLEMENTATION
 #include "vk_mem_alloc.h"
+#include "VulkanBuffer.h"
 
 #include "VulkanComputePipeline.h"
 #include "VulkanDescriptorAllocator.h"
@@ -110,6 +111,10 @@ namespace voxel_game::client::render::vulkan {
 		vkDestroyDevice(mDevice, nullptr);
 
 		vkDestroyInstance(mInstance, nullptr);
+	}
+
+	std::unique_ptr<GPUBuffer> VulkanEngine::allocateBuffer_(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType) {
+		return std::make_unique<VulkanBuffer>(this, size, usage, memoryType, mappedType);
 	}
 
 	void VulkanEngine::createInstance(window::Window& window) {

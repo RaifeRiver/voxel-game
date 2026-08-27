@@ -59,6 +59,10 @@ namespace voxel_game::client::render::opengl {
 		mRenderImage = nullptr;
 	}
 
+	std::unique_ptr<GPUBuffer> OpenGLEngine::allocateBuffer_(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType) {
+		throw std::runtime_error("Buffer allocation is not implemented");
+	}
+
 	void OpenGLEngine::initOpenGL(window::Window& window) {
 		if (gladLoadGL() == 0) {
 			LOG_FATAL("Failed to initialize GLAD");

@@ -64,6 +64,9 @@ namespace voxel_game::client::render::vulkan {
 
 		void destroy() override;
 
+	protected:
+		std::unique_ptr<GPUBuffer> allocateBuffer_(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType) override;
+
 	private:
 		VkInstance mInstance = nullptr;
 		VkPhysicalDevice mPhysicalDevice = nullptr;

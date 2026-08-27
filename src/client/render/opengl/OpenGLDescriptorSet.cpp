@@ -1,5 +1,7 @@
 #include "OpenGLDescriptorSet.h"
 
+#include <stdexcept>
+
 #include "OpenGLImage.h"
 #include "glad/glad.h"
 
@@ -9,6 +11,10 @@ namespace voxel_game::client::render::opengl {
 			mImageBindings.resize(binding + 1);
 		}
 		mImageBindings[binding] = image;
+	}
+
+	void OpenGLDescriptorSet::setBinding(uint32_t binding, GPUBuffer* buffer) {
+		throw std::runtime_error("OpenGL buffers not implemented");
 	}
 
 	void OpenGLDescriptorSet::destroy() {

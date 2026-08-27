@@ -30,6 +30,9 @@ namespace voxel_game::client::render::opengl {
 
 		void destroy() override;
 
+	protected:
+		std::unique_ptr<GPUBuffer> allocateBuffer_(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType) override;
+
 	private:
 		std::unique_ptr<OpenGLImage> mRenderImage = nullptr;
 		GLuint mFramebufferObject = 0;

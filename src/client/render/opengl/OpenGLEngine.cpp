@@ -30,8 +30,8 @@ namespace voxel_game::client::render::opengl {
 		LOG_INFO("OpenGL renderer initialised");
 	}
 
-	std::unique_ptr<GPUImage> OpenGLEngine::allocateImage(glm::ivec3, ImageFormat, ImageUsage, ImageType) {
-		throw std::runtime_error("OpenGL image allocation is not implemented");
+	std::unique_ptr<GPUImage> OpenGLEngine::allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) {
+		return std::make_unique<OpenGLImage>(size, format, usage, type);
 	}
 
 	std::unique_ptr<ComputePipeline> OpenGLEngine::createComputePipeline(const std::string& computeShader) {

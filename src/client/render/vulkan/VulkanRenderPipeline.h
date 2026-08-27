@@ -19,6 +19,8 @@ namespace voxel_game::client::render::vulkan {
 	public:
 		VulkanRenderPipeline(VulkanEngine* vulkanEngine, const RenderPipelineBuilder* builder);
 
+		~VulkanRenderPipeline() override;
+
 	private:
 		VulkanEngine* mVulkanEngine;
 		std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;

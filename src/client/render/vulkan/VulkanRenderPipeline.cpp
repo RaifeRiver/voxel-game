@@ -71,7 +71,7 @@ namespace voxel_game::client::render::vulkan {
 			.pCode = vertexShaderData.data()
 		};
 		VkShaderModule vertexShaderModule;
-		vulkan_util::vkCheck(vkCreateShaderModule(vulkanEngine->getDevice(), &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
+		vulkan_util::vkCheck(vkCreateShaderModule(mVulkanEngine->getDevice(), &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
 
 		std::vector<uint32_t> fragmentShaderData = util::readFile<uint32_t>(builder->getFragmentShader());
 		const VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo = {
@@ -80,7 +80,7 @@ namespace voxel_game::client::render::vulkan {
 			.pCode = fragmentShaderData.data()
 		};
 		VkShaderModule fragmentShaderModule;
-		vulkan_util::vkCheck(vkCreateShaderModule(vulkanEngine->getDevice(), &fragmentShaderModuleCreateInfo, nullptr, &fragmentShaderModule));
+		vulkan_util::vkCheck(vkCreateShaderModule(mVulkanEngine->getDevice(), &fragmentShaderModuleCreateInfo, nullptr, &fragmentShaderModule));
 
 		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfos[2] = {};
 		pipelineShaderStageCreateInfos[0].sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -179,7 +179,19 @@ namespace voxel_game::client::render::vulkan {
 			.layout = mPipelineLayout,
 		};
 
-		vulkan_util::vkCheck(vkCreateGraphicsPipelines(vulkanEngine->getDevice(), nullptr, 1, &graphicsPipelineCreateInfo, nullptr, &mPipeline));
+		vulkan_util::vkCheck(vkCreateGraphicsPipelines(mVulkanEngine->getDevice(), nullptr, 1, &graphicsPipelineCreateInfo, nullptr, &mPipeline));
+
+		vkDestroyShaderModule(mVulkanEngine->getDevice(), vertexShaderModule, nullptr);
+		vkDestroyShaderModule(mVulkanEngine->getDevice(), fragmentShaderModule, nullptr);
+	}
+
+	VulkanRenderPipeline::~VulkanRenderPipeline() {
+		vkDestroyPipelineLayout(mVulkanEngine->getDevice(), mPipelineLayout, nullptr);
+		vkDestroyPipeline(mVulkanEngine->getDevice(), mPipeline, nullptr);
+
+		for (const VkDescriptorSetLayout& descriptorSetLayout: mDescriptorSetLayouts) {
+			vkDestroyDescriptorSetLayout(mVulkanEngine->getDevice(), descriptorSetLayout, nullptr);
+		}
 	}
 
 	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}

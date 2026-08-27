@@ -253,7 +253,7 @@ namespace voxel_game::client::render::vulkan {
 		mSwapchainImages.resize(imageCount);
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
 
-		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::TRANSFER_DST | ImageUsage::STORAGE, ImageType::IMAGE_2D);
+		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::TRANSFER_DST | ImageUsage::STORAGE | ImageUsage::COLOUR_ATTACHMENT, ImageType::IMAGE_2D);
 
 		window.setResizeCallback([this](glm::uvec2) {
 			mNeedsResize = true;

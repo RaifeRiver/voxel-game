@@ -22,6 +22,9 @@ namespace voxel_game::ecs {
 					case Stage::BACKGROUND_RENDER:
 						system->backgroundRender(registry, deltaTime);
 						break;
+					case Stage::RENDER:
+						system->render(registry, deltaTime);
+						break;
 					case Stage::POST_RENDER:
 						system->postRender(registry, deltaTime);
 						break;

@@ -21,6 +21,8 @@ namespace voxel_game::ecs {
 
 		virtual void backgroundRender(ECSRegistry& registry, float deltaTime) {}
 
+		virtual void render(ECSRegistry& registry, float deltaTime) {}
+
 		virtual void postRender(ECSRegistry& registry, float deltaTime) {}
 
 		virtual ~System() = default;
@@ -34,6 +36,7 @@ namespace voxel_game::ecs {
 	enum class Stage {
 		PRE_RENDER,
 		BACKGROUND_RENDER,
+		RENDER,
 		POST_RENDER,
 		COUNT
 	};

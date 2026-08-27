@@ -6,6 +6,7 @@
 
 #include "VulkanComputePipeline.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanRenderPipeline.h"
 #include "VulkanUtil.h"
 #include "client/window/Window.h"
 #include "common/util/Log.h"
@@ -44,6 +45,10 @@ namespace voxel_game::client::render::vulkan {
 
 	std::unique_ptr<ComputePipeline> VulkanEngine::createComputePipeline(const std::string& computeShader) {
 		return std::make_unique<VulkanComputePipeline>(this, computeShader);
+	}
+
+	std::unique_ptr<RenderPipelineBuilder> VulkanEngine::createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) {
+		return std::make_unique<VulkanRenderPipelineBuilder>(this, vertexShader, fragmentShader);
 	}
 
 	std::unique_ptr<DescriptorAllocatorBuilder> VulkanEngine::createDescriptorAllocatorBuilder() {

@@ -1,5 +1,7 @@
 #include "VulkanUtil.h"
 
+#include "spirv_cross.hpp"
+
 namespace voxel_game::client::render::vulkan::vulkan_util {
 	std::string vkResultString(const VkResult result) {
 		switch (result) {
@@ -106,5 +108,76 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 			default:
 				return "Unknown VkResult";
 		}
+	}
+
+	std::vector<VkDescriptorSetLayout> createDescriptorSetLayouts(const VulkanEngine* vulkanEngine, const size_t shaderCount, const std::vector<uint32_t>* shaderData) {
+		std::vector<std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;
+		auto processResources = [&](const spirv_cross::Compiler& compiler, const spirv_cross::SmallVector<spirv_cross::Resource>& resources, const VkShaderStageFlags shaderStage, const VkDescriptorType descriptorType) {
+			for (const spirv_cross::Resource& sampledImage: resources) {
+				const uint32_t set = compiler.get_decoration(sampledImage.id, spv::DecorationDescriptorSet);
+				const uint32_t binding = compiler.get_decoration(sampledImage.id, spv::DecorationBinding);
+				if (descriptorSetLayoutBindings.size() <= set) {
+					descriptorSetLayoutBindings.resize(set + 1);
+				}
+				bool found = false;
+				for (VkDescriptorSetLayoutBinding& descriptorSetLayoutBinding: descriptorSetLayoutBindings[set]) {
+					if (descriptorSetLayoutBinding.binding == binding) {
+						if (descriptorSetLayoutBinding.descriptorType != descriptorType) {
+							throw std::runtime_error("Shader binding conflict, set = " + std::to_string(set) + ", binding = " + std::to_string(binding));
+						}
+						found = true;
+						descriptorSetLayoutBinding.stageFlags |= shaderStage;
+						break;
+					}
+				}
+				if (!found) {
+					descriptorSetLayoutBindings[set].push_back({
+						.binding = binding,
+						.descriptorType = descriptorType,
+						.descriptorCount = 1,
+						.stageFlags = shaderStage
+					});
+				}
+			}
+		};
+		for (size_t i = 0; i < shaderCount; i++) {
+			const spirv_cross::Compiler compiler(shaderData[i]);
+			const spirv_cross::SmallVector<spirv_cross::EntryPoint> entryPoints = compiler.get_entry_points_and_stages();
+			VkShaderStageFlags shaderStage = 0;
+			for (const auto&[name, executionModel]: entryPoints) {
+				switch (executionModel) {
+					case spv::ExecutionModelVertex:
+						shaderStage |= VK_SHADER_STAGE_VERTEX_BIT;
+						break;
+					case spv::ExecutionModelFragment:
+						shaderStage |= VK_SHADER_STAGE_FRAGMENT_BIT;
+						break;
+					case spv::ExecutionModelGLCompute:
+						shaderStage |= VK_SHADER_STAGE_COMPUTE_BIT;
+						break;
+					default:
+						throw std::runtime_error("Unsupported execution model: " + std::to_string(executionModel));
+				}
+			}
+			const spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();
+			processResources(compiler, shaderResources.sampled_images, shaderStage, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
+			processResources(compiler, shaderResources.separate_images, shaderStage, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
+			processResources(compiler, shaderResources.storage_images, shaderStage, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
+			processResources(compiler, shaderResources.separate_samplers, shaderStage, VK_DESCRIPTOR_TYPE_SAMPLER);
+			processResources(compiler, shaderResources.uniform_buffers, shaderStage, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
+			processResources(compiler, shaderResources.storage_buffers, shaderStage, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
+		}
+
+		std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+		descriptorSetLayouts.resize(descriptorSetLayoutBindings.size());
+		for (size_t i = 0; i < descriptorSetLayoutBindings.size(); i++) {
+			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
+				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+				.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings[i].size()),
+				.pBindings = descriptorSetLayoutBindings[i].data()
+			};
+			vkCheck(vkCreateDescriptorSetLayout(vulkanEngine->getDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[i]));
+		}
+		return descriptorSetLayouts;
 	}
 }

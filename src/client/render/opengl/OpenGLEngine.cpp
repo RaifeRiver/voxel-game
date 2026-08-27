@@ -37,6 +37,10 @@ namespace voxel_game::client::render::opengl {
 		return std::make_unique<OpenGLComputePipeline>(computeShader);
 	}
 
+	std::unique_ptr<RenderPipelineBuilder> OpenGLEngine::createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) {
+		throw std::runtime_error("OpenGL render pipelines are not implemented");
+	}
+
 	std::unique_ptr<DescriptorAllocatorBuilder> OpenGLEngine::createDescriptorAllocatorBuilder() {
 		return std::make_unique<OpenGLDescriptorAllocatorBuilder>();
 	}

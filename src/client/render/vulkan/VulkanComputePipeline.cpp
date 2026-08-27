@@ -22,40 +22,7 @@ namespace voxel_game::client::render::vulkan {
 		VkShaderModule computeShaderModule;
 		vulkan_util::vkCheck(vkCreateShaderModule(vulkanEngine->getDevice(), &shaderModuleCreateInfo, nullptr, &computeShaderModule));
 
-		const spirv_cross::Compiler compiler(computeShaderData);
-		const spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();
-
-		std::vector<std::vector<VkDescriptorSetLayoutBinding>> descriptorSetLayoutBindings;
-		auto processResources = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources, const VkDescriptorType descriptorType) {
-			for (const spirv_cross::Resource& sampledImage: resources) {
-				const uint32_t set = compiler.get_decoration(sampledImage.id, spv::DecorationDescriptorSet);
-				if (descriptorSetLayoutBindings.size() <= set) {
-					descriptorSetLayoutBindings.resize(set + 1);
-				}
-				descriptorSetLayoutBindings[set].push_back({
-					.binding = compiler.get_decoration(sampledImage.id, spv::DecorationBinding),
-					.descriptorType = descriptorType,
-					.descriptorCount = 1,
-					.stageFlags = VK_SHADER_STAGE_COMPUTE_BIT
-				});
-			}
-		};
-		processResources(shaderResources.sampled_images, VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER);
-		processResources(shaderResources.separate_images, VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE);
-		processResources(shaderResources.storage_images, VK_DESCRIPTOR_TYPE_STORAGE_IMAGE);
-		processResources(shaderResources.separate_samplers, VK_DESCRIPTOR_TYPE_SAMPLER);
-		processResources(shaderResources.uniform_buffers, VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER);
-		processResources(shaderResources.storage_buffers, VK_DESCRIPTOR_TYPE_STORAGE_BUFFER);
-
-		mDescriptorSetLayouts.resize(descriptorSetLayoutBindings.size());
-		for (size_t i = 0; i < descriptorSetLayoutBindings.size(); i++) {
-			VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
-				.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-				.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings[i].size()),
-				.pBindings = descriptorSetLayoutBindings[i].data()
-			};
-			vulkan_util::vkCheck(vkCreateDescriptorSetLayout(mVulkanEngine->getDevice(), &descriptorSetLayoutCreateInfo, nullptr, &mDescriptorSetLayouts[i]));
-		}
+		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 1, &computeShaderData);
 
 		const VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,

@@ -14,6 +14,8 @@ namespace voxel_game::client::render::opengl {
 
 		std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) override;
 
+		std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) override;
+
 		std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() override;
 
 		GPUImage& getRenderImage() override {

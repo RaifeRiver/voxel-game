@@ -11,6 +11,9 @@ namespace voxel_game::client::render {
 		D32_SFLOAT
 	};
 
+	bool isColourFormat(ImageFormat imageFormat);
+
+	bool isDepthFormat(ImageFormat imageFormat);
 
 	enum class ImageUsage : uint32_t {
 		NONE = 0,

@@ -8,6 +8,7 @@
 #include "ComputePipeline.h"
 #include "DescriptorAllocator.h"
 #include "GPUImage.h"
+#include "RenderPipeline.h"
 #include "common/ecs/Resource.h"
 
 namespace voxel_game::client::render {
@@ -18,6 +19,8 @@ namespace voxel_game::client::render {
 		virtual std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) = 0;
 
 		virtual std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) = 0;
+
+		virtual std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) = 0;
 
 		virtual std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() = 0;
 

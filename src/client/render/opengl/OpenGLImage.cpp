@@ -2,8 +2,6 @@
 
 #include <stdexcept>
 
-#include "common/util/Log.h"
-
 namespace voxel_game::client::render::opengl {
 	GLint toOpenGLImageFormat(const ImageFormat format) {
 		switch (format) {

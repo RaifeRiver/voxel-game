@@ -25,6 +25,9 @@ namespace voxel_game::client::render::vulkan {
 
 		~VulkanRenderPipeline() override;
 
+	protected:
+		void draw_(uint32_t vertexCount, uint32_t firstVertex) override;
+
 	private:
 		VulkanEngine* mVulkanEngine;
 		std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;

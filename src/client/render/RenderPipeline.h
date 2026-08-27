@@ -37,6 +37,13 @@ namespace voxel_game::client::render {
 	class RenderPipeline : public Pipeline {
 	public:
 		RenderPipeline();
+
+		void draw(const uint32_t vertexCount, const uint32_t firstVertex = 0) {
+			draw_(vertexCount, firstVertex);
+		}
+
+	protected:
+		virtual void draw_(uint32_t vertexCount, uint32_t firstVertex) = 0;
 	};
 
 	class RenderPipelineBuilder {

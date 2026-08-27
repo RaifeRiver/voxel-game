@@ -187,7 +187,26 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanRenderPipeline::bind() {
-		vkCmdBindPipeline(mVulkanEngine->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline);
+		// ReSharper disable once CppLocalVariableMayBeConst
+		VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mPipeline);
+
+		const glm::uvec3 renderImageSize = mVulkanEngine->getRenderImage().getSize();
+
+		const VkViewport viewport = {
+			.width = static_cast<float>(renderImageSize.x),
+			.height = static_cast<float>(renderImageSize.y),
+			.maxDepth = 1.0f
+		};
+		vkCmdSetViewport(mVulkanEngine->getCommandBuffer(), 0, 1, &viewport);
+
+		const VkRect2D scissor = {
+			.extent = {
+				.width = renderImageSize.x,
+				.height = renderImageSize.y
+			}
+		};
+		vkCmdSetScissor(mVulkanEngine->getCommandBuffer(), 0, 1, &scissor);
 	}
 
 	void VulkanRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
@@ -203,6 +222,10 @@ namespace voxel_game::client::render::vulkan {
 		for (const VkDescriptorSetLayout& descriptorSetLayout: mDescriptorSetLayouts) {
 			vkDestroyDescriptorSetLayout(mVulkanEngine->getDevice(), descriptorSetLayout, nullptr);
 		}
+	}
+
+	void VulkanRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
+		vkCmdDraw(mVulkanEngine->getCommandBuffer(), vertexCount, 1, firstVertex, 0);
 	}
 
 	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}

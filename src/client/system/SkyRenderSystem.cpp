@@ -13,7 +13,11 @@ namespace voxel_game::client::system {
 		mPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->build();
 	}
 
-	void SkyRenderSystem::backgroundRender(ecs::ECSRegistry& registry, const float) {
+	void SkyRenderSystem::runStage(const ecs::Stage stage, ecs::ECSRegistry& registry, const float) {
+		if (stage != ecs::Stage::BACKGROUND_RENDER) {
+			return;
+		}
+
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
 
 		renderEngine.beginRendering();

@@ -3,34 +3,17 @@
 #include "ECSRegistry.h"
 
 namespace voxel_game::ecs {
-	System::System() : mID(sNextID++) {}
-
 	void SystemManager::registerSystem(Stage stage, const SystemFunction& system) {
 		mStages[static_cast<size_t>(stage)].push_back(system);
 	}
 
-	void SystemManager::runSystems(ECSRegistry &registry, const float deltaTime) {
+	void SystemManager::runSystems(ECSRegistry& registry, const float deltaTime) {
 		for (size_t i = 0; i < static_cast<size_t>(Stage::COUNT); i++) {
 			for (SystemFunction& system : mStages[i]) {
 				system(registry, deltaTime);
 			}
-			for (const std::unique_ptr<System>& system: mSystems) {
-				switch (static_cast<Stage>(i)) {
-					case Stage::PRE_RENDER:
-						system->preRender(registry, deltaTime);
-						break;
-					case Stage::BACKGROUND_RENDER:
-						system->backgroundRender(registry, deltaTime);
-						break;
-					case Stage::RENDER:
-						system->render(registry, deltaTime);
-						break;
-					case Stage::POST_RENDER:
-						system->postRender(registry, deltaTime);
-						break;
-					default:
-						break;
-				}
+			for (const std::unique_ptr<ISystem>& system: mSystems) {
+				system->runStage(static_cast<Stage>(i), registry, deltaTime);
 			}
 		}
 	}

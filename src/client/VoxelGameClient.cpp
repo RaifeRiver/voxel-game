@@ -10,8 +10,6 @@
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	static uint32_t skyRenderSystemID;
-
 	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
 		switch (args.getRenderLibrary()) {
 			case RenderLibrary::OPENGL:
@@ -27,7 +25,7 @@ namespace voxel_game::client {
 				throw std::runtime_error("Unsupported render library");
 		}
 
-		skyRenderSystemID = registry.getSystemManager().createSystem<system::SkyRenderSystem>(registry);
+		registry.getSystemManager().createSystem<system::SkyRenderSystem>(registry);
 	}
 
 	void run(ecs::ECSRegistry &registry) {
@@ -49,7 +47,7 @@ namespace voxel_game::client {
 	void destroy(ecs::ECSRegistry &registry) {
 		registry.getResource<render::RenderEngine>().waitForGPU();
 
-		registry.getSystemManager().removeSystem(skyRenderSystemID);
+		registry.getSystemManager().removeSystem<system::SkyRenderSystem>();
 
 		registry.removeResource<render::RenderEngine>();
 		registry.removeResource<window::Window>();

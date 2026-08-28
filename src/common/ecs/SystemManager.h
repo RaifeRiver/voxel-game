@@ -11,7 +11,7 @@ namespace voxel_game::ecs {
 
 	class SystemManager {
 	public:
-		void registerSystem(Stage stage, const SystemFunction& system);
+		void registerSystem(SystemStage stage, const SystemFunction& system);
 
 		template <typename T> requires std::derived_from<T, System<T>> void registerSystem(const T& system) {
 			const uint32_t id = system.getID();
@@ -39,7 +39,7 @@ namespace voxel_game::ecs {
 		}
 
 	private:
-		std::vector<SystemFunction> mStages[static_cast<size_t>(Stage::COUNT)];
+		std::vector<SystemFunction> mStages[static_cast<size_t>(SystemStage::COUNT)];
 		std::vector<std::unique_ptr<ISystem>> mSystems;
 	};
 }

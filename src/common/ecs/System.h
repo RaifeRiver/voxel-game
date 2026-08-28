@@ -5,7 +5,7 @@
 namespace voxel_game::ecs {
 	class ECSRegistry;
 
-	enum class Stage {
+	enum class SystemStage {
 		PRE_RENDER,
 		BACKGROUND_RENDER,
 		RENDER,
@@ -17,7 +17,7 @@ namespace voxel_game::ecs {
 
 	class ISystem {
 	public:
-		virtual void runStage(Stage stage, ECSRegistry& registry, float deltaTime) = 0;
+		virtual void runStage(SystemStage stage, ECSRegistry& registry, float deltaTime) = 0;
 
 		virtual uint32_t getID() = 0;
 

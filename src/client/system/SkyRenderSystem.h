@@ -9,7 +9,7 @@ namespace voxel_game::client::system {
 	public:
 		explicit SkyRenderSystem(ecs::ECSRegistry& registry);
 
-		void runStage(ecs::Stage stage, ecs::ECSRegistry& registry, float deltaTime) override;
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
 
 	private:
 		std::unique_ptr<render::RenderPipeline> mPipeline = nullptr;

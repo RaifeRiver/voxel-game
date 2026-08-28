@@ -21,10 +21,10 @@ namespace voxel_game::client::render::opengl {
 
 		initOpenGL(window);
 
-		registry.getSystemManager().registerSystem(ecs::Stage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
 			preRender();
 		});
-		registry.getSystemManager().registerSystem(ecs::Stage::POST_RENDER, [this](ecs::ECSRegistry& r, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry& r, float) {
 			postRender(r.getResource<window::Window>());
 		});
 

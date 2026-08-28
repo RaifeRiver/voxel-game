@@ -1,6 +1,7 @@
 #pragma once
 
 #include "glm/vec3.hpp"
+#include "glm/geometric.hpp"
 
 namespace voxel_game::universe {
 	constexpr static int32_t SECTOR_SIZE = 64;

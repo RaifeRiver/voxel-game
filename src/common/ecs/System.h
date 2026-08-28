@@ -6,6 +6,7 @@ namespace voxel_game::ecs {
 	class ECSRegistry;
 
 	enum class SystemStage {
+		UPDATE,
 		PRE_RENDER,
 		BACKGROUND_RENDER,
 		RENDER,

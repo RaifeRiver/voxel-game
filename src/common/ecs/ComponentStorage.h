@@ -22,13 +22,18 @@ namespace voxel_game::ecs {
 			if (has(entity)) {
 				return mComponents[mComponentIndices[entity]];
 			}
+			if (entity >= mComponentIndices.size()) {
+				mComponentIndices.resize(entity + 1);
+			}
 			if (!mUnusedComponents.empty()) {
 				uint32_t index = mUnusedComponents.back();
+				mComponentIndices[entity] = index;
 				mUnusedComponents.pop_back();
 				mComponents[index] = component;
 				return mComponents[index];
 			}
 			uint32_t index = mComponents.size();
+			mComponentIndices[entity] = index;
 			mComponents.push_back(component);
 			return mComponents[index];
 		}

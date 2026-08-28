@@ -13,6 +13,7 @@ int main(const int argc, char** argv) {
 	voxel_game::preLoad(registry);
 	voxel_game::client::load(registry, args);
 	voxel_game::load(registry);
+	voxel_game::postLoad(registry);
 
 	LOG_INFO("Loaded Voxel Game in {}s", std::chrono::duration<float>(std::chrono::round<std::chrono::duration<uint32_t, std::ratio<1, 10>>>(std::chrono::steady_clock::now() - startTime)).count());
 

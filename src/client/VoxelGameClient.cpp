@@ -26,6 +26,8 @@ namespace voxel_game::client {
 		}
 
 		registry.getSystemManager().createSystem<system::SkyRenderSystem>(registry);
+
+		player::attachPlayerComponents(registry, registry.createEntity(), true);
 	}
 
 	void run(ecs::ECSRegistry &registry) {

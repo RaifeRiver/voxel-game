@@ -94,12 +94,19 @@ namespace voxel_game::client::render::vulkan {
 		pipelineShaderStageCreateInfos[1].pName = "main";
 
 		std::vector<uint32_t> shaderData[] = {vertexShaderData, fragmentShaderData};
+
 		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 2, shaderData);
 
+		std::vector<VkPushConstantRange> pushConstantRanges = vulkan_util::getPushConstantRanges(1, shaderData);
+		for (const VkPushConstantRange& pushConstantRange : pushConstantRanges) {
+			mPushConstantsSize = std::max(mPushConstantsSize, pushConstantRange.offset + pushConstantRange.size);
+		}
 		const VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
 			.setLayoutCount = static_cast<uint32_t>(mDescriptorSetLayouts.size()),
-			.pSetLayouts = mDescriptorSetLayouts.data()
+			.pSetLayouts = mDescriptorSetLayouts.data(),
+			.pushConstantRangeCount = static_cast<uint32_t>(pushConstantRanges.size()),
+			.pPushConstantRanges = pushConstantRanges.data()
 		};
 		vulkan_util::vkCheck(vkCreatePipelineLayout(mVulkanEngine->getDevice(), &pipelineLayoutCreateInfo, nullptr, &mPipelineLayout));
 
@@ -213,6 +220,10 @@ namespace voxel_game::client::render::vulkan {
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkDescriptorSet vulkanDescriptorSet = dynamic_cast<VulkanDescriptorSet*>(descriptorSet)->getDescriptorSet();
 		vkCmdBindDescriptorSets(mVulkanEngine->getCommandBuffer(), VK_PIPELINE_BIND_POINT_GRAPHICS, mPipelineLayout, set, 1, &vulkanDescriptorSet, 0, nullptr);
+	}
+
+	void VulkanRenderPipeline::setPushConstants(void* pushConstants) {
+		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, mPushConstantsSize, pushConstants);
 	}
 
 	VulkanRenderPipeline::~VulkanRenderPipeline() {

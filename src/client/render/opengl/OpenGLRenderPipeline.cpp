@@ -4,6 +4,7 @@
 
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
+#include "common/util/FileHelper.h"
 
 namespace voxel_game::client::render::opengl {
 	unsigned int toOpenGLPrimitiveTopology(const PrimitiveTopology topology) {
@@ -65,9 +66,11 @@ namespace voxel_game::client::render::opengl {
 	}
 
 	OpenGLRenderPipeline::OpenGLRenderPipeline(const RenderPipelineBuilder* builder) {
-		const std::string vertexShaderCode = opengl_util::loadShaderCode(builder->getVertexShader());
-		const std::string fragmentShaderCode = opengl_util::loadShaderCode(builder->getFragmentShader());
+		const std::vector<uint32_t> vertexShaderData = util::readFile<uint32_t>(builder->getVertexShader());
+		const std::vector<uint32_t> fragmentShaderData = util::readFile<uint32_t>(builder->getFragmentShader());
 
+		const std::string vertexShaderCode = opengl_util::convertShader(vertexShaderData);
+		const std::string fragmentShaderCode = opengl_util::convertShader(fragmentShaderData);
 		const char* vertexShaderCodeChars = vertexShaderCode.c_str();
 		const char* fragmentShaderCodeChars = fragmentShaderCode.c_str();
 
@@ -88,6 +91,9 @@ namespace voxel_game::client::render::opengl {
 		glDeleteShader(fragmentShader);
 
 		glGenVertexArrays(1, &mVertexArray);
+
+		const std::vector<uint32_t> shaderData[] = {vertexShaderData, fragmentShaderData};
+		mPushConstants = opengl_util::getPushConstants(2, shaderData, mShaderProgram);
 
 		mPrimitiveTopology = toOpenGLPrimitiveTopology(builder->getPrimitiveTopology());
 		mPolygonMode = toOpenGLPolygonMode(builder->getPolygonMode());
@@ -114,6 +120,10 @@ namespace voxel_game::client::render::opengl {
 
 	void OpenGLRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
 		dynamic_cast<OpenGLDescriptorSet*>(descriptorSet)->bind(set);
+	}
+
+	void OpenGLRenderPipeline::setPushConstants(void* pushConstants) {
+		opengl_util::setPushConstantData(mPushConstants, pushConstants);
 	}
 
 	OpenGLRenderPipeline::~OpenGLRenderPipeline() {

@@ -144,7 +144,7 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 			const spirv_cross::Compiler compiler(shaderData[i]);
 			const spirv_cross::SmallVector<spirv_cross::EntryPoint> entryPoints = compiler.get_entry_points_and_stages();
 			VkShaderStageFlags shaderStage = 0;
-			for (const auto&[name, executionModel]: entryPoints) {
+			for (const auto& [name, executionModel]: entryPoints) {
 				switch (executionModel) {
 					case spv::ExecutionModelVertex:
 						shaderStage |= VK_SHADER_STAGE_VERTEX_BIT;
@@ -179,5 +179,43 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 			vkCheck(vkCreateDescriptorSetLayout(vulkanEngine->getDevice(), &descriptorSetLayoutCreateInfo, nullptr, &descriptorSetLayouts[i]));
 		}
 		return descriptorSetLayouts;
+	}
+
+	std::vector<VkPushConstantRange> getPushConstantRanges(const size_t shaderCount, const std::vector<uint32_t>* shaderData) {
+		std::vector<VkPushConstantRange> pushConstantRanges;
+		VkShaderStageFlags shaderStages = 0;
+		size_t maxSize = 0;
+		for (size_t i = 0; i < shaderCount; i++) {
+			const spirv_cross::Compiler compiler(shaderData[i]);
+			const spirv_cross::SmallVector<spirv_cross::EntryPoint> entryPoints = compiler.get_entry_points_and_stages();
+			for (const auto& [name, executionModel]: entryPoints) {
+				switch (executionModel) {
+					case spv::ExecutionModelVertex:
+						shaderStages |= VK_SHADER_STAGE_VERTEX_BIT;
+						break;
+					case spv::ExecutionModelFragment:
+						shaderStages |= VK_SHADER_STAGE_FRAGMENT_BIT;
+						break;
+					case spv::ExecutionModelGLCompute:
+						shaderStages |= VK_SHADER_STAGE_COMPUTE_BIT;
+						break;
+					default:
+						throw std::runtime_error("Unsupported execution model: " + std::to_string(executionModel));
+				}
+			}
+			spirv_cross::ShaderResources resources = compiler.get_shader_resources();
+			for (const spirv_cross::Resource& pushConstant: resources.push_constant_buffers) {
+				const spirv_cross::SPIRType& type = compiler.get_type(pushConstant.type_id);
+				size_t size = compiler.get_declared_struct_size(type);
+				maxSize = std::max(maxSize, size);
+			}
+		}
+		if (maxSize != 0) {
+			pushConstantRanges.push_back(VkPushConstantRange{
+				.stageFlags = shaderStages,
+				.size = static_cast<uint32_t>(maxSize)
+			});
+		}
+		return pushConstantRanges;
 	}
 }

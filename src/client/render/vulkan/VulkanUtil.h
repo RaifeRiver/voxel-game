@@ -5,7 +5,6 @@
 #include <string>
 #include <vector>
 
-#include "volk.h"
 #include "VulkanEngine.h"
 #include "common/util/Log.h"
 
@@ -66,4 +65,6 @@ namespace voxel_game::client::render::vulkan::vulkan_util {
 	}
 
 	std::vector<VkDescriptorSetLayout> createDescriptorSetLayouts(const VulkanEngine* vulkanEngine, size_t shaderCount, const std::vector<uint32_t>* shaderData);
+
+	std::vector<VkPushConstantRange> getPushConstantRanges(size_t shaderCount, const std::vector<uint32_t>* shaderData);
 }

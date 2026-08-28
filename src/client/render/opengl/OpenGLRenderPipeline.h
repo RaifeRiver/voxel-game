@@ -1,5 +1,6 @@
 #pragma once
 
+#include "OpenGLUtil.h"
 #include "client/render/RenderPipeline.h"
 
 namespace voxel_game::client::render::opengl {
@@ -19,6 +20,8 @@ namespace voxel_game::client::render::opengl {
 
 		void bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) override;
 
+		void setPushConstants(void* pushConstants) override;
+
 		~OpenGLRenderPipeline() override;
 
 	protected:
@@ -27,6 +30,7 @@ namespace voxel_game::client::render::opengl {
 	private:
 		unsigned int mShaderProgram;
 		unsigned int mVertexArray = 0;
+		std::vector<opengl_util::PushConstant> mPushConstants;
 
 		unsigned int mPrimitiveTopology = 0;
 		unsigned int mPolygonMode = 0;

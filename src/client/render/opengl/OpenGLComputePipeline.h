@@ -2,6 +2,7 @@
 
 #include <string>
 
+#include "OpenGLUtil.h"
 #include "client/render/ComputePipeline.h"
 
 namespace voxel_game::client::render::opengl {
@@ -13,6 +14,8 @@ namespace voxel_game::client::render::opengl {
 
 		void bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) override;
 
+		void setPushConstants(void* pushConstants) override;
+
 		~OpenGLComputePipeline() override;
 
 	protected:
@@ -20,5 +23,6 @@ namespace voxel_game::client::render::opengl {
 
 	private:
 		unsigned int mShaderProgram;
+		std::vector<opengl_util::PushConstant> mPushConstants;
 	};
 }

@@ -4,9 +4,9 @@ layout (local_size_x = 16, local_size_y = 16) in;
 
 layout (rgba16f, set = 0, binding = 0) uniform image2D image;
 
-layout (set = 0, binding = 1) uniform TimeBuffer {
+layout (push_constant) uniform PushConstants {
     float time;
-} time;
+} pushConstants;
 
 void main() {
     ivec2 texelCoord = ivec2(gl_GlobalInvocationID.xy);
@@ -16,7 +16,7 @@ void main() {
         if (gl_LocalInvocationID.x != 0 && gl_LocalInvocationID.y != 0) {
             colour.x = float(texelCoord.x) / size.x;
             colour.y = float(texelCoord.y) / size.y;
-            colour.xy *= sin(time.time * 0.5f);
+            colour.xy *= abs(sin(pushConstants.time * 0.5f));
         }
         imageStore(image, texelCoord, colour);
     }

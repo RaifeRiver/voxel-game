@@ -15,6 +15,8 @@ namespace voxel_game::client::render::vulkan {
 
 		void bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) override;
 
+		void setPushConstants(void* pushConstants) override;
+
 		~VulkanComputePipeline() override;
 
 	protected:
@@ -25,5 +27,6 @@ namespace voxel_game::client::render::vulkan {
 		std::vector<VkDescriptorSetLayout> mDescriptorSetLayouts;
 		VkPipeline mPipeline = nullptr;
 		VkPipelineLayout mPipelineLayout = nullptr;
+		uint32_t mPushConstantsSize = 0;
 	};
 }

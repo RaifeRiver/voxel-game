@@ -1,12 +1,18 @@
 #include "OpenGLComputePipeline.h"
 
+#include <stdexcept>
+
+#include "glad/glad.h"
+
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
-#include "glad/glad.h"
+#include "common/util/FileHelper.h"
 
 namespace voxel_game::client::render::opengl {
 	OpenGLComputePipeline::OpenGLComputePipeline(const std::string& computeShaderPath) {
-		const std::string computeShaderCode = opengl_util::loadShaderCode(computeShaderPath);
+		const std::vector<uint32_t> computeShaderData = util::readFile<uint32_t>(computeShaderPath);
+
+		const std::string computeShaderCode = opengl_util::convertShader(computeShaderData);
 		const char* computeShaderCodeChars = computeShaderCode.c_str();
 
 		const unsigned int computeShader = glCreateShader(GL_COMPUTE_SHADER);
@@ -18,6 +24,8 @@ namespace voxel_game::client::render::opengl {
 		glLinkProgram(mShaderProgram);
 
 		glDeleteShader(computeShader);
+
+		mPushConstants = opengl_util::getPushConstants(1, &computeShaderData, mShaderProgram);
 	}
 
 	void OpenGLComputePipeline::bind() {
@@ -26,6 +34,10 @@ namespace voxel_game::client::render::opengl {
 
 	void OpenGLComputePipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
 		dynamic_cast<OpenGLDescriptorSet*>(descriptorSet)->bind(set);
+	}
+
+	void OpenGLComputePipeline::setPushConstants(void* pushConstants) {
+		opengl_util::setPushConstantData(mPushConstants, pushConstants);
 	}
 
 	OpenGLComputePipeline::~OpenGLComputePipeline() {

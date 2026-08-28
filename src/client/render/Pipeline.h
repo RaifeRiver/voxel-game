@@ -16,6 +16,8 @@ namespace voxel_game::client::render {
 
     	virtual void bindDescriptorSet(uint32_t set, DescriptorSet* descriptorSet) = 0;
 
+    	virtual void setPushConstants(void* pushConstants) = 0;
+
         [[nodiscard]] PipelineType getType() const {
 	        return mType;
         }

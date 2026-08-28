@@ -1,15 +1,16 @@
 #include "VoxelGameClient.h"
 
+#include "common/player/Player.h"
 #include "common/util/Log.h"
 #include "render/RenderEngine.h"
 #include "render/opengl/OpenGLEngine.h"
 #include "render/vulkan/VulkanEngine.h"
-#include "system/BackgroundRenderSystem.h"
+#include "system/SkyRenderSystem.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	static uint32_t backgroundRenderSystemID;
+	static uint32_t skyRenderSystemID;
 
 	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
 		switch (args.getRenderLibrary()) {
@@ -26,7 +27,7 @@ namespace voxel_game::client {
 				throw std::runtime_error("Unsupported render library");
 		}
 
-		backgroundRenderSystemID = registry.getSystemManager().createSystem<system::BackgroundRenderSystem>(registry);
+		skyRenderSystemID = registry.getSystemManager().createSystem<system::SkyRenderSystem>(registry);
 	}
 
 	void run(ecs::ECSRegistry &registry) {
@@ -48,7 +49,7 @@ namespace voxel_game::client {
 	void destroy(ecs::ECSRegistry &registry) {
 		registry.getResource<render::RenderEngine>().waitForGPU();
 
-		registry.getSystemManager().removeSystem(backgroundRenderSystemID);
+		registry.getSystemManager().removeSystem(skyRenderSystemID);
 
 		registry.removeResource<render::RenderEngine>();
 		registry.removeResource<window::Window>();

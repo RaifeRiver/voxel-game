@@ -131,7 +131,7 @@ namespace voxel_game::client::render {
 		CullMode mCullMode = CullMode::NONE;
 		FrontFace mFrontFace = FrontFace::COUNTER_CLOCKWISE;
 		ImageFormat mColourFormat = ImageFormat::RGBA16_SFLOAT;
-		ImageFormat mDepthFormat = ImageFormat::UNKNOWN;
+		ImageFormat mDepthFormat = ImageFormat::D32_SFLOAT;
 		BlendMode mBlendMode = BlendMode::NONE;
 	};
 }

@@ -57,6 +57,7 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::beginRendering() {
+		mRenderImage->transition(ImageUsage::COLOUR_ATTACHMENT);
 		mDepthImage->transition(ImageUsage::DEPTH_ATTACHMENT);
 
 		VkRenderingAttachmentInfo renderingAttachmentInfo = {

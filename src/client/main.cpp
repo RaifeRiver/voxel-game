@@ -10,6 +10,7 @@ int main(const int argc, char** argv) {
 
 	voxel_game::ecs::ECSRegistry registry;
 
+	voxel_game::preLoad(registry);
 	voxel_game::client::load(registry, args);
 	voxel_game::load(registry);
 

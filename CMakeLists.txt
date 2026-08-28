@@ -26,6 +26,7 @@ target_include_directories(VoxelGameClient PUBLIC src)
 
 target_compile_definitions(VoxelGameClient PUBLIC $<$<CONFIG:Debug>:VG_DEBUG>)
 target_compile_definitions(VoxelGameClient PUBLIC LOG_PROJECT_NAME=VoxelGame)
+target_compile_definitions(VoxelGameClient PUBLIC VG_SIDE=CLIENT)
 
 target_compile_definitions(VoxelGameClient PUBLIC GLM_ENABLE_EXPERIMENTAL)
 target_compile_definitions(VoxelGameClient PUBLIC VK_NO_PROTOTYPES)

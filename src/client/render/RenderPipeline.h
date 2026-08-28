@@ -34,6 +34,12 @@ namespace voxel_game::client::render {
 		CLOCKWISE
 	};
 
+	enum class BlendMode {
+		NONE,
+		ADDITIVE,
+		ALPHA
+	};
+
 	class RenderPipeline : public Pipeline {
 	public:
 		RenderPipeline();
@@ -106,6 +112,12 @@ namespace voxel_game::client::render {
 
 		RenderPipelineBuilder* depthFormat(ImageFormat depthFormat);
 
+		[[nodiscard]] BlendMode getBlendMode() const {
+			return mBlendMode;
+		}
+
+		RenderPipelineBuilder* blendMode(BlendMode blendMode);
+
 		virtual std::unique_ptr<RenderPipeline> build() = 0;
 
 		virtual ~RenderPipelineBuilder() = default;
@@ -120,5 +132,6 @@ namespace voxel_game::client::render {
 		FrontFace mFrontFace = FrontFace::COUNTER_CLOCKWISE;
 		ImageFormat mColourFormat = ImageFormat::RGBA16_SFLOAT;
 		ImageFormat mDepthFormat = ImageFormat::UNKNOWN;
+		BlendMode mBlendMode = BlendMode::NONE;
 	};
 }

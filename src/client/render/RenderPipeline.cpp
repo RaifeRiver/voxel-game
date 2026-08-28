@@ -47,4 +47,9 @@ namespace voxel_game::client::render {
 		mDepthFormat = depthFormat;
 		return this;
 	}
+
+	RenderPipelineBuilder * RenderPipelineBuilder::blendMode(const BlendMode blendMode) {
+		mBlendMode = blendMode;
+		return this;
+	}
 }

@@ -101,6 +101,7 @@ namespace voxel_game::client::render::opengl {
 		mLineWidth = builder->getLineWidth();
 		mCullFace = toOpenGLCullFace(builder->getCullMode());
 		mFrontFace = toOpenGLFrontFace(builder->getFrontFace());
+		mBlendMode = builder->getBlendMode();
 	}
 
 	void OpenGLRenderPipeline::bind() {
@@ -116,6 +117,22 @@ namespace voxel_game::client::render::opengl {
 			glEnable(GL_CULL_FACE);
 			glCullFace(mCullFace);
 			glFrontFace(mFrontFace);
+		}
+
+		if (mBlendMode == BlendMode::NONE) {
+			glDisable(GL_BLEND);
+		}
+		else {
+			glEnable(GL_BLEND);
+			if (mBlendMode == BlendMode::ADDITIVE) {
+				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE, GL_ONE, GL_ONE);
+			}
+			else if (mBlendMode == BlendMode::ALPHA) {
+				glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
+			}
+			else {
+				throw std::runtime_error("Unsupported blend mode");
+			}
 		}
 	}
 

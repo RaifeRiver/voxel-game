@@ -8,7 +8,7 @@ namespace voxel_game::client::system {
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
 		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
 
-		mPipeline = renderEngine.createRenderPipelineBuilder(resourceManager.findResource("voxel_game:shaders/test", ".vert.spv", resource::ResourceType::ASSET).path, resourceManager.findResource("voxel_game:shaders/test", ".frag.spv", resource::ResourceType::ASSET).path)->build();
+		mPipeline = renderEngine.createRenderPipelineBuilder(resourceManager.findResource("voxel_game:shaders/test", ".vert.spv", resource::ResourceType::ASSET).path, resourceManager.findResource("voxel_game:shaders/test", ".frag.spv", resource::ResourceType::ASSET).path)->blendMode(render::BlendMode::ALPHA)->build();
 
 		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->addBinding(0, render::DescriptorType::STORAGE_BUFFER)->build(render::FRAME_OVERLAP, render::ShaderStage::VERTEX);
 
@@ -23,9 +23,9 @@ namespace voxel_game::client::system {
 		vertexData[2] = {0.5f, 0.5f, 0.0f, 1.0f};
 		vertexData[3] = {0.0f, 1.0f, 0.0f, 1.0f};
 		vertexData[4] = {-0.5f, -0.5f, 0.0f, 1.0f};
-		vertexData[5] = {0.0f, 0.0f, 1.0f, 1.0f};
+		vertexData[5] = {0.0f, 0.0f, 1.0f, 0.5f};
 		vertexData[6] = {-0.5f, 0.5f, 0.0f, 1.0f};
-		vertexData[7] = {0.0f, 0.0f, 0.0f, 1.0f};
+		vertexData[7] = {0.0f, 0.0f, 0.0f, 0.5f};
 		mVertexBuffer->unmap();
 
 		mIndexBuffer = renderEngine.allocateBuffer(6 * sizeof(uint32_t), render::BufferUsage::INDEX, render::MemoryType::AUTO, render::MappedType::SEQUENTIAL_WRITE);

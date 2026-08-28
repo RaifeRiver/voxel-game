@@ -41,6 +41,7 @@ namespace voxel_game::client::render::opengl {
 		float mLineWidth = 1.0f;
 		unsigned int mCullFace = 0;
 		unsigned int mFrontFace = 0;
+		BlendMode mBlendMode = BlendMode::NONE;
 	};
 
 	class OpenGLRenderPipelineBuilder : public RenderPipelineBuilder {

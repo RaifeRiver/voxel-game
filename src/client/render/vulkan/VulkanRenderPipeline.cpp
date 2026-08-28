@@ -145,16 +145,32 @@ namespace voxel_game::client::render::vulkan {
 			.maxDepthBounds = 1.0f
 		};
 
-		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState = {
+		VkPipelineColorBlendAttachmentState pipelineColourBlendAttachmentState = {
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT
 		};
+		BlendMode blendMode = builder->getBlendMode();
+		if (blendMode == BlendMode::ADDITIVE) {
+			pipelineColourBlendAttachmentState.blendEnable = true;
+			pipelineColourBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+			pipelineColourBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+			pipelineColourBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		}
+		else if (blendMode == BlendMode::ALPHA) {
+			pipelineColourBlendAttachmentState.blendEnable = true;
+			pipelineColourBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+			pipelineColourBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+			pipelineColourBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		}
+		else if (blendMode != BlendMode::NONE) {
+			throw std::runtime_error("Unsupported blend mode");
+		}
 
 		VkPipelineColorBlendStateCreateInfo pipelineColourBlendStateCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
 			.logicOpEnable = false,
 			.logicOp = VK_LOGIC_OP_COPY,
 			.attachmentCount = 1,
-			.pAttachments = &pipelineColorBlendAttachmentState
+			.pAttachments = &pipelineColourBlendAttachmentState
 		};
 
 		VkDynamicState dynamicStates[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};

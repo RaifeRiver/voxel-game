@@ -1,13 +1,13 @@
 #include "Player.h"
 
 #include "common/component/Transform.h"
-#include "common/component/UniverseLoadInfo.h"
+#include "common/universe/UniverseLoaderInfo.h"
 
 namespace voxel_game::player {
 	void attachPlayerComponents(ecs::ECSRegistry& registry, const ecs::Entity entity, const bool local) {
 		registry.attachComponent<Player>(entity);
 		registry.attachComponent<universe::Transform>(entity);
-		registry.attachComponent<universe::UniverseLoadInfo>(entity);
+		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 1000000;
 
 		if (local) {
 			registry.attachComponent<LocalPlayer>(entity);

@@ -17,7 +17,7 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Component<T>> T& attachComponent(Entity entity) {
 			const uint32_t id = T::getID();
-			if (mComponentStorages.size() < id) {
+			if (mComponentStorages.size() <= id) {
 				mComponentStorages.resize(id + 1);
 			}
 			if (!mComponentStorages[id]) {
@@ -28,7 +28,7 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] T& getComponent(Entity entity) {
 			const uint32_t id = T::getID();
-			if (mComponentStorages.size() < id || !mComponentStorages[id]) {
+			if (mComponentStorages.size() <= id || !mComponentStorages[id]) {
 				throw std::runtime_error("Entity does not have the requested component");
 			}
 			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->get(entity);
@@ -36,7 +36,7 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] bool hasComponent(Entity entity) {
 			const uint32_t id = T::getID();
-			if (mComponentStorages.size() < id || !mComponentStorages[id]) {
+			if (mComponentStorages.size() <= id || !mComponentStorages[id]) {
 				return false;
 			}
 			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->has(entity);
@@ -44,7 +44,7 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Component<T>> void removeComponent(Entity entity) {
 			const uint32_t id = T::getID();
-			if (mComponentStorages.size() >= id && mComponentStorages[id]) {
+			if (mComponentStorages.size() > id && mComponentStorages[id]) {
 				reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->remove(entity);
 			}
 		}

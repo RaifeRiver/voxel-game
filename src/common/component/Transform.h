@@ -2,8 +2,8 @@
 
 #include "glm/ext.hpp"
 
-#include "UniversePos.h"
 #include "common/ecs/Component.h"
+#include "common/universe/UniversePos.h"
 
 namespace voxel_game::universe {
 	struct Transform : ecs::Component<Transform> {

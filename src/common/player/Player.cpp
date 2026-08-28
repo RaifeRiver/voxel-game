@@ -1,7 +1,7 @@
 #include "Player.h"
 
-#include "common/universe/Transform.h"
-#include "common/universe/UniverseLoader.h"
+#include "common/component/Transform.h"
+#include "common/component/UniverseLoader.h"
 
 namespace voxel_game::player {
 	void attachPlayerComponents(ecs::ECSRegistry& registry, const ecs::Entity entity, const bool local) {

@@ -5,9 +5,9 @@
 namespace voxel_game::client::render {
 	enum class ShaderStage : uint32_t {
 		NONE = 0,
-		VERTEX = 1 < 0,
-		FRAGMENT = 1 < 1,
-		COMPUTE = 1 < 2
+		VERTEX = 1 << 0,
+		FRAGMENT = 1 << 1,
+		COMPUTE = 1 << 2
 	};
 
 	inline ShaderStage operator|(ShaderStage a, ShaderStage b) {

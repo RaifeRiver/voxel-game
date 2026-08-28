@@ -43,7 +43,7 @@ namespace voxel_game::resource {
 	public:
 		ResourceManager();
 
-		[[nodiscard]] FindResourceResult findResource(std::string name, const std::string& extension) const;
+		[[nodiscard]] FindResourceResult findResource(std::string name, const std::string& extension, ResourceType type) const;
 
 		template <typename T> requires std::derived_from<T, Resource<T>> void addResourceLoader(ResourceLoader<T>* loader) {
 #if VG_SIDE != CLIENT
@@ -77,7 +77,7 @@ namespace voxel_game::resource {
 			IResourceLoader* resourceLoader = nullptr;
 			for (const std::unique_ptr<IResourceLoader>& loader : mResourceLoaders[id]) {
 				for (const std::string& extension : loader->getExtensions()) {
-					const FindResourceResult result = findResource(name, extension);
+					const FindResourceResult result = findResource(name, extension, T::getType());
 					if (result.found) {
 						findResourceResult = result;
 						resourceLoader = loader.get();

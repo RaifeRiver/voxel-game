@@ -1,12 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 
 namespace voxel_game::resource {
     enum class ResourceType {
         ASSET,
         DATA
     };
+
+	std::string to_string(ResourceType type);
 
 	class IResource {
 	public:

@@ -21,18 +21,19 @@ namespace voxel_game::resource {
 				mResourcePaths.emplace_back(resourcePath);
 			}
 			else {
-				mResourcePaths.emplace_back(std::string(resourcePath) + "/");
+				mResourcePaths.push_back(std::string(resourcePath) + "/");
 			}
 		}
 	}
 
-	FindResourceResult ResourceManager::findResource(std::string name, const std::string& extension) const {
+	FindResourceResult ResourceManager::findResource(std::string name, const std::string& extension, const ResourceType type) const {
 		if (!std::regex_match(name, VALID_RESOURCE_NAMES)) {
 			throw std::runtime_error("Invalid resource name: " + name);
 		}
 		name[name.find(':')] = '/';
-		for (uint32_t i = 0; i < mResourcePaths.size(); i++) {
-			std::string file = mResourcePaths[i] + name + extension;
+		const std::string path = to_string(type) + '/' + name + extension;
+		for (const std::string& resourcePath : mResourcePaths) {
+			std::string file = resourcePath + path;
 			if (std::filesystem::is_regular_file(file)) {
 				return {
 					.found = true,

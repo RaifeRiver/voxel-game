@@ -3,12 +3,14 @@
 #include "client/render/RenderEngine.h"
 #include "client/render/Shader.h"
 #include "client/window/Window.h"
+#include "common/resource/ResourceManager.h"
 
 namespace voxel_game::client::system {
 	BackgroundRenderSystem::BackgroundRenderSystem(ecs::ECSRegistry& registry) {
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
+		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
 
-		mPipeline = renderEngine.createComputePipeline("res/assets/voxel_game/shaders/gradient.comp.spv");
+		mPipeline = renderEngine.createComputePipeline(resourceManager.findResource("voxel_game:shaders/gradient", ".comp.spv", resource::ResourceType::ASSET).path);
 
 		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->addBinding(0, render::DescriptorType::IMAGE)->build(render::FRAME_OVERLAP, render::ShaderStage::COMPUTE);
 

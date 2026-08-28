@@ -22,10 +22,14 @@ namespace voxel_game::client::render::opengl {
 
 		void setPushConstants(void* pushConstants) override;
 
+		void bindIndexBuffer(GPUBuffer* buffer) override;
+
 		~OpenGLRenderPipeline() override;
 
 	protected:
 		void draw_(uint32_t vertexCount, uint32_t firstVertex) override;
+
+		void drawIndexed_(uint32_t indexCount, uint32_t firstIndex) override;
 
 	private:
 		unsigned int mShaderProgram;

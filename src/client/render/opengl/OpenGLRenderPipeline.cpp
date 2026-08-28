@@ -1,5 +1,6 @@
 #include "OpenGLRenderPipeline.h"
 
+#include "OpenGLBuffer.h"
 #include "glad/glad.h"
 
 #include "OpenGLDescriptorSet.h"
@@ -126,6 +127,11 @@ namespace voxel_game::client::render::opengl {
 		opengl_util::setPushConstantData(mPushConstants, pushConstants);
 	}
 
+	void OpenGLRenderPipeline::bindIndexBuffer(GPUBuffer* buffer) {
+		const OpenGLBuffer* openGLBuffer = dynamic_cast<OpenGLBuffer*>(buffer);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, openGLBuffer->getBuffer());
+	}
+
 	OpenGLRenderPipeline::~OpenGLRenderPipeline() {
 		glDeleteVertexArrays(1, &mVertexArray);
 		glDeleteProgram(mShaderProgram);
@@ -133,6 +139,10 @@ namespace voxel_game::client::render::opengl {
 
 	void OpenGLRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
 		glDrawArrays(mPrimitiveTopology, static_cast<int>(firstVertex), static_cast<int>(vertexCount));
+	}
+
+	void OpenGLRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex) {
+		glDrawElements(mPrimitiveTopology, static_cast<int>(indexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(firstIndex * 4));
 	}
 
 	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}

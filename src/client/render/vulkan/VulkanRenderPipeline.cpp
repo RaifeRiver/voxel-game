@@ -1,5 +1,6 @@
 #include "VulkanRenderPipeline.h"
 
+#include "VulkanBuffer.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
@@ -226,6 +227,11 @@ namespace voxel_game::client::render::vulkan {
 		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, mPushConstantsSize, pushConstants);
 	}
 
+	void VulkanRenderPipeline::bindIndexBuffer(GPUBuffer* buffer) {
+		const VulkanBuffer* vulkanBuffer = dynamic_cast<VulkanBuffer*>(buffer);
+		vkCmdBindIndexBuffer(mVulkanEngine->getCommandBuffer(), vulkanBuffer->getBuffer(), 0, VK_INDEX_TYPE_UINT32);
+	}
+
 	VulkanRenderPipeline::~VulkanRenderPipeline() {
 		vkDestroyPipelineLayout(mVulkanEngine->getDevice(), mPipelineLayout, nullptr);
 		vkDestroyPipeline(mVulkanEngine->getDevice(), mPipeline, nullptr);
@@ -237,6 +243,10 @@ namespace voxel_game::client::render::vulkan {
 
 	void VulkanRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
 		vkCmdDraw(mVulkanEngine->getCommandBuffer(), vertexCount, 1, firstVertex, 0);
+	}
+
+	void VulkanRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex) {
+		vkCmdDrawIndexed(mVulkanEngine->getCommandBuffer(), indexCount, 1, firstIndex, 0, 0);
 	}
 
 	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}

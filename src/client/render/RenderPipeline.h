@@ -38,12 +38,20 @@ namespace voxel_game::client::render {
 	public:
 		RenderPipeline();
 
+		virtual void bindIndexBuffer(GPUBuffer* buffer) = 0;
+
 		void draw(const uint32_t vertexCount, const uint32_t firstVertex = 0) {
 			draw_(vertexCount, firstVertex);
 		}
 
+		void drawIndexed(const uint32_t indexCount, const uint32_t firstIndex = 0) {
+			drawIndexed_(indexCount, firstIndex);
+		}
+
 	protected:
 		virtual void draw_(uint32_t vertexCount, uint32_t firstVertex) = 0;
+
+		virtual void drawIndexed_(uint32_t indexCount, uint32_t firstIndex) = 0;
 	};
 
 	class RenderPipelineBuilder {

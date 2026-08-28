@@ -20,6 +20,8 @@ namespace voxel_game::client::render::vulkan {
 				return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
 			case BufferUsage::SHADER_DEVICE_ADDRESS:
 				return VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+			case BufferUsage::INDEX:
+				return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
 			default:
 				throw std::runtime_error("Unsupported buffer usage");
 		}

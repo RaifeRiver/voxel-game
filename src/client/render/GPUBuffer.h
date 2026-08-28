@@ -10,7 +10,8 @@ namespace voxel_game::client::render {
         TRANSFER_DST = 1 << 1,
         UNIFORM = 1 << 2,
         STORAGE = 1 << 3,
-        SHADER_DEVICE_ADDRESS = 1 << 4
+        SHADER_DEVICE_ADDRESS = 1 << 4,
+    	INDEX = 1 << 5
     };
 
     inline BufferUsage operator|(BufferUsage a, BufferUsage b) {

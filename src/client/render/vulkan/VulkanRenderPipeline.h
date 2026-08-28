@@ -25,10 +25,14 @@ namespace voxel_game::client::render::vulkan {
 
 		void setPushConstants(void* pushConstants) override;
 
+		void bindIndexBuffer(GPUBuffer* buffer) override;
+
 		~VulkanRenderPipeline() override;
 
 	protected:
 		void draw_(uint32_t vertexCount, uint32_t firstVertex) override;
+
+		void drawIndexed_(uint32_t indexCount, uint32_t firstIndex) override;
 
 	private:
 		VulkanEngine* mVulkanEngine;

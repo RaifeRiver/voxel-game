@@ -1,18 +1,18 @@
 #version 460
 
-layout (location = 0) out vec3 outColour;
+layout (location = 0) out vec4 outColour;
+
+struct Vertex {
+    vec4 pos;
+    vec4 colour;
+};
+
+layout (set = 0, binding = 0) readonly buffer VertexBuffer {
+    Vertex vertices[];
+} vertices;
 
 void main() {
-    const vec3 positions[3] = vec3[3](
-            vec3(1.0f, 1.0f, 0.0f),
-            vec3(-1.0f, 1.0f, 0.0f),
-            vec3(0.0f, -1.0f, 0.0f)
-    );
-    const vec3 colours[3] = vec3[3](
-            vec3(1.0f, 0.0f, 0.0f),
-            vec3(0.0f, 1.0f, 0.0f),
-            vec3(00.f, 0.0f, 1.0f)
-    );
-    gl_Position = vec4(positions[gl_VertexIndex], 1.0f);
-    outColour = colours[gl_VertexIndex];
+    Vertex vertex = vertices.vertices[gl_VertexIndex];
+    gl_Position = vertex.pos;
+    outColour = vertex.colour;
 }

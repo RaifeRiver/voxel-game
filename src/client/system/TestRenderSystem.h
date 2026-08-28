@@ -14,5 +14,9 @@ namespace voxel_game::client::system {
 
 	private:
 		std::unique_ptr<render::RenderPipeline> mPipeline = nullptr;
+		std::unique_ptr<render::DescriptorAllocator> mDescriptorAllocator = nullptr;
+		std::unique_ptr<render::DescriptorSet> mDescriptorSets[render::FRAME_OVERLAP];
+		std::unique_ptr<render::GPUBuffer> mVertexBuffer = nullptr;
+		std::unique_ptr<render::GPUBuffer> mIndexBuffer = nullptr;
 	};
 }

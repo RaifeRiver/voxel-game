@@ -3,8 +3,12 @@
 #include "client/render/DescriptorSet.h"
 
 namespace voxel_game::client::render::opengl {
+	class OpenGLDescriptorAllocator;
+
 	class OpenGLDescriptorSet : public DescriptorSet {
 	public:
+		explicit OpenGLDescriptorSet(OpenGLDescriptorAllocator* descriptorAllocator);
+
 		void setBinding(uint32_t binding, GPUImage* image) override;
 
 		void setBinding(uint32_t binding, GPUBuffer* buffer) override;
@@ -14,6 +18,7 @@ namespace voxel_game::client::render::opengl {
 		void bind(uint32_t set) const;
 
 	private:
+		OpenGLDescriptorAllocator* mDescriptorAllocator;
 		std::vector<GPUImage*> mImageBindings;
 		std::vector<GPUBuffer*> mBufferBindings;
 	};

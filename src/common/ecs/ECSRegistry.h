@@ -15,6 +15,14 @@ namespace voxel_game::ecs {
 
 		void destroyEntity(Entity entity);
 
+		template <typename T> requires std::derived_from<T, Component<T>> ComponentStorage<T>* getEntitiesWithComponent() {
+			const uint32_t id = T::getID();
+			if (mComponentStorages.size() <= id || !mComponentStorages[id]) {
+				return {};
+			}
+			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get());
+		}
+
 		template <typename T> requires std::derived_from<T, Component<T>> T& attachComponent(Entity entity) {
 			const uint32_t id = T::getID();
 			if (mComponentStorages.size() <= id) {

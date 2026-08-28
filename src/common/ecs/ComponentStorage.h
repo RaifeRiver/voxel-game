@@ -60,8 +60,8 @@ namespace voxel_game::ecs {
 				}
 			}
 
-			int operator*() const {
-				return mCurrent;
+			Entity operator*() const {
+				return Entity(mCurrent);
 			}
 
 			Iterator& operator++() {

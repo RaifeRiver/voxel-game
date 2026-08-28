@@ -16,5 +16,6 @@ namespace voxel_game::ecs {
 		explicit Entity(const uint32_t id) : mID(id) {}
 
 		friend class ECSRegistry;
+		template <typename T> requires std::derived_from<T, Component<T>> friend class ComponentStorage;
 	};
 }

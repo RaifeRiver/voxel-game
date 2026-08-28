@@ -11,15 +11,8 @@ vec4 vertexPositions[4] = vec4[4](
     vec4(-1.0f, 1.0f, 0.0f, 1.0f)
 );
 
-vec3 vertexColours[4] = vec3[4](
-    vec3(1.0f, 0.0f, 0.0f),
-    vec3(0.0f, 1.0f, 0.0f),
-    vec3(0.0f, 0.0f, 1.0f),
-    vec3(0.0f, 0.0f, 0.0f)
-);
-
 void main() {
     uint index = indices[gl_VertexIndex];
     gl_Position = vertexPositions[index];
-    outColour = vertexColours[index];
+    outColour = vec3(0.3f, 0.7f, 1.0f);
 }

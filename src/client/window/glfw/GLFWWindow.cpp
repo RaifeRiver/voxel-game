@@ -31,6 +31,7 @@ namespace voxel_game::client::window::glfw {
 		glfwWindowHint(GLFW_GREEN_BITS, videoMode->greenBits);
 		glfwWindowHint(GLFW_BLUE_BITS, videoMode->blueBits);
 		glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
+		glfwWindowHintString(GLFW_WAYLAND_APP_ID, "Voxel Game");
 
 		if (fullscreen) {
 			mWindow = glfwCreateWindow(videoMode->width, videoMode->height, name.c_str(), monitor, nullptr);

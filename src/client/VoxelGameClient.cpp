@@ -5,13 +5,11 @@
 #include "render/opengl/OpenGLEngine.h"
 #include "render/vulkan/VulkanEngine.h"
 #include "system/BackgroundRenderSystem.h"
-#include "system/TestRenderSystem.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
 	static uint32_t backgroundRenderSystemID;
-	static uint32_t testRenderSystemID;
 
 	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
 		switch (args.getRenderLibrary()) {
@@ -29,7 +27,6 @@ namespace voxel_game::client {
 		}
 
 		backgroundRenderSystemID = registry.getSystemManager().createSystem<system::BackgroundRenderSystem>(registry);
-		testRenderSystemID = registry.getSystemManager().createSystem<system::TestRenderSystem>(registry);
 	}
 
 	void run(ecs::ECSRegistry &registry) {
@@ -51,7 +48,6 @@ namespace voxel_game::client {
 	void destroy(ecs::ECSRegistry &registry) {
 		registry.getResource<render::RenderEngine>().waitForGPU();
 
-		registry.getSystemManager().removeSystem(testRenderSystemID);
 		registry.getSystemManager().removeSystem(backgroundRenderSystemID);
 
 		registry.removeResource<render::RenderEngine>();

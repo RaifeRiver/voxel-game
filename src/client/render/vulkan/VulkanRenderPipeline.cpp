@@ -144,6 +144,11 @@ namespace voxel_game::client::render::vulkan {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
 			.maxDepthBounds = 1.0f
 		};
+		if (builder->getDepthFormat() != ImageFormat::UNKNOWN) {
+			pipelineDepthStencilStateCreateInfo.depthTestEnable = true;
+			pipelineDepthStencilStateCreateInfo.depthWriteEnable = true;
+			pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_GREATER_OR_EQUAL;
+		}
 
 		VkPipelineColorBlendAttachmentState pipelineColourBlendAttachmentState = {
 			.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT

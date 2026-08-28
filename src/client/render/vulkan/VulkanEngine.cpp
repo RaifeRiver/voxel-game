@@ -57,12 +57,17 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	void VulkanEngine::beginRendering() {
+		mDepthImage->transition(ImageUsage::DEPTH_ATTACHMENT);
+
 		VkRenderingAttachmentInfo renderingAttachmentInfo = {
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 			.imageView = mRenderImage->getImageView(),
-			.imageLayout = mRenderImage->getCurrentLayout(),
-			.loadOp = VK_ATTACHMENT_LOAD_OP_LOAD,
-			.storeOp = VK_ATTACHMENT_STORE_OP_STORE
+			.imageLayout = mRenderImage->getCurrentLayout()
+		};
+		VkRenderingAttachmentInfo depthAttachmentInfo = {
+			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
+			.imageView = mDepthImage->getImageView(),
+			.imageLayout = mDepthImage->getCurrentLayout()
 		};
 		const glm::uvec3 renderImageSize = mRenderImage->getSize();
 		const VkRenderingInfo renderingInfo = {
@@ -75,7 +80,8 @@ namespace voxel_game::client::render::vulkan {
 			},
 			.layerCount = 1,
 			.colorAttachmentCount = 1,
-			.pColorAttachments = &renderingAttachmentInfo
+			.pColorAttachments = &renderingAttachmentInfo,
+			.pDepthAttachment = &depthAttachmentInfo
 		};
 		vkCmdBeginRendering(getFrameData().commandBuffer, &renderingInfo);
 	}
@@ -287,6 +293,7 @@ namespace voxel_game::client::render::vulkan {
 		vulkan_util::vkCheck(vkGetSwapchainImagesKHR(mDevice, mSwapchain, &imageCount, mSwapchainImages.data()));
 
 		mRenderImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::TRANSFER_SRC | ImageUsage::TRANSFER_DST | ImageUsage::STORAGE | ImageUsage::COLOUR_ATTACHMENT, ImageType::IMAGE_2D);
+		mDepthImage = std::make_unique<VulkanImage>(this, glm::uvec3{windowSize, 1}, ImageFormat::D32_SFLOAT, ImageUsage::DEPTH_ATTACHMENT, ImageType::IMAGE_2D);
 
 		window.setResizeCallback([this](glm::uvec2) {
 			mNeedsResize = true;
@@ -441,6 +448,8 @@ namespace voxel_game::client::render::vulkan {
 
 	void VulkanEngine::destroySwapchain() {
 		mRenderImage = nullptr;
+		mDepthImage = nullptr;
+
 		vkDestroySwapchainKHR(mDevice, mSwapchain, nullptr);
 	}
 

@@ -37,16 +37,17 @@ namespace voxel_game::client::render::opengl {
 		glTexParameteri(glType, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(glType, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(glType, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		const GLint glFormat = toOpenGLImageFormat(format);
+		const int glInternalFormat = toOpenGLImageFormat(format);
+		const int glFormat = isDepthFormat(format)? GL_DEPTH_COMPONENT: GL_RGBA;
 		switch (type) {
 			case ImageType::IMAGE_1D:
-				glTexImage1D(glType, 0, glFormat, static_cast<GLint>(size.x), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage1D(glType, 0, glInternalFormat, static_cast<GLint>(size.x), 0, glFormat, GL_UNSIGNED_BYTE, nullptr);
 				break;
 			case ImageType::IMAGE_2D:
-				glTexImage2D(glType, 0, glFormat, static_cast<GLint>(size.x), static_cast<GLint>(size.y), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage2D(glType, 0, glInternalFormat, static_cast<GLint>(size.x), static_cast<GLint>(size.y), 0, glFormat, GL_UNSIGNED_BYTE, nullptr);
 				break;
 			case ImageType::IMAGE_3D:
-				glTexImage3D(glType, 0, glFormat, static_cast<GLint>(size.x), static_cast<GLint>(size.y), static_cast<GLint>(size.z), 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+				glTexImage3D(glType, 0, glInternalFormat, static_cast<GLint>(size.x), static_cast<GLint>(size.y), static_cast<GLint>(size.z), 0, glFormat, GL_UNSIGNED_BYTE, nullptr);
 				break;
 		}
 	}

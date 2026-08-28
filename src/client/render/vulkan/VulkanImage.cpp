@@ -139,7 +139,7 @@ namespace voxel_game::client::render::vulkan {
 
 	void VulkanImage::transition(const ImageUsage usage) {
 		if (usage != mCurrentUsage) {
-			if ((usage & mUsage) == static_cast<uint32_t>(mUsage)) {
+			if ((usage & mUsage) != static_cast<uint32_t>(usage)) {
 				throw std::runtime_error("Image must be created with usage");
 			}
 			const VkImageLayout layout = toVKImageLayout(usage);

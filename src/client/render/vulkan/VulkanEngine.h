@@ -41,6 +41,10 @@ namespace voxel_game::client::render::vulkan {
 			return *mRenderImage;
 		}
 
+		[[nodiscard]] GPUImage& getDepthImage() override {
+			return *mDepthImage;
+		}
+
 		void beginRendering() override;
 
 		void endRendering() override;
@@ -81,6 +85,7 @@ namespace voxel_game::client::render::vulkan {
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
 		std::unique_ptr<VulkanImage> mRenderImage;
+		std::unique_ptr<VulkanImage> mDepthImage;
 		uint32_t mCurrentSwapchainIndex = 0;
 		bool mRendering = false;
 		bool mNeedsResize = false;

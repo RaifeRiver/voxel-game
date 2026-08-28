@@ -97,18 +97,24 @@ namespace voxel_game::client::render::opengl {
 		glViewport(0, 0, static_cast<int>(windowSize.x), static_cast<int>(windowSize.y));
 		window.setResizeCallback([this](const glm::uvec2 size) {
 			glViewport(0, 0, static_cast<int>(size.x), static_cast<int>(size.y));
+
 			mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{size, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::NONE, ImageType::IMAGE_2D);
+			mDepthImage = std::make_unique<OpenGLImage>(glm::uvec3{size, 1}, ImageFormat::D32_SFLOAT, ImageUsage::DEPTH_ATTACHMENT, ImageType::IMAGE_2D);
+
 			glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderImage->getImage(), 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mDepthImage->getImage(), 0);
 		});
 
 		LOG_DEBUG("Creating framebuffer image");
 
-		mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::NONE, ImageType::IMAGE_2D);
+		mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::STORAGE | ImageUsage::COLOUR_ATTACHMENT, ImageType::IMAGE_2D);
+		mDepthImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::D32_SFLOAT, ImageUsage::DEPTH_ATTACHMENT, ImageType::IMAGE_2D);
 
 		glGenFramebuffers(1, &mFramebufferObject);
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mRenderImage->getImage(), 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, mDepthImage->getImage(), 0);
 
 		glEnable(GL_FRAMEBUFFER_SRGB);
 	}
@@ -123,6 +129,9 @@ namespace voxel_game::client::render::opengl {
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
+
+		glClear(GL_DEPTH_BUFFER_BIT);
+		glClearDepth(0.0f);
 	}
 
 	void OpenGLEngine::postRender(window::Window& window) {

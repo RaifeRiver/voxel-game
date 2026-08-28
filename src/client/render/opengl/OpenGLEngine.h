@@ -18,8 +18,12 @@ namespace voxel_game::client::render::opengl {
 
 		std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() override;
 
-		GPUImage& getRenderImage() override {
+		[[nodiscard]] GPUImage& getRenderImage() override {
 			return *mRenderImage;
+		}
+
+		[[nodiscard]] GPUImage& getDepthImage() override {
+			return *mDepthImage;
 		}
 
 		void beginRendering() override;
@@ -35,6 +39,7 @@ namespace voxel_game::client::render::opengl {
 
 	private:
 		std::unique_ptr<OpenGLImage> mRenderImage = nullptr;
+		std::unique_ptr<OpenGLImage> mDepthImage = nullptr;
 		GLuint mFramebufferObject = 0;
 		GLsync mRenderFences[FRAME_OVERLAP] = {};
 

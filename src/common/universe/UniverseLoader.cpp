@@ -47,7 +47,10 @@ namespace voxel_game::universe {
 							continue;
 						}
 						glm::i64vec3 sector = transform.pos.sector + glm::i64vec3{x, y, z};
-						if (!mLoadedSectors.contains(sector)) {
+						glm::i64vec3 mapIndex = sector;
+						mapIndex.z >>= 6;
+						auto it = mLoadedSectors.find(mapIndex);
+						if (it == mLoadedSectors.end() || !(it->second & (1 << (z & 63)))) {
 							loadSector(sector);
 						}
 					}
@@ -58,7 +61,6 @@ namespace voxel_game::universe {
 			universeLoaderInfo.hasLastPos = true;
 		}
 
-		uint64_t loadedSectors = 0;
 		for (const auto& [index, loaded]: mLoadedSectors) {
 			for (int64_t i = 0; i < 64; i++) {
 				if (!(loaded & (1 << i))) {
@@ -66,9 +68,6 @@ namespace voxel_game::universe {
 					sector.z <<= 6;
 					sector.z |= i;
 					unloadSector(sector);
-				}
-				else {
-					loadedSectors++;
 				}
 			}
 		}
@@ -84,5 +83,8 @@ namespace voxel_game::universe {
 		glm::i64vec3 mapIndex = sector;
 		mapIndex.z >>= 6;
 		mLoadedSectors[mapIndex] &= ~(1 << (sector.z & 63));
+		if (!mLoadedSectors[mapIndex]) {
+			mLoadedSectors.erase(mapIndex);
+		}
 	}
 }

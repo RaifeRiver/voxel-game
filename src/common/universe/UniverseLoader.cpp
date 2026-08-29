@@ -1,6 +1,5 @@
 #include "UniverseLoader.h"
 
-#include <iostream>
 #include <ranges>
 
 #include "UniverseLoaderInfo.h"
@@ -72,7 +71,7 @@ namespace voxel_game::universe {
 					loadedSectors++;
 				}
 			}
-		}std::cout << "\rLoaded sectors: " << loadedSectors << std::flush;
+		}
 	}
 
 	void UniverseLoader::loadSector(const glm::i64vec3& sector) {

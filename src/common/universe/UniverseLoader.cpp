@@ -16,17 +16,14 @@ namespace voxel_game::universe {
 
 		bool needsUpdate = false;
 		for (const ecs::Entity entity : entities) {
-			auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
+			const auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
 			const auto& transform = registry.getComponent<Transform>(entity);
 
 			const double distance = (transform.pos - universeLoaderInfo.lastPos).length();
-			if (distance < LOAD_DISTANCE_THRESHOLD && universeLoaderInfo.hasLastPos) {
-				continue;
+			if (distance >= LOAD_DISTANCE_THRESHOLD || !universeLoaderInfo.hasLastPos) {
+				needsUpdate = true;
+				break;
 			}
-
-			universeLoaderInfo.lastPos = transform.pos;
-			universeLoaderInfo.hasLastPos = true;
-			needsUpdate = true;
 		}
 		if (!needsUpdate) {
 			return;
@@ -37,7 +34,7 @@ namespace voxel_game::universe {
 		}
 
 		for (const ecs::Entity entity : entities) {
-			const auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
+			auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
 			const auto& transform = registry.getComponent<Transform>(entity);
 
 			const int32_t radius = universeLoaderInfo.radius;
@@ -56,6 +53,9 @@ namespace voxel_game::universe {
 					}
 				}
 			}
+
+			universeLoaderInfo.lastPos = transform.pos;
+			universeLoaderInfo.hasLastPos = true;
 		}
 
 		uint64_t loadedSectors = 0;

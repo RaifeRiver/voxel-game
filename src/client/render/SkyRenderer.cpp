@@ -3,7 +3,7 @@
 #include "engine/RenderEngine.h"
 #include "common/resource/ResourceManager.h"
 
-namespace voxel_game::client::system {
+namespace voxel_game::client::render {
 	SkyRenderer::SkyRenderer(ecs::ECSRegistry& registry) {
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
 		const auto& resourceManager = registry.getResource<resource::ResourceManager>();

@@ -25,7 +25,7 @@ namespace voxel_game::client {
 				throw std::runtime_error("Unsupported render library");
 		}
 
-		registry.getSystemManager().createSystem<system::SkyRenderer>(registry);
+		registry.getSystemManager().createSystem<render::SkyRenderer>(registry);
 
 		player::attachPlayerComponents(registry, registry.createEntity(), true);
 	}
@@ -49,7 +49,7 @@ namespace voxel_game::client {
 	void destroy(ecs::ECSRegistry &registry) {
 		registry.getResource<render::RenderEngine>().waitForGPU();
 
-		registry.getSystemManager().removeSystem<system::SkyRenderer>();
+		registry.getSystemManager().removeSystem<render::SkyRenderer>();
 
 		registry.removeResource<render::RenderEngine>();
 		registry.removeResource<window::Window>();

@@ -45,4 +45,20 @@ namespace voxel_game::resource {
 			.found = false
 		};
 	}
+
+	std::vector<std::string> ResourceManager::findResources(const std::string& folder, const std::string& extension, const ResourceType type) const {
+		std::vector<std::string> resources;
+		const std::string path = to_string(type) + '/' + folder;
+		for (const std::string& resourcePath : mResourcePaths) {
+			std::string folderPath = resourcePath + path;
+			if (std::filesystem::is_directory(folderPath)) {
+				for (const std::filesystem::directory_entry& entry: std::filesystem::recursive_directory_iterator(folderPath)) {
+					if (std::filesystem::is_regular_file(entry.status()) && entry.path().string().ends_with(extension)) {
+						resources.push_back(entry.path().string());
+					}
+				}
+			}
+		}
+		return resources;
+	}
 }

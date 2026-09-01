@@ -18,7 +18,7 @@ namespace voxel_game::block {
 			}
 			const ecs::Entity entity = registry.createEntity();
 			try {
-				for (simdjson::dom::key_value_pair field : json.get_object()) {
+				for (const simdjson::dom::key_value_pair& field : json.get_object()) {
 					registry.attachComponent(entity, std::string(field.key)).loadFromJSON(field.value);
 				}
 			}

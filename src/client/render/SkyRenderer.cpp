@@ -1,10 +1,10 @@
-#include "SkyRenderSystem.h"
+#include "SkyRenderer.h"
 
-#include "../render/engine/RenderEngine.h"
+#include "engine/RenderEngine.h"
 #include "common/resource/ResourceManager.h"
 
 namespace voxel_game::client::system {
-	SkyRenderSystem::SkyRenderSystem(ecs::ECSRegistry& registry) {
+	SkyRenderer::SkyRenderer(ecs::ECSRegistry& registry) {
 		auto& renderEngine = registry.getResource<render::RenderEngine>();
 		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
 
@@ -13,7 +13,7 @@ namespace voxel_game::client::system {
 		mPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->build();
 	}
 
-	void SkyRenderSystem::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, const float) {
+	void SkyRenderer::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, const float) {
 		if (stage != ecs::SystemStage::BACKGROUND_RENDER) {
 			return;
 		}

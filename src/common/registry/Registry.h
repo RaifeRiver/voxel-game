@@ -23,7 +23,7 @@ namespace voxel_game::registry {
 			return *mObjects.back();
 		}
 
-		template <typename U, typename... Args> T& registerNew(const std::string& name, Args... args) {
+		template <typename U = T, typename... Args> T& registerNew(const std::string& name, Args... args) {
 			if (!std::regex_match(name, VALID_REGISTRY_NAMES)) {
 				throw std::runtime_error("Invalid registry name: " + name);
 			}

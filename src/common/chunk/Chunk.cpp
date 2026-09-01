@@ -1,6 +1,6 @@
 #include "Chunk.h"
 
-namespace voxel_game::universe {
+namespace voxel_game::chunk {
 	Chunk::Chunk(const ChunkPos pos, const ecs::Entity object) : mPos(pos), mObject(object) {}
 
 	uint32_t Chunk::getBlock(const uint32_t index) const {

@@ -4,7 +4,7 @@
 
 #include "common/util/HashCombiner.h"
 
-namespace voxel_game::universe {
+namespace voxel_game::chunk {
 	struct ChunkPos {
 		int32_t x;
 		int32_t y;
@@ -20,8 +20,8 @@ namespace voxel_game::universe {
 	};
 }
 
-template <> struct std::hash<voxel_game::universe::ChunkPos> {
-	std::size_t operator()(const voxel_game::universe::ChunkPos& pos) const noexcept {
+template <> struct std::hash<voxel_game::chunk::ChunkPos> {
+	std::size_t operator()(const voxel_game::chunk::ChunkPos& pos) const noexcept {
 		return voxel_game::util::hash(pos.x, pos.y, pos.z);
 	}
 };

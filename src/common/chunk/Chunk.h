@@ -7,7 +7,7 @@
 #include "common/ecs/Component.h"
 #include "common/ecs/Entity.h"
 
-namespace voxel_game::universe {
+namespace voxel_game::chunk {
 	constexpr uint32_t CHUNK_SIZE = 32;
 	constexpr uint32_t CHUNK_SIZE2 = CHUNK_SIZE * CHUNK_SIZE;
 	constexpr uint32_t CHUNK_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;

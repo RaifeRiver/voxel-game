@@ -4,7 +4,7 @@
 #include "ChunkPos.h"
 #include "common/ecs/Component.h"
 
-namespace voxel_game::universe {
+namespace voxel_game::chunk {
 	struct ChunkData : ecs::Component<ChunkData> {
 		std::unordered_map<ChunkPos, Chunk> chunks;
 

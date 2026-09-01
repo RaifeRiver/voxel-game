@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace voxel_game::universe {
+namespace voxel_game::chunk {
 	bool ChunkData::isLoaded(const ChunkPos pos) const {
 		return chunks.contains(pos);
 	}

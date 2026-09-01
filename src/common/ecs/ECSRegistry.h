@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <utility>
 #include <vector>
 
 #include "CommandQueue.h"
@@ -9,6 +10,8 @@
 #include "SystemManager.h"
 
 namespace voxel_game::ecs {
+	using ComponentProvider = std::function<std::unique_ptr<IComponent>()>;
+
 	class ECSRegistry {
 	public:
 		Entity createEntity();
@@ -29,7 +32,13 @@ namespace voxel_game::ecs {
 			return entities;
 		}
 
-		template <typename T> requires std::derived_from<T, Component<T>> T& attachComponent(Entity entity) {
+		template <typename T> requires std::derived_from<T, Component<T>> void registerComponentType(const std::string& name) {
+			mComponentTypes[name] = {T::getID(), [] {
+				return std::make_unique<T>();
+			}};
+		}
+
+		template <typename T> requires std::derived_from<T, Component<T>> T& attachComponent(Entity entity, T component = {}) {
 			const uint32_t id = T::getID();
 			if (mComponentStorages.size() <= id) {
 				mComponentStorages.resize(id + 1);
@@ -37,7 +46,15 @@ namespace voxel_game::ecs {
 			if (!mComponentStorages[id]) {
 				mComponentStorages[id] = std::make_unique<ComponentStorage<T>>();
 			}
-			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->attach(entity);
+			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->attach(entity, component);
+		}
+
+		IComponent& attachComponent(const Entity entity, const std::string& name) {
+			auto [id, provider] = mComponentTypes[name];
+			if (mComponentStorages.size() <= id) {
+				mComponentStorages.resize(id + 1);
+			}
+			return mComponentStorages[id].get()->attach_(entity);
 		}
 
 		template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] T& getComponent(Entity entity) {
@@ -127,6 +144,7 @@ namespace voxel_game::ecs {
 		std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;
 		std::vector<uint32_t> mFreeIDs;
 		std::vector<std::unique_ptr<IResource>> mResources;
+		std::unordered_map<std::string, std::pair<uint32_t, ComponentProvider>> mComponentTypes;
 		CommandQueue mCommandQueue;
 		SystemManager mSystemManager;
 		uint32_t mNextID = 0;

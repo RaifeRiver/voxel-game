@@ -1,6 +1,7 @@
 #include "ResourceManager.h"
 
 #include <cstring>
+#include <iostream>
 #include <regex>
 
 namespace voxel_game::resource {
@@ -46,15 +47,22 @@ namespace voxel_game::resource {
 		};
 	}
 
-	std::vector<std::string> ResourceManager::findResources(const std::string& folder, const std::string& extension, const ResourceType type) const {
-		std::vector<std::string> resources;
-		const std::string path = to_string(type) + '/' + folder;
+	std::vector<FoundResource> ResourceManager::findResources(std::string folder, const std::string& extension, const ResourceType type) const {
+		std::vector<FoundResource> resources;
+		folder = '/' + folder;
+		const std::string typeStr = to_string(type);
 		for (const std::string& resourcePath : mResourcePaths) {
-			std::string folderPath = resourcePath + path;
-			if (std::filesystem::is_directory(folderPath)) {
-				for (const std::filesystem::directory_entry& entry: std::filesystem::recursive_directory_iterator(folderPath)) {
-					if (std::filesystem::is_regular_file(entry.status()) && entry.path().string().ends_with(extension)) {
-						resources.push_back(entry.path().string());
+			for (const std::filesystem::directory_entry& entry: std::filesystem::directory_iterator(resourcePath + typeStr)) {
+				if (std::filesystem::is_directory(entry.status())) {
+					std::string folderPath = entry.path().string() + folder;
+					for (const std::filesystem::directory_entry& entry2: std::filesystem::recursive_directory_iterator(folderPath)) {
+						if (std::filesystem::is_regular_file(entry2.status()) && entry2.path().string().ends_with(extension)) {
+							resources.push_back({
+								.namespace_ = entry.path().stem(),
+								.name = entry2.path().stem(),
+								.path = entry2.path().string()
+							});
+						}
 					}
 				}
 			}

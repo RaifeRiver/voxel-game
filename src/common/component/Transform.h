@@ -5,9 +5,9 @@
 #include "common/ecs/Component.h"
 #include "common/universe/UniversePos.h"
 
-namespace voxel_game::universe {
+namespace voxel_game::component {
 	struct Transform : ecs::Component<Transform> {
-		UniversePos pos;
+		universe::UniversePos pos;
 		glm::quat rotation;
 		glm::vec3 scale;
 	};

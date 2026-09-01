@@ -4,9 +4,9 @@
 #include "common/ecs/ECSRegistry.h"
 
 namespace voxel_game::player {
-	struct Player : ecs::Component<Player> {};
+	struct Player : ecs::MarkerComponent<Player> {};
 
-	struct LocalPlayer : ecs::Component<LocalPlayer> {};
+	struct LocalPlayer : ecs::MarkerComponent<LocalPlayer> {};
 
 	void attachPlayerComponents(ecs::ECSRegistry& registry, ecs::Entity entity, bool local = false);
 }

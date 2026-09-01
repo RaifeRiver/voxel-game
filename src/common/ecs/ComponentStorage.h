@@ -13,11 +13,33 @@ namespace voxel_game::ecs {
 	public:
 		virtual void remove(Entity entity) = 0;
 
+		virtual IComponent& attach_(Entity entity) = 0;
+
 		virtual ~IComponentStorage() = default;
 	};
 
 	template <typename T> requires std::derived_from<T, Component<T>> class ComponentStorage : public IComponentStorage {
 	public:
+		IComponent& attach_(const Entity entity) override {
+			if (!has(entity)) {
+				if (entity >= mComponentIndices.size()) {
+					mComponentIndices.resize(entity + 1);
+				}
+				if (!mUnusedComponents.empty()) {
+					uint32_t index = mUnusedComponents.back();
+					mComponentIndices[entity] = index;
+					mUnusedComponents.pop_back();
+					mComponents[index] = {};
+					return mComponents[index];
+				}
+				const uint32_t index = mComponents.size();
+				mComponentIndices[entity] = index;
+				mComponents.push_back({});
+				return mComponents.back();
+			}
+			return get(entity);
+		}
+
 		T& attach(const Entity entity, T component = T{}) {
 			if (has(entity)) {
 				return mComponents[mComponentIndices[entity]];
@@ -39,11 +61,10 @@ namespace voxel_game::ecs {
 		}
 
 		[[nodiscard]] T& get(const Entity entity) {
-			uint32_t index = mComponentIndices.at(entity);
-			if (index == UINT32_MAX) {
+			if (!has(entity)) {
 				throw std::runtime_error("Entity does not have the requested component");
 			}
-			return mComponents[index];
+			return mComponents[mComponentIndices[entity]];
 		}
 
 		[[nodiscard]] bool has(const Entity entity) const {
@@ -51,10 +72,11 @@ namespace voxel_game::ecs {
 		}
 
 		void remove(const Entity entity) override {
-			const uint32_t index = mComponentIndices.at(entity);
-			if (index != UINT32_MAX) {
-				mUnusedComponents.push_back(index);
+			if (!has(entity)) {
+				return;
 			}
+			mUnusedComponents.push_back(mComponentIndices[entity]);
+			mComponentIndices[entity] = UINT32_MAX;
 		}
 
 		class Iterator {

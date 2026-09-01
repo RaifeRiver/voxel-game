@@ -12,12 +12,12 @@ namespace voxel_game::universe {
 			return;
 		}
 
-		const std::vector<ecs::Entity> entities = registry.getEntitiesWithComponents<UniverseLoaderInfo, Transform>();
+		const std::vector<ecs::Entity> entities = registry.getEntitiesWithComponents<UniverseLoaderInfo, component::Transform>();
 
 		bool needsUpdate = false;
 		for (const ecs::Entity entity : entities) {
 			const auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
-			const auto& transform = registry.getComponent<Transform>(entity);
+			const auto& transform = registry.getComponent<component::Transform>(entity);
 
 			const double distance = (transform.pos - universeLoaderInfo.lastPos).length();
 			if (distance >= LOAD_DISTANCE_THRESHOLD || !universeLoaderInfo.hasLastPos) {
@@ -35,7 +35,7 @@ namespace voxel_game::universe {
 
 		for (const ecs::Entity entity : entities) {
 			auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
-			const auto& transform = registry.getComponent<Transform>(entity);
+			const auto& transform = registry.getComponent<component::Transform>(entity);
 
 			const int32_t radius = universeLoaderInfo.radius;
 			const int64_t radiusSquared = radius * radius;

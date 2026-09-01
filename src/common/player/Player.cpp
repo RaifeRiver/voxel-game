@@ -6,7 +6,7 @@
 namespace voxel_game::player {
 	void attachPlayerComponents(ecs::ECSRegistry& registry, const ecs::Entity entity, const bool local) {
 		registry.attachComponent<Player>(entity);
-		registry.attachComponent<universe::Transform>(entity);
+		registry.attachComponent<component::Transform>(entity);
 		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 100;
 
 		if (local) {

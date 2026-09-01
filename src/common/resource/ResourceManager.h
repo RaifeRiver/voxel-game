@@ -39,13 +39,19 @@ namespace voxel_game::resource {
 		std::string path;
 	};
 
+	struct FoundResource {
+		std::string namespace_;
+		std::string name;
+		std::string path;
+	};
+
 	class ResourceManager : public ecs::Resource<ResourceManager> {
 	public:
 		ResourceManager();
 
 		[[nodiscard]] FindResourceResult findResource(std::string name, const std::string& extension, ResourceType type) const;
 
-		[[nodiscard]] std::vector<std::string> findResources(const std::string& folder, const std::string& extension, ResourceType type) const;
+		[[nodiscard]] std::vector<FoundResource> findResources(std::string folder, const std::string& extension, ResourceType type) const;
 
 		template <typename T> requires std::derived_from<T, Resource<T>> void addResourceLoader(ResourceLoader<T>* loader) {
 #if VG_SIDE != CLIENT

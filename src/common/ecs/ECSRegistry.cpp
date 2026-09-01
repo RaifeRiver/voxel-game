@@ -13,7 +13,9 @@ namespace voxel_game::ecs {
 	void ECSRegistry::destroyEntity(const Entity entity) {
 		mFreeIDs.push_back(entity);
 		for (const std::unique_ptr<IComponentStorage>& componentStorage: mComponentStorages) {
-			componentStorage->remove(entity);
+			if (componentStorage) {
+				componentStorage->remove(entity);
+			}
 		}
 	}
 }

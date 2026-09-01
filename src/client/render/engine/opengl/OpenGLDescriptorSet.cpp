@@ -5,7 +5,7 @@
 #include "OpenGLBuffer.h"
 #include "OpenGLDescriptorAllocator.h"
 #include "OpenGLImage.h"
-#include "client/render/DescriptorAllocator.h"
+#include "client/render/engine/DescriptorAllocator.h"
 
 namespace voxel_game::client::render::opengl {
 	OpenGLDescriptorSet::OpenGLDescriptorSet(OpenGLDescriptorAllocator* descriptorAllocator) : mDescriptorAllocator(descriptorAllocator) {}

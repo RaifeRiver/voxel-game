@@ -2,7 +2,7 @@
 
 #include "volk.h"
 
-#include "client/render/DescriptorAllocator.h"
+#include "client/render/engine/DescriptorAllocator.h"
 
 namespace voxel_game::client::render::vulkan {
 	class VulkanEngine;

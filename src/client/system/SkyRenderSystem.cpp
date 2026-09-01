@@ -1,6 +1,6 @@
 #include "SkyRenderSystem.h"
 
-#include "client/render/RenderEngine.h"
+#include "../render/engine/RenderEngine.h"
 #include "common/resource/ResourceManager.h"
 
 namespace voxel_game::client::system {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenGLDescriptorSet.h"
-#include "client/render/DescriptorAllocator.h"
+#include "client/render/engine/DescriptorAllocator.h"
 
 namespace voxel_game::client::render::opengl {
 	class OpenGLDescriptorAllocator : public DescriptorAllocator {

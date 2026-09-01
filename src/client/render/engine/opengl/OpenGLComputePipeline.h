@@ -3,7 +3,7 @@
 #include <string>
 
 #include "OpenGLUtil.h"
-#include "client/render/ComputePipeline.h"
+#include "client/render/engine/ComputePipeline.h"
 
 namespace voxel_game::client::render::opengl {
 	class OpenGLComputePipeline : public ComputePipeline {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenGLImage.h"
-#include "client/render/RenderEngine.h"
+#include "client/render/engine/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 

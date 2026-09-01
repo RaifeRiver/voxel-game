@@ -3,7 +3,7 @@
 #include "volk.h"
 #include "vk_mem_alloc.h"
 
-#include "client/render/GPUBuffer.h"
+#include "client/render/engine/GPUBuffer.h"
 
 namespace voxel_game::client::render::vulkan {
 	class VulkanEngine;

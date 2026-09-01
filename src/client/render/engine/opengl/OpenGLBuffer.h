@@ -1,6 +1,6 @@
 #pragma once
 
-#include "client/render/GPUBuffer.h"
+#include "client/render/engine/GPUBuffer.h"
 
 namespace voxel_game::client::render::opengl {
 	class OpenGLBuffer : public GPUBuffer {

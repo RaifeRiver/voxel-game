@@ -4,7 +4,7 @@
 
 #include "VulkanEngine.h"
 
-#include "client/render/ComputePipeline.h"
+#include "client/render/engine/ComputePipeline.h"
 
 namespace voxel_game::client::render::vulkan {
 	class VulkanComputePipeline : public ComputePipeline {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "OpenGLUtil.h"
-#include "client/render/RenderPipeline.h"
+#include "client/render/engine/RenderPipeline.h"
 
 namespace voxel_game::client::render::opengl {
 	unsigned int toOpenGLPrimitiveTopology(PrimitiveTopology topology);

@@ -2,9 +2,9 @@
 
 #include "common/player/Player.h"
 #include "common/util/Log.h"
-#include "render/RenderEngine.h"
-#include "render/opengl/OpenGLEngine.h"
-#include "render/vulkan/VulkanEngine.h"
+#include "render/engine/RenderEngine.h"
+#include "render/engine/opengl/OpenGLEngine.h"
+#include "render/engine/vulkan/VulkanEngine.h"
 #include "system/SkyRenderSystem.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"

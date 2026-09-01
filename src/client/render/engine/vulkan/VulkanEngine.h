@@ -5,8 +5,8 @@
 #include "vk_mem_alloc.h"
 
 #include "VulkanImage.h"
-#include "client/render/DescriptorAllocator.h"
-#include "client/render/RenderEngine.h"
+#include "client/render/engine/DescriptorAllocator.h"
+#include "client/render/engine/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 

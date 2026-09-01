@@ -2,7 +2,7 @@
 
 #include "glad/glad.h"
 
-#include "client/render/GPUImage.h"
+#include "client/render/engine/GPUImage.h"
 
 namespace voxel_game::client::render::opengl {
 	GLint toOpenGLImageFormat(ImageFormat format);

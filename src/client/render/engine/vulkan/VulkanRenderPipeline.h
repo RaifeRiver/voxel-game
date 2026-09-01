@@ -2,7 +2,7 @@
 
 #include "volk.h"
 
-#include "client/render/RenderPipeline.h"
+#include "client/render/engine/RenderPipeline.h"
 
 namespace voxel_game::client::render::vulkan {
 	class VulkanEngine;

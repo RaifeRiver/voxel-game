@@ -1,7 +1,7 @@
 #pragma once
 
-#include "client/render/DescriptorAllocator.h"
-#include "client/render/RenderEngine.h"
+#include "../render/engine/DescriptorAllocator.h"
+#include "../render/engine/RenderEngine.h"
 #include "common/ecs/ECSRegistry.h"
 
 namespace voxel_game::client::system {

@@ -2,7 +2,7 @@
 
 #include "client/render/engine/DescriptorSet.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	class OpenGLDescriptorAllocator;
 
 	class OpenGLDescriptorSet : public DescriptorSet {

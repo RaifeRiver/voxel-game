@@ -2,7 +2,7 @@
 
 #include "spirv_cross.hpp"
 
-namespace voxel_game::client::render::vulkan::vulkan_util {
+namespace voxel_game::client::render::engine::vulkan::vulkan_util {
 	std::string vkResultString(const VkResult result) {
 		switch (result) {
 			case VK_SUCCESS:

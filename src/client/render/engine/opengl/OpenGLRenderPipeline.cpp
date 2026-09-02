@@ -5,9 +5,10 @@
 
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
+#include "client/render/engine/Shader.h"
 #include "common/util/FileHelper.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	unsigned int toOpenGLPrimitiveTopology(const PrimitiveTopology topology) {
 		switch (topology) {
 			case PrimitiveTopology::POINT_LIST:
@@ -67,8 +68,8 @@ namespace voxel_game::client::render::opengl {
 	}
 
 	OpenGLRenderPipeline::OpenGLRenderPipeline(const RenderPipelineBuilder* builder) {
-		const std::vector<uint32_t> vertexShaderData = util::readFile<uint32_t>(builder->getVertexShader());
-		const std::vector<uint32_t> fragmentShaderData = util::readFile<uint32_t>(builder->getFragmentShader());
+		const std::vector<uint32_t> vertexShaderData = compileGLSL(builder->getVertexShader(), ShaderStage::VERTEX);
+		const std::vector<uint32_t> fragmentShaderData = compileGLSL(builder->getFragmentShader(), ShaderStage::FRAGMENT);
 
 		const std::string vertexShaderCode = opengl_util::convertShader(vertexShaderData);
 		const std::string fragmentShaderCode = opengl_util::convertShader(fragmentShaderData);

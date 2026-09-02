@@ -2,7 +2,7 @@
 
 #include "glad/glad.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	OpenGLBuffer::OpenGLBuffer(const size_t size, const BufferUsage usage, const MemoryType memoryType, const MappedType mappedType) : GPUBuffer(size, usage, memoryType, mappedType) {
 		glGenBuffers(1, &mBuffer);
 		glBindBuffer(GL_ARRAY_BUFFER, mBuffer);

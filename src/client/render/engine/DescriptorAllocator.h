@@ -8,7 +8,7 @@
 #include "DescriptorSet.h"
 #include "Shader.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	enum class DescriptorType {
 		SAMPLED_TEXTURE,
 		TEXTURE,

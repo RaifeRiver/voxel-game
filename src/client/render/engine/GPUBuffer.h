@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <cstddef>
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
     enum class BufferUsage : uint32_t {
         NONE = 0,
         TRANSFER_SRC = 1 << 0,

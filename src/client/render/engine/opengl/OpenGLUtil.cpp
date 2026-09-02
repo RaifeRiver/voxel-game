@@ -7,7 +7,7 @@
 
 #include "common/util/FileHelper.h"
 
-namespace voxel_game::client::render::opengl::opengl_util {
+namespace voxel_game::client::render::engine::opengl::opengl_util {
 	std::string convertShader(const std::vector<uint32_t>& shaderData) {
 		spirv_cross::CompilerGLSL compiler(shaderData);
 		const spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();

@@ -10,7 +10,7 @@
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 #ifdef VG_DEBUG
 	constexpr bool ENABLE_VALIDATION_LAYERS = true;
 #else

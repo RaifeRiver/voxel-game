@@ -1,6 +1,6 @@
 #include "GPUImage.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	bool isColourFormat(const ImageFormat imageFormat) {
 		return imageFormat == ImageFormat::RGBA8_SRGB || imageFormat == ImageFormat::RGBA16_SFLOAT;
 	}

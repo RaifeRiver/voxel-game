@@ -2,7 +2,7 @@
 
 #include "DescriptorSet.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
     enum class PipelineType {
         COMPUTE,
     	RENDER

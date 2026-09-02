@@ -3,7 +3,7 @@
 #include "OpenGLDescriptorSet.h"
 #include "client/render/engine/DescriptorAllocator.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	class OpenGLDescriptorAllocator : public DescriptorAllocator {
 	public:
 		explicit OpenGLDescriptorAllocator(uint32_t maxSets, const std::vector<DescriptorBinding>& descriptorBindings);

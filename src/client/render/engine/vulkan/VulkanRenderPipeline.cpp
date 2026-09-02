@@ -6,7 +6,7 @@
 #include "VulkanUtil.h"
 #include "common/util/FileHelper.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VkPrimitiveTopology toVKPrimitiveTopology(const PrimitiveTopology topology) {
 		switch (topology) {
 			case PrimitiveTopology::POINT_LIST:
@@ -66,7 +66,7 @@ namespace voxel_game::client::render::vulkan {
 	}
 
 	VulkanRenderPipeline::VulkanRenderPipeline(VulkanEngine* vulkanEngine, const RenderPipelineBuilder* builder) : mVulkanEngine(vulkanEngine) {
-		std::vector<uint32_t> vertexShaderData = util::readFile<uint32_t>(builder->getVertexShader());
+		std::vector<uint32_t> vertexShaderData = compileGLSL(builder->getVertexShader(), ShaderStage::VERTEX);
 		const VkShaderModuleCreateInfo vertexShaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			.codeSize = vertexShaderData.size() * sizeof(uint32_t),
@@ -75,7 +75,7 @@ namespace voxel_game::client::render::vulkan {
 		VkShaderModule vertexShaderModule;
 		vulkan_util::vkCheck(vkCreateShaderModule(mVulkanEngine->getDevice(), &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
 
-		std::vector<uint32_t> fragmentShaderData = util::readFile<uint32_t>(builder->getFragmentShader());
+		std::vector<uint32_t> fragmentShaderData = compileGLSL(builder->getFragmentShader(), ShaderStage::FRAGMENT);
 		const VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			.codeSize = fragmentShaderData.size() * sizeof(uint32_t),

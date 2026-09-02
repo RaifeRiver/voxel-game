@@ -4,7 +4,7 @@
 
 #include "client/render/engine/GPUImage.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	GLint toOpenGLImageFormat(ImageFormat format);
 
 	GLint toOpenGLImageType(ImageType type);

@@ -6,11 +6,11 @@
 
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
-#include "common/util/FileHelper.h"
+#include "client/render/engine/Shader.h"
 
-namespace voxel_game::client::render::opengl {
-	OpenGLComputePipeline::OpenGLComputePipeline(const std::string& computeShaderPath) {
-		const std::vector<uint32_t> computeShaderData = util::readFile<uint32_t>(computeShaderPath);
+namespace voxel_game::client::render::engine::opengl {
+	OpenGLComputePipeline::OpenGLComputePipeline(const std::string& computeShaderGLSL) {
+		const std::vector<uint32_t> computeShaderData = compileGLSL(computeShaderGLSL, ShaderStage::COMPUTE);
 
 		const std::string computeShaderCode = opengl_util::convertShader(computeShaderData);
 		const char* computeShaderCodeChars = computeShaderCode.c_str();

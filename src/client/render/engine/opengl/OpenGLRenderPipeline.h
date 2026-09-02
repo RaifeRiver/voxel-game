@@ -3,7 +3,7 @@
 #include "OpenGLUtil.h"
 #include "client/render/engine/RenderPipeline.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	unsigned int toOpenGLPrimitiveTopology(PrimitiveTopology topology);
 
 	unsigned int toOpenGLPolygonMode(PolygonMode mode);

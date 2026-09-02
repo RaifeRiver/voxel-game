@@ -5,7 +5,7 @@
 #include "vk_mem_alloc.h"
 #include "VulkanUtil.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VkBufferUsageFlags toVKBufferUsage(const BufferUsage usage) {
 		switch (usage) {
 			case BufferUsage::NONE:

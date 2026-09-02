@@ -2,7 +2,7 @@
 
 #include "Pipeline.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	class ComputePipeline : public Pipeline {
 	public:
 		ComputePipeline();

@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	GPUBuffer::GPUBuffer(const size_t size, const BufferUsage usage, const MemoryType memoryType, const MappedType mappedType) : mSize(size), mUsage(usage), mMemoryType(memoryType), mMappedType(mappedType) {}
 
 	void* GPUBuffer::map() {

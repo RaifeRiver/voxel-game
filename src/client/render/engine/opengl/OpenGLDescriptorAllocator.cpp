@@ -3,7 +3,7 @@
 #include "OpenGLDescriptorSet.h"
 #include "common/util/Log.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	OpenGLDescriptorAllocator::OpenGLDescriptorAllocator(const uint32_t maxSets, const std::vector<DescriptorBinding>& descriptorBindings) : mMaxSets(maxSets), mDescriptorBindings(descriptorBindings) {}
 
 	void OpenGLDescriptorAllocator::clearDescriptors() {

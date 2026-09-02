@@ -10,9 +10,9 @@
 #include "VulkanUtil.h"
 #include "common/util/FileHelper.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const std::string& computeShader) : mVulkanEngine(vulkanEngine) {
-		std::vector<uint32_t> computeShaderData = util::readFile<uint32_t>(computeShader);
+		std::vector<uint32_t> computeShaderData = compileGLSL(computeShader, ShaderStage::COMPUTE);
 
 		const VkShaderModuleCreateInfo shaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,

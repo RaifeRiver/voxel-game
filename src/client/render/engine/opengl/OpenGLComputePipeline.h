@@ -5,10 +5,10 @@
 #include "OpenGLUtil.h"
 #include "client/render/engine/ComputePipeline.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	class OpenGLComputePipeline : public ComputePipeline {
 	public:
-		explicit OpenGLComputePipeline(const std::string& computeShaderPath);
+		explicit OpenGLComputePipeline(const std::string& computeShaderGLSL);
 
 		void bind() override;
 

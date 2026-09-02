@@ -8,7 +8,7 @@
 #include "VulkanShader.h"
 #include "VulkanUtil.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VkDescriptorType toVKDescriptorType(const DescriptorType type) {
 		switch (type) {
 			case DescriptorType::SAMPLED_TEXTURE:

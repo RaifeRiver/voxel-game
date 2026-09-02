@@ -13,8 +13,8 @@
 #include "OpenGLRenderPipeline.h"
 #include "common/util/Log.h"
 
-namespace voxel_game::client::render::opengl {
-	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) {
+namespace voxel_game::client::render::engine::opengl {
+	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
 		LOG_INFO("Using OpenGL renderer");
 
 		auto& window = registry.getResource<window::Window>();

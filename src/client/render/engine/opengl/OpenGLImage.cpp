@@ -2,7 +2,7 @@
 
 #include <stdexcept>
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	GLint toOpenGLImageFormat(const ImageFormat format) {
 		switch (format) {
 			case ImageFormat::RGBA8_SRGB:

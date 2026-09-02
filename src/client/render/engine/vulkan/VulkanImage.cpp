@@ -5,7 +5,7 @@
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VkFormat toVKImageFormat(const ImageFormat format) {
 		switch (format) {
 			case ImageFormat::UNKNOWN:

@@ -3,7 +3,7 @@
 #include "VulkanEngine.h"
 #include "client/render/engine/DescriptorSet.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	class VulkanDescriptorAllocator;
 
 	class VulkanDescriptorSet : public DescriptorSet {

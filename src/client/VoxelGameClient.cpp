@@ -2,10 +2,10 @@
 
 #include "common/player/Player.h"
 #include "common/util/Log.h"
+#include "render/SkyRenderer.h"
 #include "render/engine/RenderEngine.h"
 #include "render/engine/opengl/OpenGLEngine.h"
 #include "render/engine/vulkan/VulkanEngine.h"
-#include "render/SkyRenderer.h"
 #include "window/Window.h"
 #include "window/glfw/GLFWWindow.h"
 
@@ -14,11 +14,11 @@ namespace voxel_game::client {
 		switch (args.getRenderLibrary()) {
 			case RenderLibrary::OPENGL:
 				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0, true);
-				registry.createResource<render::RenderEngine, render::opengl::OpenGLEngine>(registry);
+				registry.createResource<render::engine::RenderEngine, render::engine::opengl::OpenGLEngine>(registry);
 				break;
 			case RenderLibrary::VULKAN:
 				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0);
-				registry.createResource<render::RenderEngine, render::vulkan::VulkanEngine>(registry);
+				registry.createResource<render::engine::RenderEngine, render::engine::vulkan::VulkanEngine>(registry);
 				break;
 			default:
 				LOG_FATAL("Unsupported render library");
@@ -47,11 +47,11 @@ namespace voxel_game::client {
 	}
 
 	void destroy(ecs::ECSRegistry &registry) {
-		registry.getResource<render::RenderEngine>().waitForGPU();
+		registry.getResource<render::engine::RenderEngine>().waitForGPU();
 
 		registry.getSystemManager().removeSystem<render::SkyRenderer>();
 
-		registry.removeResource<render::RenderEngine>();
+		registry.removeResource<render::engine::RenderEngine>();
 		registry.removeResource<window::Window>();
 	}
 }

@@ -5,7 +5,7 @@
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	class OpenGLEngine : public RenderEngine {
 	public:
 		explicit OpenGLEngine(ecs::ECSRegistry& registry);

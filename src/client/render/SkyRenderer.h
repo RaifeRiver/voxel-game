@@ -11,6 +11,6 @@ namespace voxel_game::client::render {
 		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
 
 	private:
-		std::unique_ptr<render::RenderPipeline> mPipeline = nullptr;
+		std::unique_ptr<engine::RenderPipeline> mPipeline = nullptr;
 	};
 }

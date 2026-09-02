@@ -3,7 +3,7 @@
 #include "VulkanBuffer.h"
 #include "VulkanDescriptorAllocator.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	// ReSharper disable CppParameterMayBeConst
 	VulkanDescriptorSet::VulkanDescriptorSet(VulkanEngine* vulkanEngine, VulkanDescriptorAllocator* descriptorAllocator, VkDescriptorPool descriptorPool, VkDescriptorSet descriptorSet) : mVulkanEngine(vulkanEngine), mDescriptorAllocator(descriptorAllocator), mDescriptorPool(descriptorPool), mDescriptorSet(descriptorSet) {}
 	// ReSharper restore CppParameterMayBeConst

@@ -7,7 +7,7 @@
 #include "OpenGLImage.h"
 #include "client/render/engine/DescriptorAllocator.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	OpenGLDescriptorSet::OpenGLDescriptorSet(OpenGLDescriptorAllocator* descriptorAllocator) : mDescriptorAllocator(descriptorAllocator) {}
 
 	void OpenGLDescriptorSet::setBinding(const uint32_t binding, GPUImage* image) {

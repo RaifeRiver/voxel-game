@@ -1,6 +1,6 @@
 #include "VulkanShader.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	VkShaderStageFlags toVKShaderStage(const ShaderStage shaderStage) {
 		VkShaderStageFlags shaderStageFlags = 0;
 		if (shaderStage & ShaderStage::VERTEX) {

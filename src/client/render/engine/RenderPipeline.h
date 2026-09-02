@@ -6,7 +6,7 @@
 #include "GPUImage.h"
 #include "Pipeline.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	enum class PrimitiveTopology {
 		POINT_LIST,
 		LINE_LIST,

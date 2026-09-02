@@ -12,8 +12,8 @@
 #include "client/window/Window.h"
 #include "common/util/Log.h"
 
-namespace voxel_game::client::render::vulkan {
-	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) {
+namespace voxel_game::client::render::engine::vulkan {
+	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
 		LOG_INFO("Using Vulkan renderer");
 
 		auto& window = registry.getResource<window::Window>();

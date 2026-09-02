@@ -3,7 +3,7 @@
 #include "glm/vec3.hpp"
 #include "glm/vec4.hpp"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	enum class ImageFormat {
 		UNKNOWN,
 		RGBA8_SRGB,

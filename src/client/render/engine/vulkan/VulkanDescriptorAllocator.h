@@ -4,7 +4,7 @@
 
 #include "client/render/engine/DescriptorAllocator.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	class VulkanEngine;
 
 	VkDescriptorType toVKDescriptorType(DescriptorType type);

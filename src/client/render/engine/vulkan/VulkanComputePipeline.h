@@ -6,7 +6,7 @@
 
 #include "client/render/engine/ComputePipeline.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	class VulkanComputePipeline : public ComputePipeline {
 	public:
 		VulkanComputePipeline(VulkanEngine* vulkanEngine, const std::string& computeShader);

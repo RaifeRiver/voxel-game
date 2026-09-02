@@ -10,13 +10,16 @@
 #include "GPUBuffer.h"
 #include "GPUImage.h"
 #include "RenderPipeline.h"
+#include "common/ecs/ECSRegistry.h"
 #include "common/ecs/Resource.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	constexpr uint32_t FRAME_OVERLAP = 2;
 
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:
+		explicit RenderEngine(ecs::ECSRegistry& registry);
+
 		virtual std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) = 0;
 
 		std::unique_ptr<GPUBuffer> allocateBuffer(const size_t size, const BufferUsage usage, const MemoryType memoryType, const MappedType mappedType = MappedType::NONE) {

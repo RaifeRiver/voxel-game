@@ -6,7 +6,7 @@
 #include <vector>
 
 namespace voxel_game::util {
-	template <typename T> std::vector<T> readFile(const std::string& path) {
+	template <typename T> [[nodiscard]] std::vector<T> readFile(const std::string& path) {
 		std::ifstream file(path, std::ios::ate | std::ios::binary);
 		if (!file.is_open()) {
 			throw std::runtime_error("Failed to open file: " + path);
@@ -18,4 +18,6 @@ namespace voxel_game::util {
 		file.close();
 		return buffer;
 	}
+
+	[[nodiscard]] std::string readFileAsString(const std::string& path);
 }

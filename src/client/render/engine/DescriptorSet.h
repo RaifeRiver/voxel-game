@@ -3,7 +3,7 @@
 #include "GPUBuffer.h"
 #include "GPUImage.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::engine {
 	class DescriptorSet {
 	public:
 		virtual void setBinding(uint32_t binding, GPUImage* image) = 0;

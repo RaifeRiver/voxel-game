@@ -4,7 +4,7 @@
 
 #include "client/render/engine/RenderPipeline.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	class VulkanEngine;
 
 	VkPrimitiveTopology toVKPrimitiveTopology(PrimitiveTopology topology);

@@ -5,7 +5,7 @@
 
 #include "client/render/engine/GPUBuffer.h"
 
-namespace voxel_game::client::render::vulkan {
+namespace voxel_game::client::render::engine::vulkan {
 	class VulkanEngine;
 
 	VkBufferUsageFlags toVKBufferUsage(BufferUsage usage);

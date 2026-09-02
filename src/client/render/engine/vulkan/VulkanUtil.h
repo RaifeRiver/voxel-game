@@ -8,7 +8,7 @@
 #include "VulkanEngine.h"
 #include "common/util/Log.h"
 
-namespace voxel_game::client::render::vulkan::vulkan_util {
+namespace voxel_game::client::render::engine::vulkan::vulkan_util {
 	std::string vkResultString(VkResult result);
 
 	inline bool vkCheck(const VkResult result, const bool fatal = true) {

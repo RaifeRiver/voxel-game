@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-namespace voxel_game::client::render::opengl::opengl_util {
+namespace voxel_game::client::render::engine::opengl::opengl_util {
 	enum class PushConstantDataType {
 		FLOAT,
 		DOUBLE,

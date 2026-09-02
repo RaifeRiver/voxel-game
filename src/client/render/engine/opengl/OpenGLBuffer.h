@@ -2,7 +2,7 @@
 
 #include "client/render/engine/GPUBuffer.h"
 
-namespace voxel_game::client::render::opengl {
+namespace voxel_game::client::render::engine::opengl {
 	class OpenGLBuffer : public GPUBuffer {
 	public:
 		OpenGLBuffer(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType);

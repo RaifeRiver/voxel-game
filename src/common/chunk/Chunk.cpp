@@ -28,7 +28,7 @@ namespace voxel_game::chunk {
 		mBlockMask = 63;
 		mClearMask = 1;
 		mData.resize(CHUNK_VOLUME >> 6, 0);
-		mPalette.reserve(2);
+		mPalette.resize(2);
 		mPalette[0] = {.id = mUniformType, .count = CHUNK_VOLUME - 1};
 		mPalette[1] = {.id = id, .count = 1};
 		const uint32_t offset = (index & mBlockMask) * mBitsPerBlock;

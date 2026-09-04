@@ -50,13 +50,13 @@ namespace voxel_game::chunk {
 		uint8_t mBitsPerBlock = 0;
 		uint8_t mIndexShift = 0;
 		uint32_t mBlockMask = 0;
-		uint32_t mClearMask = 0;
+		uint64_t mClearMask = 0;
 		std::vector<uint64_t> mData;
 		std::vector<ChunkPaletteEntry> mPalette;
 		ChunkPos mPos;
 		ecs::Entity mObject;
 
-		void convertToPalette(uint32_t index, uint32_t id);
+		void convertToPalette();
 
 		uint32_t getPaletteIDModifyCount(uint32_t id, int32_t countModifier);
 

@@ -11,37 +11,40 @@ namespace voxel_game::chunk {
 	}
 
 	void Chunk::setBlock(const uint32_t index, const uint32_t id) {
-		getPaletteIDModifyCount(getBlock(index), -1);
+		const uint32_t currentBlock = getBlock(index);
+		if (currentBlock == id) {
+			return;
+		}
+		getPaletteIDModifyCount(currentBlock, -1);
 		const uint32_t paletteID = getPaletteIDModifyCount(id, 1);
+		if (mBitsPerBlock == 0) {
+			return;
+		}
 		const uint32_t offset = (index & mBlockMask) * mBitsPerBlock;
-		mData[index >> mIndexShift] &= ~(mClearMask << offset);
-		mData[index >> mIndexShift] |= paletteID << offset;
+		const uint32_t shiftedIndex = index >> mIndexShift;
+		mData[shiftedIndex] &= ~(mClearMask << offset);
+		mData[shiftedIndex] |= static_cast<uint64_t>(paletteID) << offset;
 	}
 
 	bool Chunk::isUniform() const {
 		return mBitsPerBlock == 0;
 	}
 
-	void Chunk::convertToPalette(const uint32_t index, const uint32_t id) {
+	void Chunk::convertToPalette() {
 		mBitsPerBlock = 1;
 		mIndexShift = 6;
 		mBlockMask = 63;
 		mClearMask = 1;
 		mData.resize(CHUNK_VOLUME >> 6, 0);
-		mPalette.resize(2);
-		mPalette[0] = {.id = mUniformType, .count = CHUNK_VOLUME - 1};
-		mPalette[1] = {.id = id, .count = 1};
-		const uint32_t offset = (index & mBlockMask) * mBitsPerBlock;
-		const uint32_t shiftedIndex = index >> mIndexShift;
-		mData[shiftedIndex] &= ~(mClearMask << offset);
-		mData[shiftedIndex] |= id << offset;
+		mPalette.resize(1);
+		mPalette[0] = {.id = mUniformType, .count = CHUNK_VOLUME};
 	}
 
 	uint32_t Chunk::getPaletteIDModifyCount(const uint32_t id, const int32_t countModifier) {
 		if (mBitsPerBlock == 0) {
 			if (id != mUniformType) {
-				convertToPalette(0, mUniformType);
-				mPalette[1] = {.id = id, .count = countModifier};
+				convertToPalette();
+				mPalette.emplace_back(id, countModifier);
 				return 1;
 			}
 			return 0;
@@ -92,7 +95,9 @@ namespace voxel_game::chunk {
 			mUniformType = last;
 			mBitsPerBlock = 0;
 			mPalette.clear();
+			mPalette.shrink_to_fit();
 			mData.clear();
+			mData.shrink_to_fit();
 		}
 		else {
 			for (uint32_t index = 0; index < CHUNK_VOLUME; index++) {
@@ -105,6 +110,7 @@ namespace voxel_game::chunk {
 			}
 			if (mPalette.size() <= getShrinkThreshold()) {
 				resizeData(mBitsPerBlock >> 1);
+				mData.shrink_to_fit();
 			}
 		}
 	}
@@ -122,7 +128,7 @@ namespace voxel_game::chunk {
 			const uint32_t offset = (i & mBlockMask) * mBitsPerBlock;
 			const uint32_t id = (data[i >> mIndexShift] >> offset) & mClearMask;
 			if (id != 0) {
-				mData[i >> mIndexShift] |= id << offset;
+				mData[i >> indexShift] |= id << offset;
 			}
 		}
 

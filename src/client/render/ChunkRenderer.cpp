@@ -16,7 +16,7 @@ namespace voxel_game::client::render {
 
 		const std::string vertexShader = util::readFileAsString(resourceManager.findResource("voxel_game:shaders/chunk", ".vert", resource::ResourceType::ASSET).path);
 		const std::string fragmentShader = util::readFileAsString(resourceManager.findResource("voxel_game:shaders/chunk", ".frag", resource::ResourceType::ASSET).path);
-		mPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->build();
+		mPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->cullMode(engine::CullMode::BACK)->build();
 
 		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->build(1, engine::ShaderStage::VERTEX);
 		mDescriptorSet = mDescriptorAllocator->allocate();

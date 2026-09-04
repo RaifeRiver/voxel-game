@@ -75,4 +75,12 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanBuffer::unmap_() {}
+
+	uint64_t VulkanBuffer::getDeviceAddress_() {
+		const VkBufferDeviceAddressInfo bufferDeviceAddressInfo = {
+			.sType = VK_STRUCTURE_TYPE_BUFFER_DEVICE_ADDRESS_INFO,
+			.buffer = mBuffer
+		};
+		return vkGetBufferDeviceAddress(mVulkanEngine->getDevice(), &bufferDeviceAddressInfo);
+	}
 }

@@ -40,6 +40,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkPipeline mPipeline = nullptr;
 		VkPipelineLayout mPipelineLayout = nullptr;
 		uint32_t mPushConstantsSize = 0;
+		VkShaderStageFlags mPushConstantStages = 0;
 	};
 
 	class VulkanRenderPipelineBuilder : public RenderPipelineBuilder {

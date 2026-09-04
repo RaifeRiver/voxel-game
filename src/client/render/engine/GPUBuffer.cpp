@@ -23,4 +23,11 @@ namespace voxel_game::client::render::engine {
 		mMapped = false;
 		unmap_();
 	}
+
+	uint64_t GPUBuffer::getDeviceAddress() {
+		if (!(mUsage & BufferUsage::SHADER_DEVICE_ADDRESS)) {
+			throw std::runtime_error("Buffers created without BufferUsage::SHADER_DEVICE_ADDRESS do not have a readable device address");
+		}
+		return getDeviceAddress_();
+	}
 }

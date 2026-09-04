@@ -99,8 +99,9 @@ namespace voxel_game::client::render::engine::vulkan {
 		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 2, shaderData);
 
 		std::vector<VkPushConstantRange> pushConstantRanges = vulkan_util::getPushConstantRanges(1, shaderData);
-		for (const VkPushConstantRange& pushConstantRange : pushConstantRanges) {
-			mPushConstantsSize = std::max(mPushConstantsSize, pushConstantRange.offset + pushConstantRange.size);
+		for (const auto&[stageFlags, offset, size] : pushConstantRanges) {
+			mPushConstantsSize = std::max(mPushConstantsSize, offset + size);
+			mPushConstantStages |= stageFlags;
 		}
 		const VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -223,8 +224,9 @@ namespace voxel_game::client::render::engine::vulkan {
 		const glm::uvec3 renderImageSize = mVulkanEngine->getRenderImage().getSize();
 
 		const VkViewport viewport = {
+			.y = static_cast<float>(renderImageSize.y),
 			.width = static_cast<float>(renderImageSize.x),
-			.height = static_cast<float>(renderImageSize.y),
+			.height = -static_cast<float>(renderImageSize.y),
 			.maxDepth = 1.0f
 		};
 		vkCmdSetViewport(mVulkanEngine->getCommandBuffer(), 0, 1, &viewport);
@@ -245,7 +247,7 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanRenderPipeline::setPushConstants(void* pushConstants) {
-		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, VK_SHADER_STAGE_VERTEX_BIT | VK_SHADER_STAGE_FRAGMENT_BIT, 0, mPushConstantsSize, pushConstants);
+		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, mPushConstantStages, 0, mPushConstantsSize, pushConstants);
 	}
 
 	void VulkanRenderPipeline::bindIndexBuffer(GPUBuffer* buffer) {

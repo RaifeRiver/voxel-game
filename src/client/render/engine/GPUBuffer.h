@@ -42,6 +42,8 @@ namespace voxel_game::client::render::engine {
 
     	void unmap();
 
+    	uint64_t getDeviceAddress();
+
     	[[nodiscard]] size_t getSize() const {
     		return mSize;
     	}
@@ -70,5 +72,7 @@ namespace voxel_game::client::render::engine {
     	virtual void* map_() = 0;
 
     	virtual void unmap_() = 0;
+
+    	virtual uint64_t getDeviceAddress_() = 0;
     };
 }

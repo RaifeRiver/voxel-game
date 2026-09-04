@@ -69,6 +69,7 @@ target_compile_definitions(VoxelGameClient PUBLIC LOG_PROJECT_NAME=VoxelGame)
 target_compile_definitions(VoxelGameClient PUBLIC VG_SIDE=CLIENT)
 
 target_compile_definitions(VoxelGameClient PUBLIC GLM_ENABLE_EXPERIMENTAL)
+target_compile_definitions(VoxelGameClient PUBLIC GLM_FORCE_DEPTH_ZERO_TO_ONE)
 target_compile_definitions(VoxelGameClient PUBLIC VK_NO_PROTOTYPES)
 target_compile_definitions(VoxelGameClient PUBLIC VMA_VULKAN_HEADERS_ALREADY_INCLUDED)
 

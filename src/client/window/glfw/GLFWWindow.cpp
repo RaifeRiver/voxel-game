@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "client/render/engine/RenderEngine.h"
 #include "common/util/Log.h"
 
 namespace voxel_game::client::window::glfw {
@@ -26,7 +27,9 @@ namespace voxel_game::client::window::glfw {
 		else {
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		}
-		glfwWindowHint(GLFW_REFRESH_RATE, videoMode->refreshRate);
+		if (render::engine::ENABLE_VSYNC) {
+			glfwWindowHint(GLFW_REFRESH_RATE, videoMode->refreshRate);
+		}
 		glfwWindowHint(GLFW_RED_BITS, videoMode->redBits);
 		glfwWindowHint(GLFW_GREEN_BITS, videoMode->greenBits);
 		glfwWindowHint(GLFW_BLUE_BITS, videoMode->blueBits);
@@ -54,6 +57,9 @@ namespace voxel_game::client::window::glfw {
 
 		if (context) {
 			glfwMakeContextCurrent(mWindow);
+			if (!render::engine::ENABLE_VSYNC) {
+				glfwSwapInterval(0);
+			}
 		}
 	}
 

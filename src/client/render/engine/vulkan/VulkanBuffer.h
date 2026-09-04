@@ -29,6 +29,8 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		void unmap_() override;
 
+		uint64_t getDeviceAddress_() override;
+
 	private:
 		VulkanEngine* mVulkanEngine;
 		VkBuffer mBuffer = nullptr;

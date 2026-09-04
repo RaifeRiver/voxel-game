@@ -68,7 +68,8 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkRenderingAttachmentInfo depthAttachmentInfo = {
 			.sType = VK_STRUCTURE_TYPE_RENDERING_ATTACHMENT_INFO,
 			.imageView = mDepthImage->getImageView(),
-			.imageLayout = mDepthImage->getCurrentLayout()
+			.imageLayout = mDepthImage->getCurrentLayout(),
+			.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR
 		};
 		const glm::uvec3 renderImageSize = mRenderImage->getSize();
 		const VkRenderingInfo renderingInfo = {
@@ -222,14 +223,17 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		VkPhysicalDeviceVulkan12Features features12 = {};
 		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
+		features12.bufferDeviceAddress = true;
 
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
 		features13.pNext = &features12;
 		features13.dynamicRendering = true;
+		features13.shaderDemoteToHelperInvocation = true;
 		features13.synchronization2 = true;
 
 		VkPhysicalDeviceFeatures features = {};
+		features.fillModeNonSolid = true;
 
 		VkDeviceCreateInfo deviceCreateInfo = vulkan_util::deviceCreateInfo(1, &deviceQueueCreateInfo, extensions, &features, &features13);
 		vulkan_util::vkCheck(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
@@ -247,7 +251,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		};
 
 		const VmaAllocatorCreateInfo allocatorCreateInfo = {
-			.flags = 0,
+			.flags = VMA_ALLOCATOR_CREATE_BUFFER_DEVICE_ADDRESS_BIT,
 			.physicalDevice = mPhysicalDevice,
 			.device = mDevice,
 			.pVulkanFunctions = &vulkanFunctions,
@@ -284,7 +288,7 @@ namespace voxel_game::client::render::engine::vulkan {
 			.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = VK_PRESENT_MODE_FIFO_KHR
+			.presentMode = ENABLE_VSYNC ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR
 		};
 		vulkan_util::vkCheck(vkCreateSwapchainKHR(mDevice, &swapchainCreateInfo, nullptr, &mSwapchain));
 

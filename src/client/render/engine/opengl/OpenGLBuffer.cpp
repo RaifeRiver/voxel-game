@@ -1,5 +1,7 @@
 #include "OpenGLBuffer.h"
 
+#include <stdexcept>
+
 #include "glad/glad.h"
 
 namespace voxel_game::client::render::engine::opengl {
@@ -20,5 +22,9 @@ namespace voxel_game::client::render::engine::opengl {
 
 	void OpenGLBuffer::unmap_() {
 		glUnmapBuffer(GL_ARRAY_BUFFER);
+	}
+
+	uint64_t OpenGLBuffer::getDeviceAddress_() {
+		throw std::runtime_error("Buffer device address is not supported on OpenGL");
 	}
 }

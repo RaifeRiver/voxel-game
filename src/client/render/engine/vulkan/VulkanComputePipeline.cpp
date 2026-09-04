@@ -8,7 +8,6 @@
 #include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
-#include "common/util/FileHelper.h"
 
 namespace voxel_game::client::render::engine::vulkan {
 	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const std::string& computeShader) : mVulkanEngine(vulkanEngine) {
@@ -25,8 +24,9 @@ namespace voxel_game::client::render::engine::vulkan {
 		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 1, &computeShaderData);
 
 		std::vector<VkPushConstantRange> pushConstantRanges = vulkan_util::getPushConstantRanges(1, &computeShaderData);
-		for (const VkPushConstantRange& pushConstantRange : pushConstantRanges) {
-			mPushConstantsSize = std::max(mPushConstantsSize, pushConstantRange.offset + pushConstantRange.size);
+		for (const auto&[stageFlags, offset, size] : pushConstantRanges) {
+			mPushConstantsSize = std::max(mPushConstantsSize, offset + size);
+			mPushConstantStages |= stageFlags;
 		}
 		const VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
@@ -64,7 +64,7 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanComputePipeline::setPushConstants(void* pushConstants) {
-		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, VK_SHADER_STAGE_COMPUTE_BIT, 0, mPushConstantsSize, pushConstants);
+		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, mPushConstantStages, 0, mPushConstantsSize, pushConstants);
 	}
 
 	void VulkanComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z) {

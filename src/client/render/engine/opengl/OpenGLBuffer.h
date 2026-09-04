@@ -18,6 +18,8 @@ namespace voxel_game::client::render::engine::opengl {
 
 		void unmap_() override;
 
+		uint64_t getDeviceAddress_() override;
+
 	private:
 		unsigned int mBuffer = 0;
 	};

@@ -22,12 +22,24 @@ namespace voxel_game::universe {
 		[[nodiscard]] double length() const {
 			return glm::length(glm::dvec3(sector)) * SECTOR_SIZE + glm::length(local);
 		}
+
+		void operator+=(const glm::vec3& other) {
+			local += other;
+			fix();
+		}
 	};
 
 	[[nodiscard]] inline UniversePos operator+(const UniversePos& a, const UniversePos& b) {
 		UniversePos result = {};
 		result.sector = a.sector + b.sector;
 		result.local = a.local + b.local;
+		result.fix();
+		return result;
+	}
+
+	[[nodiscard]] inline UniversePos operator+(const UniversePos& a, const glm::vec3& b) {
+		UniversePos result = {};
+		result.local = a.local + b;
 		result.fix();
 		return result;
 	}

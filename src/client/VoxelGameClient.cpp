@@ -2,8 +2,11 @@
 
 #include <numeric>
 
+#include "common/component/Transform.h"
+#include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
 #include "common/util/Log.h"
+#include "player/PlayerInputController.h"
 #include "render/ChunkRenderer.h"
 #include "render/SkyRenderer.h"
 #include "render/engine/RenderEngine.h"
@@ -31,7 +34,15 @@ namespace voxel_game::client {
 		registry.getSystemManager().createSystem<render::SkyRenderer>(registry);
 		registry.getSystemManager().createSystem<render::ChunkRenderer>(registry);
 
-		player::attachPlayerComponents(registry, registry.createEntity(), true);
+		const ecs::Entity player = registry.createEntity();
+		voxel_game::player::attachPlayerComponents(registry, player, true);
+		registry.getComponent<component::Transform>(player).pos.local = {16, 40, 45};
+		auto& cameraRotation = registry.getComponent<voxel_game::player::CameraRotation>(player);
+		cameraRotation.pitch = -0.6f;
+		registry.getSystemManager().createSystem<player::PlayerInputController>();
+
+		auto& window = registry.getResource<window::Window>();
+		window.setLockMouse(true);
 	}
 
 	void run(ecs::ECSRegistry &registry) {

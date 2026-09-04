@@ -1,10 +1,12 @@
 #include "ChunkRenderer.h"
 
 #include "glm/packing.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 #include "common/chunk/Chunk.h"
+#include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
+#include "common/player/CameraRotation.h"
+#include "common/player/Player.h"
 #include "common/util/FileHelper.h"
 #include "common/util/Log.h"
 #include "engine/RenderEngine.h"
@@ -109,8 +111,18 @@ namespace voxel_game::client::render {
 
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
 
+		const ecs::Entity player = registry.getEntitiesWithComponents<player::LocalPlayer, component::Transform>()[0];
+		const component::Transform& transform = registry.getComponent<component::Transform>(player);
+		const player::CameraRotation& rotation = registry.getComponent<player::CameraRotation>(player);
+
 		const glm::uvec2 size = renderEngine.getRenderImage().getSize();
-		mPushConstants.viewProj = glm::perspective(glm::radians(90.0f), static_cast<float>(size.x) / size.y, 1000.0f, 0.1f) * glm::lookAt(glm::vec3(16, 50, 45), glm::vec3(16, 32, 16), glm::vec3(0, 1, 0));
+		const glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), static_cast<float>(size.x) / size.y, 1000000.0f, 0.1f);
+		const glm::quat pitchRotation = glm::angleAxis(rotation.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
+		const glm::quat yawRotation = glm::angleAxis(rotation.yaw, glm::vec3(0.0f, -1.0f, 0.0f));
+		const glm::mat4 rotationMatrix = glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
+		const glm::mat4 translationMatrix  =glm::translate(glm::mat4(1.0f), glm::vec3(transform.pos.sector) * universe::SECTOR_SIZE + transform.pos.local);
+		const glm::mat4 viewMatrix = glm::inverse(translationMatrix * rotationMatrix);
+		mPushConstants.viewProj = projectionMatrix * viewMatrix;
 
 		renderEngine.beginRendering();
 

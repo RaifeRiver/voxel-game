@@ -7,6 +7,25 @@
 #include "common/util/Log.h"
 
 namespace voxel_game::client::window::glfw {
+	int toGLFWKey(const Key key) {
+		switch (key) {
+			case Key::KEY_A:
+				return GLFW_KEY_A;
+			case Key::KEY_D:
+				return GLFW_KEY_D;
+			case Key::KEY_S:
+				return GLFW_KEY_S;
+			case Key::KEY_W:
+				return GLFW_KEY_W;
+			case Key::KEY_LEFT_SHIFT:
+				return GLFW_KEY_LEFT_SHIFT;
+			case Key::KEY_SPACE:
+				return GLFW_KEY_SPACE;
+			default:
+				throw std::runtime_error("Unsupported key");
+		}
+	}
+
 	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
 		LOG_INFO("Using GLFW window");
 
@@ -54,6 +73,15 @@ namespace voxel_game::client::window::glfw {
 				window2->mResizeCallback({w, h});
 			}
 		});
+		glfwSetCursorPosCallback(mWindow, [](GLFWwindow* window, const double x, const double y) {
+			static glm::dvec2 previous = {};
+			const glm::dvec2 current = {x, y};
+			const glm::dvec2 movement = current - previous;
+			previous = current;
+
+			const auto window2 = static_cast<GLFWWindow*>(glfwGetWindowUserPointer(window));
+			window2->mMouseMovement += movement;
+		});
 
 		if (context) {
 			glfwMakeContextCurrent(mWindow);
@@ -95,6 +123,7 @@ namespace voxel_game::client::window::glfw {
 	}
 
 	void GLFWWindow::pollEvents() {
+		mMouseMovement = {};
 		glfwPollEvents();
 	}
 
@@ -109,6 +138,23 @@ namespace voxel_game::client::window::glfw {
 
 	void GLFWWindow::setResizeCallback(const WindowResizeCallback& callback) {
 		mResizeCallback = callback;
+	}
+
+	bool GLFWWindow::isKeyPressed(const Key key) {
+		return glfwGetKey(mWindow, toGLFWKey(key)) == GLFW_PRESS;
+	}
+
+	glm::vec2 GLFWWindow::getMouseMovement() {
+		return mMouseMovement;
+	}
+
+	void GLFWWindow::setLockMouse(const bool lockMouse) {
+		if (lockMouse) {
+			glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+		}
+		else {
+			glfwSetInputMode(mWindow, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+		}
 	}
 
 	void GLFWWindow::destroy() {

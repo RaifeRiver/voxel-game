@@ -11,6 +11,16 @@
 namespace voxel_game::client::window {
 	using WindowResizeCallback = std::function<void(glm::uvec2)>;
 
+	enum class Key {
+		KEY_A,
+		KEY_D,
+		KEY_S,
+		KEY_W,
+
+		KEY_LEFT_SHIFT,
+		KEY_SPACE
+	};
+
 	class Window : public ecs::Resource<Window> {
 	public:
 		virtual void swapOpenGLBuffers() = 0;
@@ -30,5 +40,11 @@ namespace voxel_game::client::window {
 		virtual void setVisible(bool visible) = 0;
 
 		virtual void setResizeCallback(const WindowResizeCallback& callback) = 0;
+
+		virtual bool isKeyPressed(Key key) = 0;
+
+		virtual glm::vec2 getMouseMovement() = 0;
+
+		virtual void setLockMouse(bool lockMouse) = 0;
 	};
 }

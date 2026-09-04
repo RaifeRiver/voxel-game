@@ -11,6 +11,8 @@
 #include "client/window/Window.h"
 
 namespace voxel_game::client::window::glfw {
+	int toGLFWKey(Key key);
+
 	class GLFWWindow : public Window {
 	public:
 		GLFWWindow(const std::string& name, bool fullscreen, int width, int height, bool context = false);
@@ -33,11 +35,18 @@ namespace voxel_game::client::window::glfw {
 
 		void setResizeCallback(const WindowResizeCallback& callback) override;
 
+		bool isKeyPressed(Key key) override;
+
+		glm::vec2 getMouseMovement() override;
+
+		void setLockMouse(bool lockMouse) override;
+
 		void destroy() override;
 
 	private:
 		GLFWwindow* mWindow;
 		WindowResizeCallback mResizeCallback;
+		glm::vec2 mMouseMovement;
 
 		static void init();
 	};

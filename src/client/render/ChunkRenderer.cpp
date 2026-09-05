@@ -51,47 +51,59 @@ namespace voxel_game::client::render {
 						glm::vec3 p6 = {x + 1.0f, y + 1.0f, z};
 						glm::vec3 p7 = {x, y + 1.0f, z};
 
-						vertices.push_back({.position = p0, .colour = colour});
-						vertices.push_back({.position = p1, .colour = colour});
-						vertices.push_back({.position = p2, .colour = colour});
-						vertices.push_back({.position = p0, .colour = colour});
-						vertices.push_back({.position = p2, .colour = colour});
-						vertices.push_back({.position = p3, .colour = colour});
+						if (z == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y, z + 1) == 0) {
+							vertices.push_back({.position = p0, .colour = colour});
+							vertices.push_back({.position = p1, .colour = colour});
+							vertices.push_back({.position = p2, .colour = colour});
+							vertices.push_back({.position = p0, .colour = colour});
+							vertices.push_back({.position = p2, .colour = colour});
+							vertices.push_back({.position = p3, .colour = colour});
+						}
 
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p7, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p5, .colour = colour});
+						if (z == 0 || chunk.getBlock(x, y, z - 1) == 0) {
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p7, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p5, .colour = colour});
+						}
 
-						vertices.push_back({.position = p3, .colour = colour});
-						vertices.push_back({.position = p2, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p3, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p7, .colour = colour});
+						if (y == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y + 1, z) == 0) {
+							vertices.push_back({.position = p3, .colour = colour});
+							vertices.push_back({.position = p2, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p3, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p7, .colour = colour});
+						}
 
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p5, .colour = colour});
-						vertices.push_back({.position = p1, .colour = colour});
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p1, .colour = colour});
-						vertices.push_back({.position = p0, .colour = colour});
+						if (y == 0 || chunk.getBlock(x, y - 1, z) == 0) {
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p5, .colour = colour});
+							vertices.push_back({.position = p1, .colour = colour});
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p1, .colour = colour});
+							vertices.push_back({.position = p0, .colour = colour});
+						}
 
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p0, .colour = colour});
-						vertices.push_back({.position = p3, .colour = colour});
-						vertices.push_back({.position = p4, .colour = colour});
-						vertices.push_back({.position = p3, .colour = colour});
-						vertices.push_back({.position = p7, .colour = colour});
+						if (x == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x + 1, y, z) == 0) {
+							vertices.push_back({.position = p1, .colour = colour});
+							vertices.push_back({.position = p5, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p1, .colour = colour});
+							vertices.push_back({.position = p6, .colour = colour});
+							vertices.push_back({.position = p2, .colour = colour});
+						}
 
-						vertices.push_back({.position = p1, .colour = colour});
-						vertices.push_back({.position = p5, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p1, .colour = colour});
-						vertices.push_back({.position = p6, .colour = colour});
-						vertices.push_back({.position = p2, .colour = colour});
+						if (x == 0 || chunk.getBlock(x - 1, y, z) == 0) {
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p0, .colour = colour});
+							vertices.push_back({.position = p3, .colour = colour});
+							vertices.push_back({.position = p4, .colour = colour});
+							vertices.push_back({.position = p3, .colour = colour});
+							vertices.push_back({.position = p7, .colour = colour});
+						}
 					}
 				}
 			}

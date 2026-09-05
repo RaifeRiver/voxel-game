@@ -66,23 +66,23 @@ namespace voxel_game::util::profiler {
 	}
 
 	static void saveRegion(std::ofstream& file, const Region& region) {
-		writeToFile(file, region.label.size());
+		writeToFile(file, static_cast<uint32_t>(region.label.size()));
 		file.write(region.label.c_str(), region.label.size());
 		writeToFile(file, std::chrono::duration_cast<std::chrono::nanoseconds>(region.start.time_since_epoch()).count());
 		writeToFile(file, std::chrono::duration_cast<std::chrono::nanoseconds>(region.end.time_since_epoch()).count());
-		writeToFile(file, region.children.size());
+		writeToFile(file, static_cast<uint32_t>(region.children.size()));
 		for (const Region& child: region.children) {
 			saveRegion(file, child);
 		}
 	}
 
 	void saveData() {
-		std::ofstream file(std::format("voxel_game_profile_{:%Y_%m_%d_%H_%M_%S}.bin", std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now())), std::ios::binary);
-		writeToFile(file, frames.size());
+		std::ofstream file(std::format("voxel_game_profile_{:%Y_%m_%d_%H_%M_%S}.bin", std::chrono::round<std::chrono::duration<int64_t>>(std::chrono::zoned_time(std::chrono::current_zone(), std::chrono::system_clock::now()).get_local_time())), std::ios::binary);
+		writeToFile(file, static_cast<uint32_t>(frames.size()));
 		for (const auto& [regions, start, end]: frames) {
 			writeToFile(file, std::chrono::duration_cast<std::chrono::nanoseconds>(start.time_since_epoch()).count());
 			writeToFile(file, std::chrono::duration_cast<std::chrono::nanoseconds>(end.time_since_epoch()).count());
-			writeToFile(file, regions.size());
+			writeToFile(file, static_cast<uint32_t>(regions.size()));
 			for (const Region& region: regions) {
 				saveRegion(file, region);
 			}

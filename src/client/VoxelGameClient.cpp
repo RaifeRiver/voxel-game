@@ -6,6 +6,7 @@
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
 #include "common/util/Log.h"
+#include "common/util/Profiler.h"
 #include "player/PlayerInputController.h"
 #include "render/ChunkRenderer.h"
 #include "render/SkyRenderer.h"
@@ -52,6 +53,8 @@ namespace voxel_game::client {
 		uint64_t frame = 0;
 		float frameTimes[1000];
 		while (!window.shouldClose()) {
+			util::profiler::beginFrame();
+
 			std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::steady_clock::now();
 			const float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 			lastTime = currentTime;
@@ -67,6 +70,8 @@ namespace voxel_game::client {
 
 			registry.getCommandQueue().execute(registry);
 			registry.getSystemManager().runSystems(registry, deltaTime);
+
+			util::profiler::endFrame();
 		}
 	}
 
@@ -78,5 +83,7 @@ namespace voxel_game::client {
 
 		registry.removeResource<render::engine::RenderEngine>();
 		registry.removeResource<window::Window>();
+
+		util::profiler::saveData();
 	}
 }

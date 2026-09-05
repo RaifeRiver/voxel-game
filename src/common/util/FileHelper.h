@@ -20,4 +20,8 @@ namespace voxel_game::util {
 	}
 
 	[[nodiscard]] std::string readFileAsString(const std::string& path);
+
+	template <typename T> void writeToFile(std::ofstream& file, const T value) {
+		file.write(reinterpret_cast<const char*>(&value), sizeof(value));
+	}
 }

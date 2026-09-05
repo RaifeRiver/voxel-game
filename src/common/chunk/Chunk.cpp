@@ -128,7 +128,7 @@ namespace voxel_game::chunk {
 			const uint32_t offset = (i & mBlockMask) * mBitsPerBlock;
 			const uint32_t id = (data[i >> mIndexShift] >> offset) & mClearMask;
 			if (id != 0) {
-				mData[i >> indexShift] |= id << offset;
+				mData[i >> indexShift] |= static_cast<uint64_t>(id) << ((i & blockMask) * bitsPerBlock);
 			}
 		}
 

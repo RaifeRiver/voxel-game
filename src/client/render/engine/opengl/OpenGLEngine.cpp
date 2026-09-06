@@ -35,11 +35,11 @@ namespace voxel_game::client::render::engine::opengl {
 		return std::make_unique<OpenGLImage>(size, format, usage, type);
 	}
 
-	std::unique_ptr<ComputePipeline> OpenGLEngine::createComputePipeline(const std::string& computeShader) {
+	std::unique_ptr<ComputePipeline> OpenGLEngine::createComputePipeline(const Shader& computeShader) {
 		return std::make_unique<OpenGLComputePipeline>(computeShader);
 	}
 
-	std::unique_ptr<RenderPipelineBuilder> OpenGLEngine::createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) {
+	std::unique_ptr<RenderPipelineBuilder> OpenGLEngine::createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) {
 		return std::make_unique<OpenGLRenderPipelineBuilder>(vertexShader, fragmentShader);
 	}
 

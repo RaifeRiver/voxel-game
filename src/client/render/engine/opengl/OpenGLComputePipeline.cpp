@@ -1,16 +1,12 @@
 #include "OpenGLComputePipeline.h"
 
-#include <stdexcept>
-
 #include "glad/glad.h"
 
 #include "OpenGLDescriptorSet.h"
-#include "OpenGLUtil.h"
-#include "client/render/engine/Shader.h"
 
 namespace voxel_game::client::render::engine::opengl {
-	OpenGLComputePipeline::OpenGLComputePipeline(const std::string& computeShaderGLSL) {
-		const std::vector<uint32_t> computeShaderData = compileGLSL(computeShaderGLSL, ShaderStage::COMPUTE);
+	OpenGLComputePipeline::OpenGLComputePipeline(const Shader& computeShaderGLSL) {
+		const std::vector<uint32_t>& computeShaderData = computeShaderGLSL.getSPIRV();
 
 		const std::string computeShaderCode = opengl_util::convertShader(computeShaderData);
 		const char* computeShaderCodeChars = computeShaderCode.c_str();

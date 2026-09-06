@@ -1,14 +1,13 @@
 #pragma once
 
-#include <string>
-
 #include "OpenGLUtil.h"
 #include "client/render/engine/ComputePipeline.h"
+#include "client/render/engine/Shader.h"
 
 namespace voxel_game::client::render::engine::opengl {
 	class OpenGLComputePipeline : public ComputePipeline {
 	public:
-		explicit OpenGLComputePipeline(const std::string& computeShaderGLSL);
+		explicit OpenGLComputePipeline(const Shader& computeShaderGLSL);
 
 		void bind() override;
 

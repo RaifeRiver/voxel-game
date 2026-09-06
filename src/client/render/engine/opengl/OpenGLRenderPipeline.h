@@ -46,7 +46,7 @@ namespace voxel_game::client::render::engine::opengl {
 
 	class OpenGLRenderPipelineBuilder : public RenderPipelineBuilder {
 	public:
-		OpenGLRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader);
+		OpenGLRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader);
 
 		std::unique_ptr<RenderPipeline> build() override;
 	};

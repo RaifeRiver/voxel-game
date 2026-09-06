@@ -66,7 +66,7 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	VulkanRenderPipeline::VulkanRenderPipeline(VulkanEngine* vulkanEngine, const RenderPipelineBuilder* builder) : mVulkanEngine(vulkanEngine) {
-		std::vector<uint32_t> vertexShaderData = compileGLSL(builder->getVertexShader(), ShaderStage::VERTEX);
+		std::vector<uint32_t> vertexShaderData = builder->getVertexShader().getSPIRV();
 		const VkShaderModuleCreateInfo vertexShaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			.codeSize = vertexShaderData.size() * sizeof(uint32_t),
@@ -75,7 +75,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkShaderModule vertexShaderModule;
 		vulkan_util::vkCheck(vkCreateShaderModule(mVulkanEngine->getDevice(), &vertexShaderModuleCreateInfo, nullptr, &vertexShaderModule));
 
-		std::vector<uint32_t> fragmentShaderData = compileGLSL(builder->getFragmentShader(), ShaderStage::FRAGMENT);
+		std::vector<uint32_t> fragmentShaderData = builder->getFragmentShader().getSPIRV();
 		const VkShaderModuleCreateInfo fragmentShaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
 			.codeSize = fragmentShaderData.size() * sizeof(uint32_t),
@@ -272,7 +272,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		vkCmdDrawIndexed(mVulkanEngine->getCommandBuffer(), indexCount, 1, firstIndex, 0, 0);
 	}
 
-	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}
+	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}
 
 	std::unique_ptr<RenderPipeline> VulkanRenderPipelineBuilder::build() {
 		return std::make_unique<VulkanRenderPipeline>(mVulkanEngine, this);

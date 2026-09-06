@@ -1,10 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <string>
 
 #include "GPUImage.h"
 #include "Pipeline.h"
+#include "Shader.h"
 
 namespace voxel_game::client::render::engine {
 	enum class PrimitiveTopology {
@@ -62,13 +62,13 @@ namespace voxel_game::client::render::engine {
 
 	class RenderPipelineBuilder {
 	public:
-		RenderPipelineBuilder(std::string vertexShader, std::string fragmentShader);
+		RenderPipelineBuilder(Shader vertexShader, Shader fragmentShader);
 
-		[[nodiscard]] std::string getVertexShader() const {
+		[[nodiscard]] Shader getVertexShader() const {
 			return mVertexShader;
 		}
 
-		[[nodiscard]] std::string getFragmentShader() const {
+		[[nodiscard]] Shader getFragmentShader() const {
 			return mFragmentShader;
 		}
 
@@ -123,8 +123,8 @@ namespace voxel_game::client::render::engine {
 		virtual ~RenderPipelineBuilder() = default;
 
 	protected:
-		std::string mVertexShader;
-		std::string mFragmentShader;
+		Shader mVertexShader;
+		Shader mFragmentShader;
 		PrimitiveTopology mPrimitiveTopology = PrimitiveTopology::TRIANGLE_LIST;
 		PolygonMode mPolygonMode = PolygonMode::FILL;
 		float mLineWidth = 1.0f;

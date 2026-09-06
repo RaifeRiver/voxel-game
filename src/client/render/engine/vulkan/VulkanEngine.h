@@ -31,9 +31,9 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) override;
 
-		std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) override;
+		std::unique_ptr<ComputePipeline> createComputePipeline(const Shader& computeShader) override;
 
-		std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) override;
+		std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) override;
 
 		std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() override;
 

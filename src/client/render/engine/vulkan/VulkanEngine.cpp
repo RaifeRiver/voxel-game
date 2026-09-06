@@ -44,11 +44,11 @@ namespace voxel_game::client::render::engine::vulkan {
 		return std::make_unique<VulkanImage>(this, size, format, usage, type);
 	}
 
-	std::unique_ptr<ComputePipeline> VulkanEngine::createComputePipeline(const std::string& computeShader) {
+	std::unique_ptr<ComputePipeline> VulkanEngine::createComputePipeline(const Shader& computeShader) {
 		return std::make_unique<VulkanComputePipeline>(this, computeShader);
 	}
 
-	std::unique_ptr<RenderPipelineBuilder> VulkanEngine::createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) {
+	std::unique_ptr<RenderPipelineBuilder> VulkanEngine::createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) {
 		return std::make_unique<VulkanRenderPipelineBuilder>(this, vertexShader, fragmentShader);
 	}
 

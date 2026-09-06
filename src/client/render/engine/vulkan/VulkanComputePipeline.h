@@ -9,7 +9,7 @@
 namespace voxel_game::client::render::engine::vulkan {
 	class VulkanComputePipeline : public ComputePipeline {
 	public:
-		VulkanComputePipeline(VulkanEngine* vulkanEngine, const std::string& computeShader);
+		VulkanComputePipeline(VulkanEngine* vulkanEngine, const Shader& computeShader);
 
 		void bind() override;
 

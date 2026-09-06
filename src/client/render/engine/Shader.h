@@ -44,5 +44,30 @@ namespace voxel_game::client::render::engine {
 
 	void initShaderCompiler(resource::ResourceManager& resourceManager);
 
-	std::vector<uint32_t> compileGLSL(const std::string& glsl, ShaderStage stage);
+	class Shader {
+	public:
+		[[nodiscard]] const std::vector<uint32_t>& getSPIRV() const {
+			return mSPIRV;
+		}
+
+	private:
+		std::vector<uint32_t> mSPIRV;
+
+		explicit Shader(const std::vector<uint32_t>& spirv);
+
+		friend class ShaderBuilder;
+	};
+
+	class ShaderBuilder {
+	public:
+		explicit ShaderBuilder(const std::string& path);
+
+		ShaderBuilder& preprocessorDefinition(const std::string& name, const std::string& value = "");
+
+		Shader build(ShaderStage stage) const;
+
+	private:
+		std::string mCode;
+		std::vector<std::pair<std::string, std::string>> mPreprocessorDefinitions;
+	};
 }

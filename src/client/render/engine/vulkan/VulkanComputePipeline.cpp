@@ -10,8 +10,8 @@
 #include "VulkanUtil.h"
 
 namespace voxel_game::client::render::engine::vulkan {
-	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const std::string& computeShader) : mVulkanEngine(vulkanEngine) {
-		std::vector<uint32_t> computeShaderData = compileGLSL(computeShader, ShaderStage::COMPUTE);
+	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const Shader& computeShader) : mVulkanEngine(vulkanEngine) {
+		const std::vector<uint32_t>& computeShaderData = computeShader.getSPIRV();
 
 		const VkShaderModuleCreateInfo shaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,

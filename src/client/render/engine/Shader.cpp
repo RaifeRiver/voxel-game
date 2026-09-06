@@ -50,19 +50,35 @@ namespace voxel_game::client::render::engine {
 	}
 
 	static const shaderc::Compiler SHADERC_COMPILER;
-	static shaderc::CompileOptions SHADERC_OPTIONS;
+	static resource::ResourceManager* RESOURCE_MANAGER;
 
 	void initShaderCompiler(resource::ResourceManager& resourceManager) {
-		SHADERC_OPTIONS.SetOptimizationLevel(shaderc_optimization_level_performance);
-		SHADERC_OPTIONS.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
-		SHADERC_OPTIONS.SetIncluder(std::make_unique<ShaderIncluder>(resourceManager));
+		RESOURCE_MANAGER = &resourceManager;
 	}
 
-	std::vector<uint32_t> compileGLSL(const std::string& glsl, const ShaderStage stage) {
-		const shaderc::SpvCompilationResult result = SHADERC_COMPILER.CompileGlslToSpv(glsl, toShaderCStage(stage), "string", SHADERC_OPTIONS);
+	Shader::Shader(const std::vector<uint32_t>& spirv) : mSPIRV(spirv) {}
+
+	ShaderBuilder::ShaderBuilder(const std::string& path) {
+		mCode = util::readFileAsString(path);
+	}
+
+	ShaderBuilder& ShaderBuilder::preprocessorDefinition(const std::string& name, const std::string& value) {
+		mPreprocessorDefinitions.push_back({name, value});
+		return *this;
+	}
+
+	Shader ShaderBuilder::build(const ShaderStage stage) const {
+		shaderc::CompileOptions options = {};
+		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
+		options.SetIncluder(std::make_unique<ShaderIncluder>(*RESOURCE_MANAGER));
+		options.SetOptimizationLevel(shaderc_optimization_level_performance);
+		for (const auto& [name, value] : mPreprocessorDefinitions) {
+			options.AddMacroDefinition(name, value);
+		}
+		const shaderc::SpvCompilationResult result = SHADERC_COMPILER.CompileGlslToSpv(mCode, toShaderCStage(stage), "string", options);
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 			throw std::runtime_error("Error compiling shader: " + result.GetErrorMessage());
 		}
-		return {result.cbegin(), result.cend()};
+		return Shader({result.cbegin(), result.cend()});
 	}
 }

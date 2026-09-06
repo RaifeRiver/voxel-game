@@ -27,9 +27,9 @@ namespace voxel_game::client::render::engine {
 			return allocateBuffer_(size, usage, memoryType, mappedType);
 		}
 
-		virtual std::unique_ptr<ComputePipeline> createComputePipeline(const std::string& computeShader) = 0;
+		virtual std::unique_ptr<ComputePipeline> createComputePipeline(const Shader& computeShader) = 0;
 
-		virtual std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) = 0;
+		virtual std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) = 0;
 
 		virtual std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() = 0;
 

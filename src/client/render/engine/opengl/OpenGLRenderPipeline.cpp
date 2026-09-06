@@ -68,8 +68,8 @@ namespace voxel_game::client::render::engine::opengl {
 	}
 
 	OpenGLRenderPipeline::OpenGLRenderPipeline(const RenderPipelineBuilder* builder) {
-		const std::vector<uint32_t> vertexShaderData = compileGLSL(builder->getVertexShader(), ShaderStage::VERTEX);
-		const std::vector<uint32_t> fragmentShaderData = compileGLSL(builder->getFragmentShader(), ShaderStage::FRAGMENT);
+		const std::vector<uint32_t>& vertexShaderData = builder->getVertexShader().getSPIRV();
+		const std::vector<uint32_t>& fragmentShaderData = builder->getFragmentShader().getSPIRV();
 
 		const std::string vertexShaderCode = opengl_util::convertShader(vertexShaderData);
 		const std::string fragmentShaderCode = opengl_util::convertShader(fragmentShaderData);
@@ -163,7 +163,7 @@ namespace voxel_game::client::render::engine::opengl {
 		glDrawElements(mPrimitiveTopology, static_cast<int>(indexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(firstIndex * 4));
 	}
 
-	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const std::string& vertexShader, const std::string& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}
+	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}
 
 	std::unique_ptr<RenderPipeline> OpenGLRenderPipelineBuilder::build() {
 		return std::make_unique<OpenGLRenderPipeline>(this);

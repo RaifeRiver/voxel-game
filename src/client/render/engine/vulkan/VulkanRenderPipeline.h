@@ -45,7 +45,7 @@ namespace voxel_game::client::render::engine::vulkan {
 
 	class VulkanRenderPipelineBuilder : public RenderPipelineBuilder {
 	public:
-		VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const std::string& vertexShader, const std::string& fragmentShader);
+		VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const Shader& vertexShader, const Shader& fragmentShader);
 
 		std::unique_ptr<RenderPipeline> build() override;
 

@@ -264,12 +264,16 @@ namespace voxel_game::client::render::engine::vulkan {
 		}
 	}
 
-	void VulkanRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
-		vkCmdDraw(mVulkanEngine->getCommandBuffer(), vertexCount, 1, firstVertex, 0);
+	void VulkanRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex, const std::string& label) {
+		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
+		vkCmdDraw(commandBuffer, vertexCount, 1, firstVertex, 0);
 	}
 
-	void VulkanRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex) {
-		vkCmdDrawIndexed(mVulkanEngine->getCommandBuffer(), indexCount, 1, firstIndex, 0, 0);
+	void VulkanRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex, const std::string& label) {
+		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
+		vkCmdDrawIndexed(commandBuffer, indexCount, 1, firstIndex, 0, 0);
 	}
 
 	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}

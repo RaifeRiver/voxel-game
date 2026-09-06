@@ -5,6 +5,7 @@
 
 #include "client/render/engine/RenderEngine.h"
 #include "common/util/Log.h"
+#include "tracy/Tracy.hpp"
 
 namespace voxel_game::client::window::glfw {
 	int toGLFWKey(const Key key) {
@@ -27,6 +28,8 @@ namespace voxel_game::client::window::glfw {
 	}
 
 	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
+		ZoneScopedN("Create GLFW window");
+
 		LOG_INFO("Using GLFW window");
 
 		init();
@@ -166,6 +169,8 @@ namespace voxel_game::client::window::glfw {
 		if (init) {
 			return;
 		}
+
+		ZoneScopedN("Init GLFW");
 
 		glfwSetErrorCallback([](const int errorCode, const char* description) {
 			LOG_ERROR("GLFW Error {}: {}", errorCode, description);

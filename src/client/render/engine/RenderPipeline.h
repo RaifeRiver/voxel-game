@@ -46,18 +46,18 @@ namespace voxel_game::client::render::engine {
 
 		virtual void bindIndexBuffer(GPUBuffer* buffer) = 0;
 
-		void draw(const uint32_t vertexCount, const uint32_t firstVertex = 0) {
-			draw_(vertexCount, firstVertex);
+		void draw(const uint32_t vertexCount, const uint32_t firstVertex = 0, const std::string& label = "Unknown render pipeline") {
+			draw_(vertexCount, firstVertex, label);
 		}
 
-		void drawIndexed(const uint32_t indexCount, const uint32_t firstIndex = 0) {
-			drawIndexed_(indexCount, firstIndex);
+		void drawIndexed(const uint32_t indexCount, const uint32_t firstIndex = 0, const std::string& label = "Unknown render pipeline") {
+			drawIndexed_(indexCount, firstIndex, label);
 		}
 
 	protected:
-		virtual void draw_(uint32_t vertexCount, uint32_t firstVertex) = 0;
+		virtual void draw_(uint32_t vertexCount, uint32_t firstVertex, const std::string& label) = 0;
 
-		virtual void drawIndexed_(uint32_t indexCount, uint32_t firstIndex) = 0;
+		virtual void drawIndexed_(uint32_t indexCount, uint32_t firstIndex, const std::string& label) = 0;
 	};
 
 	class RenderPipelineBuilder {

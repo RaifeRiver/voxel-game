@@ -3,6 +3,7 @@
 #include <vector>
 
 #include "spirv_cross.hpp"
+#include "tracy/TracyVulkan.hpp"
 #include "volk.h"
 
 #include "VulkanDescriptorSet.h"
@@ -67,8 +68,10 @@ namespace voxel_game::client::render::engine::vulkan {
 		vkCmdPushConstants(mVulkanEngine->getCommandBuffer(), mPipelineLayout, mPushConstantStages, 0, mPushConstantsSize, pushConstants);
 	}
 
-	void VulkanComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z) {
-		vkCmdDispatch(mVulkanEngine->getCommandBuffer(), x, y, z);
+	void VulkanComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z, const std::string& label) {
+		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
+		vkCmdDispatch(commandBuffer, x, y, z);
 	}
 
 	VulkanComputePipeline::~VulkanComputePipeline() {

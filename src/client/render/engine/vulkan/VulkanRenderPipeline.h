@@ -30,9 +30,9 @@ namespace voxel_game::client::render::engine::vulkan {
 		~VulkanRenderPipeline() override;
 
 	protected:
-		void draw_(uint32_t vertexCount, uint32_t firstVertex) override;
+		void draw_(uint32_t vertexCount, uint32_t firstVertex, const std::string& label) override;
 
-		void drawIndexed_(uint32_t indexCount, uint32_t firstIndex) override;
+		void drawIndexed_(uint32_t indexCount, uint32_t firstIndex, const std::string& label) override;
 
 	private:
 		VulkanEngine* mVulkanEngine;

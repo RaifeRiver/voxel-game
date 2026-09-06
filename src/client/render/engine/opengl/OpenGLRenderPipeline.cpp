@@ -7,6 +7,7 @@
 #include "OpenGLUtil.h"
 #include "client/render/engine/Shader.h"
 #include "common/util/FileHelper.h"
+#include "tracy/TracyOpenGL.hpp"
 
 namespace voxel_game::client::render::engine::opengl {
 	unsigned int toOpenGLPrimitiveTopology(const PrimitiveTopology topology) {
@@ -155,11 +156,13 @@ namespace voxel_game::client::render::engine::opengl {
 		glDeleteProgram(mShaderProgram);
 	}
 
-	void OpenGLRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex) {
+	void OpenGLRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex, const std::string& label) {
+		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
 		glDrawArrays(mPrimitiveTopology, static_cast<int>(firstVertex), static_cast<int>(vertexCount));
 	}
 
-	void OpenGLRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex) {
+	void OpenGLRenderPipeline::drawIndexed_(const uint32_t indexCount, const uint32_t firstIndex, const std::string& label) {
+		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
 		glDrawElements(mPrimitiveTopology, static_cast<int>(indexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(firstIndex * 4));
 	}
 

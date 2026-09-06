@@ -1,6 +1,7 @@
 #include "OpenGLComputePipeline.h"
 
 #include "glad/glad.h"
+#include "tracy/TracyOpenGL.hpp"
 
 #include "OpenGLDescriptorSet.h"
 
@@ -40,7 +41,8 @@ namespace voxel_game::client::render::engine::opengl {
 		glDeleteProgram(mShaderProgram);
 	}
 
-	void OpenGLComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z) {
+	void OpenGLComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z, const std::string& label) {
+		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
 		glDispatchCompute(x, y, z);
 	}
 }

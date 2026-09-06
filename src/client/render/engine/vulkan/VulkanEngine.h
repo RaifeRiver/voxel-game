@@ -2,6 +2,7 @@
 
 // ReSharper disable once CppUnusedIncludeDirective
 #include "volk.h"
+#include "tracy/TracyVulkan.hpp"
 #include "vk_mem_alloc.h"
 
 #include "VulkanImage.h"
@@ -51,6 +52,8 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		void waitForGPU() override;
 
+		void submitImmediate(const std::function<void(VkCommandBuffer)>& function) const;
+
 		[[nodiscard]] VmaAllocator getVMAAllocator() const {
 			return mAllocator;
 		}
@@ -64,6 +67,10 @@ namespace voxel_game::client::render::engine::vulkan {
 				throw std::runtime_error("Must be called between preRender() and postRender()");
 			}
 			return getFrameData().commandBuffer;
+		}
+
+		[[nodiscard]] TracyVkCtx getTracyContext() const {
+			return mTracyContext;
 		}
 
 		void destroy() override;
@@ -82,11 +89,15 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkSwapchainKHR mSwapchain = nullptr;
 		std::vector<VkImage> mSwapchainImages;
 		glm::uvec3 mSwapchainExtent = {};
+		uint32_t mCurrentSwapchainIndex = 0;
 		VulkanFrameData mFrameData[FRAME_OVERLAP] = {};
 		std::vector<VkSemaphore> mRenderSemaphores;
 		std::unique_ptr<VulkanImage> mRenderImage;
 		std::unique_ptr<VulkanImage> mDepthImage;
-		uint32_t mCurrentSwapchainIndex = 0;
+		VkCommandPool mImmediateCommandPool = nullptr;
+		VkCommandBuffer mImmediateCommandBuffer = nullptr;
+		VkFence mImmediateFence = nullptr;
+		TracyVkCtx mTracyContext = nullptr;
 		bool mRendering = false;
 		bool mNeedsResize = false;
 
@@ -109,6 +120,8 @@ namespace voxel_game::client::render::engine::vulkan {
 		void createCommandBuffers();
 
 		void createSyncStructures();
+
+		void initTracyContext();
 
 		void resizeSwapchain(window::Window& window);
 

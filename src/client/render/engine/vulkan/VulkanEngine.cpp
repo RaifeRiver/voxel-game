@@ -14,6 +14,8 @@
 
 namespace voxel_game::client::render::engine::vulkan {
 	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
+		ZoneScopedN("Init Vulkan engine");
+
 		LOG_INFO("Using Vulkan renderer");
 
 		auto& window = registry.getResource<window::Window>();
@@ -27,6 +29,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		createSwapchain(window);
 		createCommandBuffers();
 		createSyncStructures();
+		initTracyContext();
 
 		window.setVisible(true);
 
@@ -57,6 +60,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::beginRendering() {
+		ZoneScopedN("Begin render");
+
 		mRenderImage->transition(ImageUsage::COLOUR_ATTACHMENT);
 		mDepthImage->transition(ImageUsage::DEPTH_ATTACHMENT);
 
@@ -89,6 +94,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::endRendering() {
+		ZoneScopedN("End render");
+
 		vkCmdEndRendering(getFrameData().commandBuffer);
 	}
 
@@ -96,12 +103,40 @@ namespace voxel_game::client::render::engine::vulkan {
 		vkDeviceWaitIdle(mDevice);
 	}
 
+	void VulkanEngine::submitImmediate(const std::function<void(VkCommandBuffer)>& function) const {
+		vulkan_util::vkCheck(vkResetFences(mDevice, 1, &mImmediateFence));
+		vulkan_util::vkCheck(vkResetCommandBuffer(mImmediateCommandBuffer, 0));
+
+		constexpr VkCommandBufferBeginInfo commandBufferBeginInfo = {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+			.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+		};
+		vulkan_util::vkCheck(vkBeginCommandBuffer(mImmediateCommandBuffer, &commandBufferBeginInfo));
+
+		function(mImmediateCommandBuffer);
+
+		vulkan_util::vkCheck(vkEndCommandBuffer(mImmediateCommandBuffer));
+
+		const VkCommandBufferSubmitInfo commandBufferSubmitInfo = {
+			.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_SUBMIT_INFO,
+			.commandBuffer = mImmediateCommandBuffer
+		};
+		const VkSubmitInfo2 submitInfo = {
+			.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO_2,
+			.commandBufferInfoCount = 1,
+			.pCommandBufferInfos = &commandBufferSubmitInfo
+		};
+		vulkan_util::vkCheck(vkQueueSubmit2(mGraphicsQueue, 1, &submitInfo, mImmediateFence));
+
+		vulkan_util::vkCheck(vkWaitForFences(mDevice, 1, &mImmediateFence, true, UINT64_MAX));
+	}
+
 	void VulkanEngine::destroy() {
 		vkDeviceWaitIdle(mDevice);
 
 		// ReSharper disable once CppLocalVariableMayBeConst
 		for (VkSemaphore semaphore: mRenderSemaphores) {
-			vkDestroySemaphore(mDevice,semaphore, nullptr);
+			vkDestroySemaphore(mDevice, semaphore, nullptr);
 		}
 
 		for (const VulkanFrameData& frameData: mFrameData) {
@@ -110,6 +145,11 @@ namespace voxel_game::client::render::engine::vulkan {
 			vkDestroyFence(mDevice, frameData.renderFence, nullptr);
 			vkDestroySemaphore(mDevice, frameData.swapchainSemaphore, nullptr);
 		}
+
+		TracyVkDestroy(mTracyContext);
+
+		vkDestroyCommandPool(mDevice, mImmediateCommandPool, nullptr);
+		vkDestroyFence(mDevice, mImmediateFence, nullptr);
 
 		destroySwapchain();
 
@@ -126,6 +166,7 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::createInstance(window::Window& window) {
+		ZoneScopedN("Create Vulkan instance");
 		LOG_DEBUG("Creating Vulkan instance");
 
 		vulkan_util::vkCheck(volkInitialize());
@@ -153,6 +194,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::selectPhysicalDevice() {
+		ZoneScopedN("Select Vulkan device");
+
 		LOG_DEBUG("Selecting Vulkan device");
 
 		uint32_t deviceCount = 0;
@@ -194,6 +237,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::createDevice(window::Window& window) {
+		ZoneScopedN("Create Vulkan device");
+
 		LOG_DEBUG("Creating Vulkan device");
 
 		uint32_t queueFamilyCount = 0;
@@ -245,6 +290,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::createAllocator() {
+		ZoneScopedN("Create VMA allocator");
+
 		const VmaVulkanFunctions vulkanFunctions = {
 			.vkGetInstanceProcAddr = vkGetInstanceProcAddr,
 			.vkGetDeviceProcAddr = vkGetDeviceProcAddr
@@ -261,10 +308,14 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::createSurface(window::Window& window) {
+		ZoneScopedN("Create Vulkan surface");
+
 		vulkan_util::vkCheck(window.createVulkanSurface(mInstance, &mSurface));
 	}
 
 	void VulkanEngine::createSwapchain(window::Window& window) {
+		ZoneScopedN("Create Vulkan swapchain");
+
 		VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
 		vulkan_util::vkCheck(vkGetPhysicalDeviceSurfaceCapabilitiesKHR(mPhysicalDevice, mSurface, &surfaceCapabilities));
 
@@ -306,6 +357,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::createCommandBuffers() {
+		ZoneScopedN("Create Vulkan command buffers");
+
 		LOG_DEBUG("Creating command buffers");
 
 		const VkCommandPoolCreateInfo commandPoolCreateInfo = {
@@ -324,9 +377,16 @@ namespace voxel_game::client::render::engine::vulkan {
 			commandBufferAllocateInfo.commandPool = frameData.commandPool;
 			vulkan_util::vkCheck(vkAllocateCommandBuffers(mDevice, &commandBufferAllocateInfo, &frameData.commandBuffer));
 		}
+
+		vulkan_util::vkCheck(vkCreateCommandPool(mDevice, &commandPoolCreateInfo, nullptr, &mImmediateCommandPool));
+
+		commandBufferAllocateInfo.commandPool = mImmediateCommandPool;
+		vulkan_util::vkCheck(vkAllocateCommandBuffers(mDevice, &commandBufferAllocateInfo, &mImmediateCommandBuffer));
 	}
 
 	void VulkanEngine::createSyncStructures() {
+		ZoneScopedN("Create Vulkan sync structures");
+
 		LOG_DEBUG("Creating sync structures");
 
 		constexpr VkFenceCreateInfo fenceCreateInfo = {
@@ -345,6 +405,18 @@ namespace voxel_game::client::render::engine::vulkan {
 		for (VkSemaphore& renderSemaphore: mRenderSemaphores) {
 			vulkan_util::vkCheck(vkCreateSemaphore(mDevice, &semaphoreCreateInfo, nullptr, &renderSemaphore));
 		}
+
+		vulkan_util::vkCheck(vkCreateFence(mDevice, &fenceCreateInfo, nullptr, &mImmediateFence));
+	}
+
+	void VulkanEngine::initTracyContext() {
+		ZoneScopedN("Init Vulkan tracy context");
+
+		LOG_DEBUG("Initialising tracy context");
+
+		vulkan_util::vkCheck(vkResetCommandBuffer(mImmediateCommandBuffer, 0));
+
+		mTracyContext = TracyVkContext(mPhysicalDevice, mDevice, mGraphicsQueue, mImmediateCommandBuffer);
 	}
 
 	void VulkanEngine::resizeSwapchain(window::Window& window) {
@@ -361,6 +433,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::preRender(window::Window& window) {
+		ZoneScopedN("Vulkan pre render");
+
 		if (mNeedsResize) {
 			resizeSwapchain(window);
 		}
@@ -392,6 +466,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::postRender() {
+		ZoneScopedN("Vulkan post render");
+
 		const VulkanFrameData& frameData = getFrameData();
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;
@@ -402,6 +478,8 @@ namespace voxel_game::client::render::engine::vulkan {
 		transitionImage(commandBuffer, mSwapchainImages[mCurrentSwapchainIndex], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
 
 		mRendering = false;
+
+		TracyVkCollect(mTracyContext, commandBuffer);
 
 		vulkan_util::vkCheck(vkEndCommandBuffer(commandBuffer));
 
@@ -452,6 +530,8 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::destroySwapchain() {
+		ZoneScopedN("Destroy Vulkan swapchain");
+
 		mRenderImage = nullptr;
 		mDepthImage = nullptr;
 

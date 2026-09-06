@@ -1,5 +1,7 @@
 #include "PlayerInputController.h"
 
+#include "tracy/Tracy.hpp"
+
 #include "client/window/Window.h"
 #include "common/component/Transform.h"
 #include "common/component/Velocity.h"
@@ -12,6 +14,8 @@ namespace voxel_game::client::player {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
 		}
+
+		ZoneScopedN("Process player input");
 
 		window::Window& window = registry.getResource<window::Window>();
 

@@ -1,6 +1,8 @@
 #include "ChunkRenderer.h"
 
 #include "glm/packing.hpp"
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyC.h"
 
 #include "common/chunk/Chunk.h"
 #include "common/component/Transform.h"
@@ -13,6 +15,8 @@
 
 namespace voxel_game::client::render {
 	ChunkRenderer::ChunkRenderer(ecs::ECSRegistry& registry) {
+		ZoneScopedN("Init chunk renderer");
+
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
 		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
 
@@ -23,6 +27,7 @@ namespace voxel_game::client::render {
 		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->build(1, engine::ShaderStage::VERTEX);
 		mDescriptorSet = mDescriptorAllocator->allocate();
 
+		TracyCZoneN(create_chunk, "Create test chunk", 1);
 		std::srand(321985123);
 		chunk::Chunk chunk({0, 0, 0}, registry.createEntity());
 		for (uint32_t x = 0; x < chunk::CHUNK_SIZE; x++) {
@@ -33,7 +38,9 @@ namespace voxel_game::client::render {
 				}
 			}
 		}
+		TracyCZoneEnd(create_chunk);
 
+		TracyCZoneN(mesh_chunk, "Mesh chunk", 1);
 		std::vector<ChunkVertex> vertices;
 		for (uint32_t x = 0; x < chunk::CHUNK_SIZE; x++) {
 			for (uint32_t y = 0; y < chunk::CHUNK_SIZE; y++) {
@@ -108,10 +115,14 @@ namespace voxel_game::client::render {
 				}
 			}
 		}
+		TracyCZoneEnd(mesh_chunk);
+
+		TracyCZoneN(upload_chunk, "Upload chunk", 1);
 		LOG_INFO("Vertices: {}, triangles: {}", vertices.size(), vertices.size() / 6);
 		mVertexBuffer = renderEngine.allocateBuffer(vertices.size() * sizeof(ChunkVertex), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
 		memcpy(mVertexBuffer->map(), vertices.data(), vertices.size() * sizeof(ChunkVertex));
 		mVertexBuffer->unmap();
+		TracyCZoneEnd(upload_chunk);
 
 		mPushConstants.vertexBufferAddress = mVertexBuffer->getDeviceAddress();
 	}
@@ -120,6 +131,8 @@ namespace voxel_game::client::render {
 		if (stage != ecs::SystemStage::RENDER) {
 			return;
 		}
+
+		ZoneScopedN("Render chunk");
 
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
 
@@ -140,7 +153,7 @@ namespace voxel_game::client::render {
 
 		mPipeline->bind();
 		mPipeline->setPushConstants(&mPushConstants);
-		mPipeline->draw(mVertexBuffer->getSize() / sizeof(ChunkVertex));
+		mPipeline->draw(mVertexBuffer->getSize() / sizeof(ChunkVertex), 0, "Render chunk");
 
 		renderEngine.endRendering();
 	}

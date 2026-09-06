@@ -20,7 +20,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		~VulkanComputePipeline() override;
 
 	protected:
-		void dispatch_(uint32_t x, uint32_t y, uint32_t z) override;
+		void dispatch_(uint32_t x, uint32_t y, uint32_t z, const std::string& label) override;
 
 	private:
 		VulkanEngine* mVulkanEngine = nullptr;

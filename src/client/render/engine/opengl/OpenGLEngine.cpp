@@ -4,9 +4,9 @@
 #include <iostream>
 #include <stdexcept>
 
-#include "OpenGLBuffer.h"
-#include "glad/glad.h"
+#include "tracy/TracyOpenGL.hpp"
 
+#include "OpenGLBuffer.h"
 #include "OpenGLComputePipeline.h"
 #include "OpenGLDescriptorAllocator.h"
 #include "OpenGLImage.h"
@@ -15,6 +15,8 @@
 
 namespace voxel_game::client::render::engine::opengl {
 	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
+		ZoneScopedN("Init OpenGL engine");
+
 		LOG_INFO("Using OpenGL renderer");
 
 		auto& window = registry.getResource<window::Window>();
@@ -70,6 +72,8 @@ namespace voxel_game::client::render::engine::opengl {
 			throw std::runtime_error("Failed to initialise GLAD");
 		}
 
+		TracyGpuContext;
+
 #ifdef VG_DEBUG
 		glEnable(GL_DEBUG_OUTPUT);
 		glDebugMessageCallback([](GLenum, GLenum, const GLuint id, const GLenum severity, GLsizei, const GLchar* message, const void*) {
@@ -107,6 +111,8 @@ namespace voxel_game::client::render::engine::opengl {
 		});
 
 		LOG_DEBUG("Creating framebuffer image");
+
+		ZoneScopedN("Create render image");
 
 		mRenderImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::RGBA16_SFLOAT, ImageUsage::STORAGE | ImageUsage::COLOUR_ATTACHMENT, ImageType::IMAGE_2D);
 		mDepthImage = std::make_unique<OpenGLImage>(glm::uvec3{windowSize, 1}, ImageFormat::D32_SFLOAT, ImageUsage::DEPTH_ATTACHMENT, ImageType::IMAGE_2D);

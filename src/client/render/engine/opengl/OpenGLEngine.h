@@ -1,5 +1,7 @@
 #pragma once
 
+#include "glad/glad.h"
+
 #include "OpenGLImage.h"
 #include "client/render/engine/RenderEngine.h"
 #include "client/window/Window.h"

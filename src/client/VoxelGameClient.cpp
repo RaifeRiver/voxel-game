@@ -2,6 +2,8 @@
 
 #include <numeric>
 
+#include "tracy/Tracy.hpp"
+
 #include "common/component/Transform.h"
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
@@ -17,6 +19,8 @@
 
 namespace voxel_game::client {
 	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
+		ZoneScopedN("Init client");
+
 		switch (args.getRenderLibrary()) {
 			case RenderLibrary::OPENGL:
 				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0, true);
@@ -67,10 +71,14 @@ namespace voxel_game::client {
 
 			registry.getCommandQueue().execute(registry);
 			registry.getSystemManager().runSystems(registry, deltaTime);
+
+			FrameMark;
 		}
 	}
 
 	void destroy(ecs::ECSRegistry &registry) {
+		ZoneScopedN("Destroy client");
+
 		registry.getResource<render::engine::RenderEngine>().waitForGPU();
 
 		registry.getSystemManager().removeSystem<render::ChunkRenderer>();

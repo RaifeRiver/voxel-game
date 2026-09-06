@@ -2,6 +2,9 @@
 
 #include <ranges>
 
+#include "tracy/Tracy.hpp"
+#include "tracy/TracyC.h"
+
 #include "UniverseLoaderInfo.h"
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
@@ -12,8 +15,11 @@ namespace voxel_game::universe {
 			return;
 		}
 
+		ZoneScopedN("Load universe");
+
 		const std::vector<ecs::Entity> entities = registry.getEntitiesWithComponents<UniverseLoaderInfo, component::Transform>();
 
+		TracyCZoneN(checkLoaded, "Check loaded", 1);
 		bool needsUpdate = false;
 		for (const ecs::Entity entity : entities) {
 			const auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
@@ -25,6 +31,7 @@ namespace voxel_game::universe {
 				break;
 			}
 		}
+		TracyCZoneEnd(checkLoaded);
 		if (!needsUpdate) {
 			return;
 		}
@@ -33,6 +40,7 @@ namespace voxel_game::universe {
 			loaded = 0;
 		}
 
+		TracyCZoneN(loadSectors, "Load sectors", 1);
 		for (const ecs::Entity entity : entities) {
 			auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
 			const auto& transform = registry.getComponent<component::Transform>(entity);
@@ -60,7 +68,9 @@ namespace voxel_game::universe {
 			universeLoaderInfo.lastPos = transform.pos;
 			universeLoaderInfo.hasLastPos = true;
 		}
+		TracyCZoneEnd(loadSectors);
 
+		TracyCZoneN(unloadSectors, "Unload sectors", 1);
 		for (const auto& [index, loaded]: mLoadedSectors) {
 			for (int64_t i = 0; i < 64; i++) {
 				if (!(loaded & (1 << i))) {
@@ -71,6 +81,7 @@ namespace voxel_game::universe {
 				}
 			}
 		}
+		TracyCZoneEnd(unloadSectors);
 	}
 
 	void UniverseLoader::loadSector(const glm::i64vec3& sector) {

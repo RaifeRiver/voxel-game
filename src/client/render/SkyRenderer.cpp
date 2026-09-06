@@ -1,11 +1,15 @@
 #include "SkyRenderer.h"
 
+#include "tracy/Tracy.hpp"
+
 #include "engine/RenderEngine.h"
 #include "common/resource/ResourceManager.h"
 #include "common/util/FileHelper.h"
 
 namespace voxel_game::client::render {
 	SkyRenderer::SkyRenderer(ecs::ECSRegistry& registry) {
+		ZoneScopedN("Init sky renderer");
+
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
 		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
 
@@ -19,12 +23,14 @@ namespace voxel_game::client::render {
 			return;
 		}
 
+		ZoneScopedN("Render sky");
+
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
 
 		renderEngine.beginRendering();
 
 		mPipeline->bind();
-		mPipeline->draw(6);
+		mPipeline->draw(6, 0, "Render sky");
 
 		renderEngine.endRendering();
 	}

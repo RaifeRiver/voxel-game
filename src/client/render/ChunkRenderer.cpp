@@ -29,7 +29,7 @@ namespace voxel_game::client::render {
 			for (uint32_t z = 0; z < chunk::CHUNK_SIZE; z++) {
 				const uint32_t height = static_cast<uint32_t>((static_cast<double>(std::rand()) / RAND_MAX * 0.2 + 0.6) * chunk::CHUNK_SIZE);
 				for (uint32_t y = 0; y < height; y++) {
-					chunk.setBlock(x, y, z, y + 1);
+					chunk.setBlock(x, y, z, z * 32 * 32 + y * 32 + x + 1);
 				}
 			}
 		}
@@ -40,7 +40,7 @@ namespace voxel_game::client::render {
 				for (uint32_t z = 0; z < chunk::CHUNK_SIZE; z++) {
 					const uint32_t block = chunk.getBlock(x, y, z);
 					if (block != 0) {
-						const uint32_t colour = glm::packUnorm4x8({block / 32.0f, 0, 0, 1});
+						const uint32_t colour = glm::packUnorm4x8({(block - 1) % 1024 / 32 / 31.0f, (block - 1) % 32 / 31.0f, (block - 1) / 1024 / 31.0f, 1});
 
 						glm::vec3 p0 = {x, y, z + 1.0f};
 						glm::vec3 p1 = {x + 1.0f, y, z + 1.0f};

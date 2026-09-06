@@ -5,6 +5,7 @@
 #include "common/block/Block.h"
 #include "common/chunk/ChunkData.h"
 #include "common/player/Player.h"
+#include "common/universe/UniverseLoaderInfo.h"
 
 namespace voxel_game::component {
 	void registerComponents(ecs::ECSRegistry& registry) {
@@ -17,5 +18,7 @@ namespace voxel_game::component {
 
 		registry.registerComponentType<player::Player>("voxel_game:player");
 		registry.registerComponentType<player::LocalPlayer>("voxel_game:local_player");
+
+		registry.registerComponentType<universe::UniverseLoaderInfo>("voxel_game:universe_loader_info");
 	}
 }

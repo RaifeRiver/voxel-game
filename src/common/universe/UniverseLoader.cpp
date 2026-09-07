@@ -8,6 +8,7 @@
 #include "UniverseLoaderInfo.h"
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
+#include "common/util/MathUtil.h"
 
 namespace voxel_game::universe {
 	void UniverseLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
@@ -19,83 +20,105 @@ namespace voxel_game::universe {
 
 		const std::vector<ecs::Entity> entities = registry.getEntitiesWithComponents<UniverseLoaderInfo, component::Transform>();
 
-		TracyCZoneN(checkLoaded, "Check loaded", 1);
-		bool needsUpdate = false;
 		for (const ecs::Entity entity : entities) {
-			const auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
-			const auto& transform = registry.getComponent<component::Transform>(entity);
+			UniverseLoaderInfo& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
+			const component::Transform& transform = registry.getComponent<component::Transform>(entity);
 
-			const double distance = (transform.pos - universeLoaderInfo.lastPos).length();
-			if (distance >= LOAD_DISTANCE_THRESHOLD || !universeLoaderInfo.hasLastPos) {
-				needsUpdate = true;
-				break;
+			if (universeLoaderInfo.hasLastSector && universeLoaderInfo.lastSector == transform.pos.sector) {
+				continue;
 			}
-		}
-		TracyCZoneEnd(checkLoaded);
-		if (!needsUpdate) {
-			return;
-		}
-
-		for (uint64_t& loaded: mLoadedSectors | std::views::values) {
-			loaded = 0;
-		}
-
-		TracyCZoneN(loadSectors, "Load sectors", 1);
-		for (const ecs::Entity entity : entities) {
-			auto& universeLoaderInfo = registry.getComponent<UniverseLoaderInfo>(entity);
-			const auto& transform = registry.getComponent<component::Transform>(entity);
 
 			const int32_t radius = universeLoaderInfo.radius;
-			const int64_t radiusSquared = radius * radius;
-			for (int32_t x = -radius; x < radius; x++) {
-				for (int32_t y = -radius; y < radius; y++) {
-					for (int32_t z = -radius; z < radius; z++) {
-						const int64_t distanceSquared = x * x + y * y + z * z;
-						if (distanceSquared > radiusSquared) {
-							continue;
-						}
-						glm::i64vec3 sector = transform.pos.sector + glm::i64vec3{x, y, z};
-						glm::i64vec3 mapIndex = sector;
-						mapIndex.z >>= 6;
-						auto it = mLoadedSectors.find(mapIndex);
-						if (it == mLoadedSectors.end() || !(it->second & (1 << (z & 63)))) {
-							loadSector(sector);
+
+			std::vector<UniverseLoaderInfo> intersectingEntities;
+			for (const ecs::Entity otherEntity : entities) {
+				if (otherEntity == entity) {
+					continue;
+				}
+				const UniverseLoaderInfo& otherLoaderInfo = registry.getComponent<UniverseLoaderInfo>(otherEntity);
+				if (!otherLoaderInfo.hasLastSector) {
+					continue;
+				}
+				const component::Transform& otherTransform = registry.getComponent<component::Transform>(otherEntity);
+				if (util::checkSpheresIntersect<int64_t>(transform.pos.sector, universeLoaderInfo.radius, otherTransform.pos.sector, otherLoaderInfo.radius)) {
+					intersectingEntities.push_back(otherLoaderInfo);
+				}
+			}
+
+			if (universeLoaderInfo.hasLastSector) {
+				const int32_t radius2 = radius * radius;
+				for (int32_t x = -radius; x <= radius; x++) {
+					const int32_t x2 = x * x;
+					const int32_t maxY = std::sqrt(radius2 - x2);
+					for (int32_t y = -maxY; y <= maxY; y++) {
+						const int32_t maxZ = std::sqrt(radius2 - x2 - y * y);
+						for (int32_t z = -maxZ; z <= maxZ; z++) {
+							glm::i64vec3 newSector = transform.pos.sector + glm::i64vec3{x, y, z};
+							const bool intersectsOld = util::checkPointIntersectsSphere<int64_t>(universeLoaderInfo.lastSector, universeLoaderInfo.radius, newSector);
+							const glm::i64vec3 oldSector = universeLoaderInfo.lastSector + glm::i64vec3{x, y, z};
+							const bool intersectsNew = util::checkPointIntersectsSphere<int64_t>(transform.pos.sector, universeLoaderInfo.radius, oldSector);
+							if (!intersectsOld || !intersectsNew) {
+								bool otherEntityLoadingNew = false;
+								for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
+									if (util::checkPointIntersectsSphere<int64_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, newSector)) {
+										otherEntityLoadingNew = true;
+										break;
+									}
+								}
+								if (!otherEntityLoadingNew && !intersectsOld) {
+									loadSector(registry, newSector);
+								}
+								bool otherEntityLoadingOld = false;
+								for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
+									if (util::checkPointIntersectsSphere<int64_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, oldSector)) {
+										otherEntityLoadingOld = true;
+										break;
+									}
+								}
+								if (!otherEntityLoadingOld && !intersectsNew) {
+									unloadSector(registry, oldSector);
+								}
+							}
 						}
 					}
 				}
 			}
-
-			universeLoaderInfo.lastPos = transform.pos;
-			universeLoaderInfo.hasLastPos = true;
-		}
-		TracyCZoneEnd(loadSectors);
-
-		TracyCZoneN(unloadSectors, "Unload sectors", 1);
-		for (const auto& [index, loaded]: mLoadedSectors) {
-			for (int64_t i = 0; i < 64; i++) {
-				if (!(loaded & (1 << i))) {
-					glm::i64vec3 sector = index;
-					sector.z <<= 6;
-					sector.z |= i;
-					unloadSector(sector);
+			else {
+				const int32_t radius2 = radius * radius;
+				for (int32_t x = -radius; x <= radius; x++) {
+					const int32_t x2 = x * x;
+					const int32_t maxY = std::sqrt(radius2 - x2);
+					for (int32_t y = -maxY; y <= maxY; y++) {
+						const int32_t maxZ = std::sqrt(radius2 - x2 - y * y);
+						for (int32_t z = -maxZ; z <= maxZ; z++) {
+							glm::i64vec3 sector = transform.pos.sector + glm::i64vec3{x, y, z};
+							bool loaded = false;
+							for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
+								if (util::checkPointIntersectsSphere(otherLoadInfo.lastSector, static_cast<int64_t>(otherLoadInfo.radius), sector)) {
+									loaded = true;
+									break;
+								}
+							}
+							if (!loaded) {
+								loadSector(registry, sector);
+							}
+						}
+					}
 				}
+				universeLoaderInfo.hasLastSector = true;
 			}
+
+			universeLoaderInfo.lastSector = transform.pos.sector;
+
+			std::cout << "Loaded sectors: " << mLoadedSectors << std::endl;
 		}
-		TracyCZoneEnd(unloadSectors);
 	}
 
-	void UniverseLoader::loadSector(const glm::i64vec3& sector) {
-		glm::i64vec3 mapIndex = sector;
-		mapIndex.z >>= 6;
-		mLoadedSectors[mapIndex] |= 1 << (sector.z & 63);
+	void UniverseLoader::loadSector(ecs::ECSRegistry&, const glm::i64vec3&) {
+		mLoadedSectors++;
 	}
 
-	void UniverseLoader::unloadSector(const glm::i64vec3& sector) {
-		glm::i64vec3 mapIndex = sector;
-		mapIndex.z >>= 6;
-		mLoadedSectors[mapIndex] &= ~(1 << (sector.z & 63));
-		if (!mLoadedSectors[mapIndex]) {
-			mLoadedSectors.erase(mapIndex);
-		}
+	void UniverseLoader::unloadSector(ecs::ECSRegistry&, const glm::i64vec3&) {
+		mLoadedSectors--;
 	}
 }

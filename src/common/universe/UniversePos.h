@@ -1,7 +1,6 @@
 #pragma once
 
 #include "glm/vec3.hpp"
-#include "glm/geometric.hpp"
 
 namespace voxel_game::universe {
 	constexpr static int32_t SECTOR_SIZE = 64;
@@ -17,10 +16,6 @@ namespace voxel_game::universe {
 				sector += sectors;
 				local -= sectors * SECTOR_SIZE;
 			}
-		}
-
-		[[nodiscard]] double length() const {
-			return glm::length(glm::dvec3(sector)) * SECTOR_SIZE + glm::length(local);
 		}
 
 		void operator+=(const glm::vec3& other) {

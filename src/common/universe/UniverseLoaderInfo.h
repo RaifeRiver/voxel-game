@@ -7,7 +7,10 @@ namespace voxel_game::universe {
 	struct UniverseLoaderInfo : ecs::Component<UniverseLoaderInfo> {
 		int32_t radius = 0.0f;
 
-		bool hasLastPos = false;
-		UniversePos lastPos = {};
+	private:
+		bool hasLastSector = false;
+		glm::i64vec3 lastSector;
+
+		friend class UniverseLoader;
 	};
 }

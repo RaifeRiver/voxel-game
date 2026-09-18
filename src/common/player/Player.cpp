@@ -29,7 +29,7 @@ namespace voxel_game::player {
 		registry.attachComponent<CameraRotation>(entity);
 		registry.attachComponent<component::Transform>(entity);
 		registry.attachComponent<component::Velocity>(entity);
-		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 4;
+		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 8;
 
 		if (local) {
 			registry.attachComponent<LocalPlayer>(entity);

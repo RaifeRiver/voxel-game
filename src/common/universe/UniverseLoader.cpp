@@ -26,6 +26,8 @@
 #include "UniverseLoaderInfo.h"
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
+#include "common/event/LoadSectorEvent.h"
+#include "common/event/UnloadSectorEvent.h"
 #include "common/util/MathUtil.h"
 
 namespace voxel_game::universe {
@@ -132,11 +134,15 @@ namespace voxel_game::universe {
 		}
 	}
 
-	void UniverseLoader::loadSector(ecs::ECSRegistry&, const glm::i64vec3&) {
+	void UniverseLoader::loadSector(ecs::ECSRegistry& registry, const glm::i64vec3& sector) {
 		mLoadedSectors++;
+
+		registry.pushEvent<event::LoadSectorEvent>(sector);
 	}
 
-	void UniverseLoader::unloadSector(ecs::ECSRegistry&, const glm::i64vec3&) {
+	void UniverseLoader::unloadSector(ecs::ECSRegistry& registry, const glm::i64vec3& sector) {
 		mLoadedSectors--;
+
+		registry.pushEvent<event::UnloadSectorEvent>(sector);
 	}
 }

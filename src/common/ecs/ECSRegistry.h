@@ -24,6 +24,7 @@
 
 #include "CommandQueue.h"
 #include "ComponentStorage.h"
+#include "Event.h"
 #include "Resource.h"
 #include "SystemManager.h"
 
@@ -150,6 +151,22 @@ namespace voxel_game::ecs {
 			mResources[id] = nullptr;
 		}
 
+		template <typename T> requires std::derived_from<T, Event<T>> void pushEvent(const T& event) {
+			const uint32_t id = T::getID();
+			if (mEvents[mCurrentEvents].size() < id) {
+				mEvents[mCurrentEvents].resize(id + 1);
+			}
+			mEvents[mCurrentEvents][id].push_back(std::make_unique<T>(event));
+		}
+
+		template <typename T> requires std::derived_from<T, Event<T>> const std::vector<std::unique_ptr<T>>& getEvents() const {
+			const uint32_t id = T::getID();
+			if (mEvents[mOtherEvents].size() < id) {
+				return {};
+			}
+			return reinterpret_cast<const std::vector<std::unique_ptr<T>>&>(mEvents[mOtherEvents][id]);
+		}
+
 		CommandQueue& getCommandQueue() {
 			return mCommandQueue;
 		}
@@ -158,11 +175,16 @@ namespace voxel_game::ecs {
 			return mSystemManager;
 		}
 
+		void update(float deltaTime);
+
 	private:
 		std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;
 		std::vector<uint32_t> mFreeIDs;
 		std::vector<std::unique_ptr<IResource>> mResources;
 		std::unordered_map<std::string, std::pair<uint32_t, ComponentProvider>> mComponentTypes;
+		std::vector<std::vector<std::unique_ptr<IEvent>>> mEvents[2];
+		uint32_t mCurrentEvents = 0;
+		uint32_t mOtherEvents = 1;
 		CommandQueue mCommandQueue;
 		SystemManager mSystemManager;
 		uint32_t mNextID = 0;

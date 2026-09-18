@@ -36,4 +36,14 @@ namespace voxel_game::ecs {
 			}
 		}
 	}
+
+	void ECSRegistry::update(const float deltaTime) {
+		mCommandQueue.execute(*this);
+		mSystemManager.runSystems(*this, deltaTime);
+
+		for (std::vector<std::unique_ptr<IEvent>>& events : mEvents[mOtherEvents]) {
+			events.clear();
+		}
+		std::swap(mCurrentEvents, mOtherEvents);
+	}
 }

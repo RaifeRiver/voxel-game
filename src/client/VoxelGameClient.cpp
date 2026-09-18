@@ -87,8 +87,7 @@ namespace voxel_game::client {
 
 			window.pollEvents();
 
-			registry.getCommandQueue().execute(registry);
-			registry.getSystemManager().runSystems(registry, deltaTime);
+			registry.update(deltaTime);
 
 			FrameMark;
 		}

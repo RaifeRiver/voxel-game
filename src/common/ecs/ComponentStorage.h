@@ -93,7 +93,9 @@ namespace voxel_game::ecs {
 			if (!has(entity)) {
 				return;
 			}
-			mUnusedComponents.push_back(mComponentIndices[entity]);
+			size_t index = mComponentIndices[entity];
+			mComponents[index] = {};
+			mUnusedComponents.push_back(index);
 			mComponentIndices[entity] = UINT32_MAX;
 		}
 

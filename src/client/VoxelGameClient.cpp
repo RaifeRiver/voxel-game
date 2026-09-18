@@ -104,6 +104,10 @@ namespace voxel_game::client {
 
 		registry.getResource<render::engine::RenderEngine>().waitForGPU();
 
+		for (const ecs::Entity& entity: registry.getEntitiesWithComponents<chunk::ChunkData>()) {
+			registry.destroyEntity(entity);
+		}
+
 		registry.getSystemManager().removeSystem<render::ChunkRenderer>();
 		registry.getSystemManager().removeSystem<render::SkyRenderer>();
 

@@ -21,6 +21,7 @@
 #include "tracy/Tracy.hpp"
 
 #include "block/BlockLoader.h"
+#include "chunk/ChunkLoader.h"
 #include "component/Components.h"
 #include "resource/ResourceManager.h"
 #include "universe/UniverseLoader.h"
@@ -44,9 +45,10 @@ namespace voxel_game {
 		ZoneScopedN("Post init common");
 
 		registry.getSystemManager().createSystem<universe::UniverseLoader>();
+		registry.getSystemManager().createSystem<chunk::ChunkLoader>();
 	}
 
-	void destroy(ecs::ECSRegistry& registry) {
+	void destroy(ecs::ECSRegistry&) {
 
 	}
 }

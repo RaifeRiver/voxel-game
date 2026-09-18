@@ -18,15 +18,17 @@
 
 #pragma once
 
+#include "glm/gtx/hash.hpp"
+#include "glm/vec3.hpp"
+
 #include "Chunk.h"
-#include "ChunkPos.h"
 #include "common/ecs/Component.h"
 
 namespace voxel_game::chunk {
 	struct ChunkData : ecs::Component<ChunkData> {
-		std::unordered_map<ChunkPos, Chunk> chunks;
+		std::unordered_map<glm::ivec3, Chunk> chunks;
 
-		bool isLoaded(ChunkPos pos) const;
+		bool isLoaded(glm::ivec3 pos) const;
 
 		uint32_t getBlock(int32_t x, int32_t y, int32_t z);
 

@@ -16,23 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "Player.h"
+#pragma once
 
-#include "CameraRotation.h"
-#include "common/component/Transform.h"
-#include "common/component/Velocity.h"
-#include "common/universe/UniverseLoaderInfo.h"
+#include "glm/vec3.hpp"
 
-namespace voxel_game::player {
-	void attachPlayerComponents(ecs::ECSRegistry& registry, const ecs::Entity entity, const bool local) {
-		registry.attachComponent<Player>(entity);
-		registry.attachComponent<CameraRotation>(entity);
-		registry.attachComponent<component::Transform>(entity);
-		registry.attachComponent<component::Velocity>(entity);
-		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 4;
+#include "common/ecs/Entity.h"
+#include "common/ecs/Event.h"
 
-		if (local) {
-			registry.attachComponent<LocalPlayer>(entity);
-		}
-	}
+namespace voxel_game::event {
+	struct UnloadChunkEvent : ecs::Event<UnloadChunkEvent> {
+		ecs::Entity entity;
+		glm::ivec3 chunk;
+
+		// ReSharper disable once CppNonExplicitConvertingConstructor
+		UnloadChunkEvent(const ecs::Entity entity, const glm::ivec3 chunk) : entity(entity), chunk(chunk) {}
+	};
 }

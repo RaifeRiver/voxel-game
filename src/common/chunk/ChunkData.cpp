@@ -21,7 +21,7 @@
 #include <stdexcept>
 
 namespace voxel_game::chunk {
-	bool ChunkData::isLoaded(const ChunkPos pos) const {
+	bool ChunkData::isLoaded(const glm::ivec3 pos) const {
 		return chunks.contains(pos);
 	}
 

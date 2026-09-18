@@ -65,7 +65,7 @@ namespace voxel_game::ecs {
 			if (!mComponentStorages[id]) {
 				mComponentStorages[id] = std::make_unique<ComponentStorage<T>>();
 			}
-			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->attach(entity, component);
+			return reinterpret_cast<ComponentStorage<T>*>(mComponentStorages[id].get())->attach(entity, std::move(component));
 		}
 
 		IComponent& attachComponent(const Entity entity, const std::string& name) {
@@ -120,7 +120,7 @@ namespace voxel_game::ecs {
 				throw std::runtime_error("Resource already exists");
 			}
 			mResources[id] = std::make_unique<U>(std::forward<Args>(args)...);
-			return dynamic_cast<T&>(*mResources[id].get());
+			return reinterpret_cast<T&>(*mResources[id].get());
 		}
 
 		template <typename T> requires std::derived_from<T, Resource<T>> [[nodiscard]] T& getResource() {
@@ -131,7 +131,7 @@ namespace voxel_game::ecs {
 			if (!mResources[id]) {
 				throw std::runtime_error("Resource not loaded");
 			}
-			return dynamic_cast<T&>(*mResources[id].get());
+			return reinterpret_cast<T&>(*mResources[id].get());
 		}
 
 		template <typename T> requires std::derived_from<T, Component<T>> [[nodiscard]] bool hasResource() {
@@ -145,7 +145,7 @@ namespace voxel_game::ecs {
 		template <typename T> requires std::derived_from<T, Resource<T>> void removeResource() {
 			const uint32_t id = T::getID();
 			if (mResources.size() < id || !mResources[id]) {
-				mResources.resize(id + 1);
+				return;
 			}
 			mResources[id]->destroy();
 			mResources[id] = nullptr;
@@ -153,18 +153,23 @@ namespace voxel_game::ecs {
 
 		template <typename T> requires std::derived_from<T, Event<T>> void pushEvent(const T& event) {
 			const uint32_t id = T::getID();
-			if (mEvents[mCurrentEvents].size() < id) {
+			if (mEvents[mCurrentEvents].size() <= id) {
 				mEvents[mCurrentEvents].resize(id + 1);
 			}
 			mEvents[mCurrentEvents][id].push_back(std::make_unique<T>(event));
 		}
 
-		template <typename T> requires std::derived_from<T, Event<T>> const std::vector<std::unique_ptr<T>>& getEvents() const {
+		template <typename T> requires std::derived_from<T, Event<T>> std::vector<T*> getEvents() {
 			const uint32_t id = T::getID();
-			if (mEvents[mOtherEvents].size() < id) {
+			if (mEvents[mOtherEvents].size() <= id) {
 				return {};
 			}
-			return reinterpret_cast<const std::vector<std::unique_ptr<T>>&>(mEvents[mOtherEvents][id]);
+			std::vector<T*> events;
+			events.reserve(mEvents[mOtherEvents][id].size());
+			for (const std::unique_ptr<IEvent>& event: mEvents[mOtherEvents][id]) {
+				events.push_back(reinterpret_cast<T*>(event.get()));
+			}
+			return events;
 		}
 
 		CommandQueue& getCommandQueue() {

@@ -22,8 +22,11 @@
 
 #include "glm/mat4x4.hpp"
 
+#include "ChunkMesh.h"
+#include "common/chunk/Chunk.h"
 #include "common/ecs/System.h"
 #include "engine/DescriptorAllocator.h"
+#include "engine/RenderEngine.h"
 #include "engine/RenderPipeline.h"
 
 namespace voxel_game::client::render {
@@ -47,7 +50,7 @@ namespace voxel_game::client::render {
 		std::unique_ptr<engine::RenderPipeline> mPipeline = nullptr;
 		std::unique_ptr<engine::DescriptorAllocator> mDescriptorAllocator = nullptr;
 		std::unique_ptr<engine::DescriptorSet> mDescriptorSet = nullptr;
-		std::unique_ptr<engine::GPUBuffer> mVertexBuffer = nullptr;
-		ChunkPushConstants mPushConstants = {};
+
+		static ChunkMesh meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk);
 	};
 }

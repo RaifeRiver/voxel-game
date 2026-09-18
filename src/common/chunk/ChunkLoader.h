@@ -16,23 +16,17 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "Player.h"
+#pragma once
 
-#include "CameraRotation.h"
-#include "common/component/Transform.h"
-#include "common/component/Velocity.h"
-#include "common/universe/UniverseLoaderInfo.h"
+#include "Chunk.h"
+#include "common/ecs/System.h"
 
-namespace voxel_game::player {
-	void attachPlayerComponents(ecs::ECSRegistry& registry, const ecs::Entity entity, const bool local) {
-		registry.attachComponent<Player>(entity);
-		registry.attachComponent<CameraRotation>(entity);
-		registry.attachComponent<component::Transform>(entity);
-		registry.attachComponent<component::Velocity>(entity);
-		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 4;
+namespace voxel_game::chunk {
+	class ChunkLoader : public ecs::System<ChunkLoader> {
+	public:
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
 
-		if (local) {
-			registry.attachComponent<LocalPlayer>(entity);
-		}
-	}
+	private:
+		static Chunk createChunk(glm::ivec3 pos, ecs::Entity entity);
+	};
 }

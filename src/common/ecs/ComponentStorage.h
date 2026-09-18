@@ -69,12 +69,12 @@ namespace voxel_game::ecs {
 				uint32_t index = mUnusedComponents.back();
 				mComponentIndices[entity] = index;
 				mUnusedComponents.pop_back();
-				mComponents[index] = component;
+				mComponents[index] = std::move(component);
 				return mComponents[index];
 			}
 			uint32_t index = mComponents.size();
 			mComponentIndices[entity] = index;
-			mComponents.push_back(component);
+			mComponents.push_back(std::move(component));
 			return mComponents[index];
 		}
 

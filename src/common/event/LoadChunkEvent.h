@@ -18,28 +18,16 @@
 
 #pragma once
 
-#include <cstdint>
+#include "common/chunk/Chunk.h"
+#include "common/ecs/Entity.h"
+#include "common/ecs/Event.h"
 
-#include "common/util/HashCombiner.h"
+namespace voxel_game::event {
+	struct LoadChunkEvent : ecs::Event<LoadChunkEvent> {
+		ecs::Entity entity;
+		chunk::Chunk& chunk;
 
-namespace voxel_game::chunk {
-	struct ChunkPos {
-		int32_t x;
-		int32_t y;
-		int32_t z;
-
-		ChunkPos() : x(0), y(0), z(0) {}
-
-		ChunkPos(const int32_t x, const int32_t y, const int32_t z) : x(x), y(y), z(z) {}
-
-		bool operator==(const ChunkPos& other) const {
-			return x == other.x && y == other.y && z == other.z;
-		}
+		// ReSharper disable once CppNonExplicitConvertingConstructor
+		LoadChunkEvent(const ecs::Entity entity, chunk::Chunk& chunk) : entity(entity), chunk(chunk) {}
 	};
 }
-
-template <> struct std::hash<voxel_game::chunk::ChunkPos> {
-	std::size_t operator()(const voxel_game::chunk::ChunkPos& pos) const noexcept {
-		return voxel_game::util::hash(pos.x, pos.y, pos.z);
-	}
-};

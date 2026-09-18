@@ -21,7 +21,8 @@
 #include <cmath>
 #include <vector>
 
-#include "ChunkPos.h"
+#include "glm/vec3.hpp"
+
 #include "common/ecs/Component.h"
 #include "common/ecs/Entity.h"
 
@@ -39,7 +40,7 @@ namespace voxel_game::chunk {
 
 	class Chunk {
 	public:
-		Chunk(ChunkPos pos, ecs::Entity object);
+		Chunk(glm::ivec3 pos, ecs::Entity object);
 
 		[[nodiscard]] uint32_t getBlock(const uint32_t x, const uint32_t y, const uint32_t z) const {
 			return getBlock(getIndex(x, y, z));
@@ -59,7 +60,7 @@ namespace voxel_game::chunk {
 			return x + y * CHUNK_SIZE + z * CHUNK_SIZE2;
 		}
 
-		[[nodiscard]] ChunkPos getPos() const {
+		[[nodiscard]] glm::ivec3 getPos() const {
 			return mPos;
 		}
 
@@ -71,7 +72,8 @@ namespace voxel_game::chunk {
 		uint64_t mClearMask = 0;
 		std::vector<uint64_t> mData;
 		std::vector<ChunkPaletteEntry> mPalette;
-		ChunkPos mPos;
+		bool mPaletted = true;
+		glm::ivec3 mPos;
 		ecs::Entity mObject;
 
 		void convertToPalette();

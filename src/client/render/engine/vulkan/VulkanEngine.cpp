@@ -29,6 +29,7 @@
 #include "VulkanUtil.h"
 #include "client/window/Window.h"
 #include "common/util/Log.h"
+#include "tracy/TracyC.h"
 
 namespace voxel_game::client::render::engine::vulkan {
 	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
@@ -451,13 +452,14 @@ namespace voxel_game::client::render::engine::vulkan {
 	}
 
 	void VulkanEngine::preRender(window::Window& window) {
-		ZoneScopedN("Vulkan pre render");
-
 		if (mNeedsResize) {
 			resizeSwapchain(window);
 		}
 
 		const VulkanFrameData& frameData = getFrameData();
+
+		// ReSharper disable once CppLocalVariableMayBeConst
+		TracyCZoneN(waitForFrame, "Wait for next frame", 1);
 
 		vulkan_util::vkCheck(vkWaitForFences(mDevice, 1, &frameData.renderFence, true, 1000000000));
 		vulkan_util::vkCheck(vkResetFences(mDevice, 1, &frameData.renderFence));
@@ -469,6 +471,10 @@ namespace voxel_game::client::render::engine::vulkan {
 		else {
 			vulkan_util::vkCheck(acquireNextImageResult);
 		}
+
+		TracyCZoneEnd(waitForFrame);
+
+		ZoneScopedN("Vulkan pre render");
 
 		// ReSharper disable once CppLocalVariableMayBeConst
 		VkCommandBuffer commandBuffer = frameData.commandBuffer;

@@ -158,7 +158,7 @@ namespace voxel_game::chunk {
 			mData.assign(CHUNK_VOLUME, 0);
 
 			for (uint32_t i = 0; i < CHUNK_VOLUME; i++) {
-				mData[i] = mPalette[(mData[i >> mIndexShift] >> ((i & mBlockMask) * mBitsPerBlock)) & mClearMask].id;
+				mData[i] = mPalette[(data[i >> mIndexShift] >> ((i & mBlockMask) * mBitsPerBlock)) & mClearMask].id;
 			}
 
 			mPalette.clear();

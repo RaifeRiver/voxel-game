@@ -81,19 +81,10 @@ namespace voxel_game::client {
 		auto& window = registry.getResource<window::Window>();
 
 		std::chrono::time_point<std::chrono::steady_clock> lastTime = std::chrono::steady_clock::now();
-		uint64_t frame = 0;
-		float frameTimes[1000];
 		while (!window.shouldClose()) {
 			std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::steady_clock::now();
 			const float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 			lastTime = currentTime;
-
-			frameTimes[frame++] = deltaTime;
-			if (frame == 1000) {
-				frame = 0;
-				const float averageFrameTime = std::accumulate(frameTimes, frameTimes + 1000, 0.0f) / 1000.0f;
-				std::cout << "\rFPS: " << (1.0f / averageFrameTime) << std::flush;
-			}
 
 			window.pollEvents();
 

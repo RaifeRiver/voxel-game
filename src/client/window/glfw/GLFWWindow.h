@@ -27,13 +27,14 @@
 #include "GLFW/glfw3.h"
 
 #include "client/window/Window.h"
+#include "common/ecs/ECSRegistry.h"
 
 namespace voxel_game::client::window::glfw {
 	int toGLFWKey(Key key);
 
 	class GLFWWindow : public Window {
 	public:
-		GLFWWindow(const std::string& name, bool fullscreen, int width, int height, bool context = false);
+		GLFWWindow(ecs::ECSRegistry& registry, const std::string& name, bool fullscreen, int width, int height, bool context = false);
 
 		void swapOpenGLBuffers() override;
 

@@ -30,7 +30,6 @@
 
 namespace voxel_game::client::render::engine {
 	constexpr uint32_t FRAME_OVERLAP = 2;
-	constexpr bool ENABLE_VSYNC = false;
 
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:

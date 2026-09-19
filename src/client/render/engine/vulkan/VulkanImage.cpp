@@ -163,6 +163,7 @@ namespace voxel_game::client::render::engine::vulkan {
 			const VkImageLayout layout = toVKImageLayout(usage);
 			transitionImage(mVulkanEngine->getCommandBuffer(), mImage, mCurrentLayout, layout);
 			mCurrentLayout = layout;
+			mCurrentUsage = usage;
 		}
 	}
 

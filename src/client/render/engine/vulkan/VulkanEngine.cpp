@@ -27,6 +27,7 @@
 #include "VulkanDescriptorAllocator.h"
 #include "VulkanRenderPipeline.h"
 #include "VulkanUtil.h"
+#include "client/LaunchOptions.h"
 #include "client/window/Window.h"
 #include "common/util/Log.h"
 #include "tracy/TracyC.h"
@@ -45,7 +46,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		createAllocator();
 		createSurface(window);
 		LOG_DEBUG("Creating swapchain");
-		createSwapchain(window);
+		createSwapchain(window, registry.getResource<LaunchOptions>().enableVsync());
 		createCommandBuffers();
 		createSyncStructures();
 		initTracyContext();
@@ -53,7 +54,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		window.setVisible(true);
 
 		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
-			preRender(r.getResource<window::Window>());
+			preRender(r.getResource<window::Window>(), r.getResource<LaunchOptions>().enableVsync());
 		});
 		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry&, float) {
 			postRender();
@@ -332,7 +333,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		vulkan_util::vkCheck(window.createVulkanSurface(mInstance, &mSurface));
 	}
 
-	void VulkanEngine::createSwapchain(window::Window& window) {
+	void VulkanEngine::createSwapchain(window::Window& window, const bool vsync) {
 		ZoneScopedN("Create Vulkan swapchain");
 
 		VkSurfaceCapabilitiesKHR surfaceCapabilities = {};
@@ -346,11 +347,15 @@ namespace voxel_game::client::render::engine::vulkan {
 		}
 		mSwapchainExtent = {swapchainExtent.width, swapchainExtent.height, 1};
 
+		uint32_t count = std::max(3u, surfaceCapabilities.minImageCount);
+		if (surfaceCapabilities.maxImageCount != 0) {
+			count = std::min(count, surfaceCapabilities.maxImageCount);
+		}
 		constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 		const VkSwapchainCreateInfoKHR swapchainCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
 			.surface = mSurface,
-			.minImageCount = surfaceCapabilities.minImageCount,
+			.minImageCount = count,
 			.imageFormat = imageFormat,
 			.imageColorSpace = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR,
 			.imageExtent = swapchainExtent,
@@ -358,7 +363,7 @@ namespace voxel_game::client::render::engine::vulkan {
 			.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = ENABLE_VSYNC ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR
+			.presentMode = vsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR
 		};
 		vulkan_util::vkCheck(vkCreateSwapchainKHR(mDevice, &swapchainCreateInfo, nullptr, &mSwapchain));
 
@@ -438,7 +443,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		mTracyContext = TracyVkContext(mPhysicalDevice, mDevice, mGraphicsQueue, mImmediateCommandBuffer);
 	}
 
-	void VulkanEngine::resizeSwapchain(window::Window& window) {
+	void VulkanEngine::resizeSwapchain(window::Window& window, const bool vsync) {
 		glm::uvec2 size = window.getSize();
 		LOG_DEBUG("Resizing swapchain to {}x{}", size.x, size.y);
 
@@ -446,14 +451,14 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		destroySwapchain();
 
-		createSwapchain(window);
+		createSwapchain(window, vsync);
 
 		mNeedsResize = false;
 	}
 
-	void VulkanEngine::preRender(window::Window& window) {
+	void VulkanEngine::preRender(window::Window& window, const bool vsync) {
 		if (mNeedsResize) {
-			resizeSwapchain(window);
+			resizeSwapchain(window, vsync);
 		}
 
 		const VulkanFrameData& frameData = getFrameData();

@@ -133,7 +133,7 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		void createSurface(window::Window& window);
 
-		void createSwapchain(window::Window& window);
+		void createSwapchain(window::Window& window, bool vsync);
 
 		void createCommandBuffers();
 
@@ -141,9 +141,9 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		void initTracyContext();
 
-		void resizeSwapchain(window::Window& window);
+		void resizeSwapchain(window::Window& window, bool vsync);
 
-		void preRender(window::Window& window);
+		void preRender(window::Window& window, bool vsync);
 
 		void postRender();
 

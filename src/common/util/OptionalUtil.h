@@ -18,13 +18,12 @@
 
 #pragma once
 
-#include "LaunchOptions.h"
-#include "common/ecs/ECSRegistry.h"
+#include <optional>
 
-namespace voxel_game::client {
-	void load(ecs::ECSRegistry& registry);
-
-	void run(ecs::ECSRegistry& registry);
-
-	void destroy(ecs::ECSRegistry& registry);
+namespace voxel_game::util::optional {
+	template <typename T> void setDefault(std::optional<T>& optional, const T& value) {
+		if (!optional) {
+			optional = value;
+		}
+	}
 }

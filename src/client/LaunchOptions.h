@@ -18,21 +18,40 @@
 
 #pragma once
 
+#include <optional>
+#include <string>
+
+#include "common/ecs/Resource.h"
+
 namespace voxel_game::client {
-	enum class RenderLibrary {
+	enum class RenderBackend {
 		OPENGL,
 		VULKAN
 	};
 
-	class CommandLineArguments {
-	public:
-		CommandLineArguments(int argc, char** argv);
+	std::optional<bool> parseBool(const std::string& value);
 
-		[[nodiscard]] RenderLibrary getRenderLibrary() const {
-			return mRenderLibrary;
+	std::optional<uint32_t> parseUint32(const std::string& value, uint32_t min = 0, uint32_t max = UINT32_MAX);
+
+	class LaunchOptions : public ecs::Resource<LaunchOptions> {
+	public:
+		LaunchOptions(int argc, char** argv);
+
+		[[nodiscard]] RenderBackend getRenderBackend() const {
+			return mRenderBackend.value();
+		}
+
+		[[nodiscard]] bool enableVsync() const {
+			return mEnableVsync.value();
+		}
+
+		[[nodiscard]] uint32_t getLoadDistance() const {
+			return mLoadDistance.value();
 		}
 
 	private:
-		RenderLibrary mRenderLibrary = RenderLibrary::VULKAN;
+		std::optional<RenderBackend> mRenderBackend;
+		std::optional<bool> mEnableVsync;
+		std::optional<uint32_t> mLoadDistance;
 	};
 }

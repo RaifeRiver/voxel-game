@@ -21,6 +21,7 @@
 #include <iostream>
 #include <stdexcept>
 
+#include "client/LaunchOptions.h"
 #include "client/render/engine/RenderEngine.h"
 #include "common/util/Log.h"
 #include "tracy/Tracy.hpp"
@@ -45,7 +46,7 @@ namespace voxel_game::client::window::glfw {
 		}
 	}
 
-	GLFWWindow::GLFWWindow(const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
+	GLFWWindow::GLFWWindow(ecs::ECSRegistry& registry, const std::string& name, const bool fullscreen, const int width, const int height, const bool context) {
 		ZoneScopedN("Create GLFW window");
 
 		LOG_INFO("Using GLFW window");
@@ -67,7 +68,8 @@ namespace voxel_game::client::window::glfw {
 		else {
 			glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		}
-		if (render::engine::ENABLE_VSYNC) {
+		const bool vsync = registry.getResource<LaunchOptions>().enableVsync();
+		if (vsync) {
 			glfwWindowHint(GLFW_REFRESH_RATE, videoMode->refreshRate);
 		}
 		glfwWindowHint(GLFW_RED_BITS, videoMode->redBits);
@@ -106,7 +108,7 @@ namespace voxel_game::client::window::glfw {
 
 		if (context) {
 			glfwMakeContextCurrent(mWindow);
-			if (!render::engine::ENABLE_VSYNC) {
+			if (!vsync) {
 				glfwSwapInterval(0);
 			}
 		}

@@ -24,12 +24,11 @@ int main(const int argc, char** argv) {
 	LOG_INFO("Loading Voxel Game");
 	const std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
 
-	const voxel_game::client::CommandLineArguments args(argc, argv);
-
 	voxel_game::ecs::ECSRegistry registry;
+	registry.createResource<voxel_game::client::LaunchOptions>(argc, argv);
 
 	voxel_game::preLoad(registry);
-	voxel_game::client::load(registry, args);
+	voxel_game::client::load(registry);
 	voxel_game::load(registry);
 	voxel_game::postLoad(registry);
 

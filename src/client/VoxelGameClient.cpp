@@ -26,6 +26,7 @@
 #include "common/component/Transform.h"
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
+#include "common/universe/UniverseLoaderInfo.h"
 #include "common/util/Log.h"
 #include "player/PlayerInputController.h"
 #include "render/ChunkMesh.h"
@@ -38,16 +39,18 @@
 #include "window/glfw/GLFWWindow.h"
 
 namespace voxel_game::client {
-	void load(ecs::ECSRegistry& registry, const CommandLineArguments& args) {
+	void load(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init client");
 
-		switch (args.getRenderLibrary()) {
-			case RenderLibrary::OPENGL:
-				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0, true);
+		const LaunchOptions& launchOptions = registry.getResource<LaunchOptions>();
+
+		switch (launchOptions.getRenderBackend()) {
+			case RenderBackend::OPENGL:
+				registry.createResource<window::Window, window::glfw::GLFWWindow>(registry, "Voxel Game", true, 0, 0, true);
 				registry.createResource<render::engine::RenderEngine, render::engine::opengl::OpenGLEngine>(registry);
 				break;
-			case RenderLibrary::VULKAN:
-				registry.createResource<window::Window, window::glfw::GLFWWindow>("Voxel Game", true, 0, 0);
+			case RenderBackend::VULKAN:
+				registry.createResource<window::Window, window::glfw::GLFWWindow>(registry, "Voxel Game", true, 0, 0);
 				registry.createResource<render::engine::RenderEngine, render::engine::vulkan::VulkanEngine>(registry);
 				break;
 			default:
@@ -60,10 +63,11 @@ namespace voxel_game::client {
 
 		const ecs::Entity player = registry.createEntity();
 		voxel_game::player::attachPlayerComponents(registry, player, true);
-		registry.getComponent<component::Transform>(player).pos.local = {16, 40, 45};
+		registry.getComponent<component::Transform>(player).pos.local = {0, 50, 0};
 		auto& cameraRotation = registry.getComponent<voxel_game::player::CameraRotation>(player);
 		cameraRotation.pitch = -0.6f;
 		registry.getSystemManager().createSystem<player::PlayerInputController>();
+		registry.getComponent<universe::UniverseLoaderInfo>(player).radius = launchOptions.getLoadDistance();
 
 		const ecs::Entity planet = registry.createEntity();
 		registry.attachComponent<chunk::ChunkData>(planet);

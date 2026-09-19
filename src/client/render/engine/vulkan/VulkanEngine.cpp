@@ -38,15 +38,16 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		LOG_INFO("Using Vulkan renderer");
 
-		auto& window = registry.getResource<window::Window>();
+		window::Window& window = registry.getResource<window::Window>();
+		const LaunchOptions& launchOptions = registry.getResource<LaunchOptions>();
 
 		createInstance(window);
-		selectPhysicalDevice();
+		selectPhysicalDevice(launchOptions.getGPU());
 		createDevice(window);
 		createAllocator();
 		createSurface(window);
 		LOG_DEBUG("Creating swapchain");
-		createSwapchain(window, registry.getResource<LaunchOptions>().enableVsync());
+		createSwapchain(window, launchOptions.enableVsync());
 		createCommandBuffers();
 		createSyncStructures();
 		initTracyContext();
@@ -213,7 +214,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		volkLoadInstance(mInstance);
 	}
 
-	void VulkanEngine::selectPhysicalDevice() {
+	void VulkanEngine::selectPhysicalDevice(std::optional<uint32_t> gpu) {
 		ZoneScopedN("Select Vulkan device");
 
 		LOG_DEBUG("Selecting Vulkan device");
@@ -223,33 +224,42 @@ namespace voxel_game::client::render::engine::vulkan {
 		std::vector<VkPhysicalDevice> devices(deviceCount);
 		vulkan_util::vkCheck(vkEnumeratePhysicalDevices(mInstance, &deviceCount, devices.data()));
 
-		int32_t deviceScore = -1;
 		VkPhysicalDevice device;
 		std::string deviceName;
-		for (VkPhysicalDevice d : devices) {
-			int32_t score = 0;
+		if (gpu && gpu.value() < devices.size()) {
+			device = devices[gpu.value()];
 
 			VkPhysicalDeviceProperties2 properties = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
-			vkGetPhysicalDeviceProperties2(d, &properties);
-
-			VkPhysicalDeviceType deviceType = properties.properties.deviceType;
-			if (deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-				score += 1000;
-			}
-			else if (deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-				score += 100;
-			}
-
-			if (deviceScore < score) {
-				deviceScore = score;
-				device = d;
-				deviceName = std::string(properties.properties.deviceName);
-			}
+			vkGetPhysicalDeviceProperties2(device, &properties);
+			deviceName = std::string(properties.properties.deviceName);
 		}
+		else {
+			int32_t deviceScore = -1;
+			for (VkPhysicalDevice d : devices) {
+				int32_t score = 0;
 
-		if (deviceScore == -1) {
-			LOG_FATAL("No suitable Vulkan devices found");
-			throw std::runtime_error("No suitable Vulkan devices found");
+				VkPhysicalDeviceProperties2 properties = {.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2};
+				vkGetPhysicalDeviceProperties2(d, &properties);
+
+				VkPhysicalDeviceType deviceType = properties.properties.deviceType;
+				if (deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+					score += 1000;
+				}
+				else if (deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+					score += 100;
+				}
+
+				if (deviceScore < score) {
+					deviceScore = score;
+					device = d;
+					deviceName = std::string(properties.properties.deviceName);
+				}
+			}
+
+			if (deviceScore == -1) {
+				LOG_FATAL("No suitable Vulkan devices found");
+				throw std::runtime_error("No suitable Vulkan devices found");
+			}
 		}
 
 		mPhysicalDevice = device;

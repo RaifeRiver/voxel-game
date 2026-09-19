@@ -107,6 +107,17 @@ namespace voxel_game::client {
 					mLoadDistance = parseUint32(value, 1);
 				}
 			}
+			else if (name == "--gpu") {
+				if (mGPU) {
+					LOG_ERROR("Argument --gpu can only be specified once");
+				}
+				else if (!hasValue) {
+					LOG_ERROR("Argument --gpu requires value, ignoring");
+				}
+				else {
+					mGPU = parseUint32(value, 0);
+				}
+			}
 			else {
 				LOG_ERROR("Unknown argument, ignoring: {}", arg);
 			}

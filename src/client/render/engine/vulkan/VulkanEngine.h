@@ -125,7 +125,7 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		void createInstance(window::Window& window);
 
-		void selectPhysicalDevice();
+		void selectPhysicalDevice(std::optional<uint32_t> gpu);
 
 		void createDevice(window::Window& window);
 

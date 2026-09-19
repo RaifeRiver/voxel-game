@@ -49,9 +49,14 @@ namespace voxel_game::client {
 			return mLoadDistance.value();
 		}
 
+		[[nodiscard]] std::optional<uint32_t> getGPU() const {
+			return mGPU;
+		}
+
 	private:
 		std::optional<RenderBackend> mRenderBackend;
 		std::optional<bool> mEnableVsync;
 		std::optional<uint32_t> mLoadDistance;
+		std::optional<uint32_t> mGPU;
 	};
 }

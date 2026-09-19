@@ -129,8 +129,6 @@ namespace voxel_game::universe {
 			}
 
 			universeLoaderInfo.lastSector = transform.pos.sector;
-
-			std::cout << "Loaded sectors: " << mLoadedSectors << std::endl;
 		}
 	}
 

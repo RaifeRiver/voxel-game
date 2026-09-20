@@ -162,67 +162,28 @@ namespace voxel_game::client::render {
 						if (block != 0) {
 							const uint32_t colour = glm::packUnorm4x8({(block - 1) % 1024 / 32 / 31.0f, (block - 1) % 32 / 31.0f, (block - 1) / 1024 / 31.0f, 1});
 
-							glm::u8vec3 p0 = {x, y, z + 1};
-							glm::u8vec3 p1 = {x + 1, y, z + 1};
-							glm::u8vec3 p2 = {x + 1, y + 1, z + 1};
-							glm::u8vec3 p3 = {x, y + 1, z + 1};
-							glm::u8vec3 p4 = {x, y, z};
-							glm::u8vec3 p5 = {x + 1, y, z};
-							glm::u8vec3 p6 = {x + 1, y + 1, z};
-							glm::u8vec3 p7 = {x, y + 1, z};
-
 							if (z == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y, z + 1) == 0) {
-								vertices.push_back({.pos = p0, .colour = colour});
-								vertices.push_back({.pos = p1, .colour = colour});
-								vertices.push_back({.pos = p2, .colour = colour});
-								vertices.push_back({.pos = p0, .colour = colour});
-								vertices.push_back({.pos = p2, .colour = colour});
-								vertices.push_back({.pos = p3, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 0, .colour = colour});
 							}
 
 							if (z == 0 || chunk.getBlock(x, y, z - 1) == 0) {
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p7, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p5, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 1, .colour = colour});
 							}
 
 							if (y == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y + 1, z) == 0) {
-								vertices.push_back({.pos = p3, .colour = colour});
-								vertices.push_back({.pos = p2, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p3, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p7, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 2, .colour = colour});
 							}
 
 							if (y == 0 || chunk.getBlock(x, y - 1, z) == 0) {
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p5, .colour = colour});
-								vertices.push_back({.pos = p1, .colour = colour});
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p1, .colour = colour});
-								vertices.push_back({.pos = p0, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 3, .colour = colour});
 							}
 
 							if (x == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x + 1, y, z) == 0) {
-								vertices.push_back({.pos = p1, .colour = colour});
-								vertices.push_back({.pos = p5, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p1, .colour = colour});
-								vertices.push_back({.pos = p6, .colour = colour});
-								vertices.push_back({.pos = p2, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 4, .colour = colour});
 							}
 
 							if (x == 0 || chunk.getBlock(x - 1, y, z) == 0) {
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p0, .colour = colour});
-								vertices.push_back({.pos = p3, .colour = colour});
-								vertices.push_back({.pos = p4, .colour = colour});
-								vertices.push_back({.pos = p3, .colour = colour});
-								vertices.push_back({.pos = p7, .colour = colour});
+								vertices.push_back({.pos = {x, y, z}, .dir = 5, .colour = colour});
 							}
 						}
 					}
@@ -238,12 +199,12 @@ namespace voxel_game::client::render {
 				mesh.vertexBuffer = std::move(buffer);
 
 				auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
-				glm::ivec3 pos = chunk.getPos();
+				const glm::ivec3 pos = chunk.getPos();
 				auto& [modelMatrix, boundingSphere, bufferAddress, vertexCount] = chunkBufferData[mesh.chunkIndex];
 				modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
 				boundingSphere = glm::ivec4(pos * static_cast<int32_t>(chunk::CHUNK_SIZE) + static_cast<int32_t>(chunk::CHUNK_SIZE) / 2, std::ceil(std::sqrt(static_cast<float>(chunk::CHUNK_SIZE * chunk::CHUNK_SIZE / 2 * 3))));
 				bufferAddress = mesh.vertexBuffer->getDeviceAddress();
-				vertexCount = vertices.size();
+				vertexCount = vertices.size() * 6;
 				mChunkBuffer->unmap();
 
 				mesh.hasMesh = true;

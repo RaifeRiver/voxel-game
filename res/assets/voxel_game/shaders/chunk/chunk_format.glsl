@@ -1,17 +1,17 @@
 #extension GL_EXT_buffer_reference : require
 
-struct ChunkVertex {
+struct ChunkFace {
     uint pos;
     uint colour;
 };
 
-layout (buffer_reference, std430) readonly buffer ChunkVertexBuffer {
-    ChunkVertex vertices[];
+layout (buffer_reference, std430) readonly buffer ChunkFaceBuffer {
+    ChunkFace faces[];
 };
 
 struct Chunk {
     mat4 modelMatrix;
     ivec4 boundingSphere;
-    ChunkVertexBuffer vertexBuffer;
+    ChunkFaceBuffer faceBuffer;
     uint vertexCount;
 };

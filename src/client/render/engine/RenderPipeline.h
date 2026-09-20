@@ -20,6 +20,7 @@
 
 #include <memory>
 
+#include "DescriptorLayout.h"
 #include "GPUImage.h"
 #include "Pipeline.h"
 #include "Shader.h"
@@ -72,21 +73,41 @@ namespace voxel_game::client::render::engine {
 			drawIndexed_(indexCount, firstIndex, label);
 		}
 
+		void drawIndirectCount(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const std::string& label = "Unknown render pipeline") {
+			drawIndirectCount_(indirectCommandBuffer, countBuffer, maxCount, 0, 0, label);
+		}
+
+		void drawIndirectCount(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset = 0, const std::string& label = "Unknown render pipeline") {
+			drawIndirectCount_(indirectCommandBuffer, countBuffer, maxCount, commandOffset, countOffset, label);
+		}
+
+		void drawIndexedIndirectCount(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const std::string& label = "Unknown render pipeline") {
+			drawIndexedIndirectCount_(indirectCommandBuffer, countBuffer, maxCount, 0, 0, label);
+		}
+
+		void drawIndexedIndirectCount(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset = 0, const std::string& label = "Unknown render pipeline") {
+			drawIndexedIndirectCount_(indirectCommandBuffer, countBuffer, maxCount, commandOffset, countOffset, label);
+		}
+
 	protected:
 		virtual void draw_(uint32_t vertexCount, uint32_t firstVertex, const std::string& label) = 0;
 
 		virtual void drawIndexed_(uint32_t indexCount, uint32_t firstIndex, const std::string& label) = 0;
+
+		virtual void drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) = 0;
+
+		virtual void drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) = 0;
 	};
 
 	class RenderPipelineBuilder {
 	public:
 		RenderPipelineBuilder(Shader vertexShader, Shader fragmentShader);
 
-		[[nodiscard]] Shader getVertexShader() const {
+		[[nodiscard]] const Shader& getVertexShader() const {
 			return mVertexShader;
 		}
 
-		[[nodiscard]] Shader getFragmentShader() const {
+		[[nodiscard]] const Shader& getFragmentShader() const {
 			return mFragmentShader;
 		}
 
@@ -136,6 +157,12 @@ namespace voxel_game::client::render::engine {
 
 		RenderPipelineBuilder* blendMode(BlendMode blendMode);
 
+		[[nodiscard]] const std::vector<DescriptorLayout*>& getDescriptorLayouts() const {
+			return mDescriptorLayouts;
+		}
+
+		RenderPipelineBuilder* descriptorLayout(uint32_t set, DescriptorLayout* descriptorLayout);
+
 		virtual std::unique_ptr<RenderPipeline> build() = 0;
 
 		virtual ~RenderPipelineBuilder() = default;
@@ -151,5 +178,6 @@ namespace voxel_game::client::render::engine {
 		ImageFormat mColourFormat = ImageFormat::RGBA16_SFLOAT;
 		ImageFormat mDepthFormat = ImageFormat::D32_SFLOAT;
 		BlendMode mBlendMode = BlendMode::NONE;
+		std::vector<DescriptorLayout*> mDescriptorLayouts;
 	};
 }

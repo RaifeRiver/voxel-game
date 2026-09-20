@@ -82,7 +82,5 @@ namespace voxel_game::client::render::engine::vulkan::vulkan_util {
 		};
 	}
 
-	std::vector<VkDescriptorSetLayout> createDescriptorSetLayouts(const VulkanEngine* vulkanEngine, size_t shaderCount, const std::vector<uint32_t>* shaderData);
-
 	std::vector<VkPushConstantRange> getPushConstantRanges(size_t shaderCount, const std::vector<uint32_t>* shaderData);
 }

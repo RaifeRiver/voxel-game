@@ -16,11 +16,16 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "DescriptorAllocator.h"
+#pragma once
+
+#include <cstdint>
 
 namespace voxel_game::client::render::engine {
-	DescriptorAllocatorBuilder* DescriptorAllocatorBuilder::addBinding(uint32_t binding, DescriptorType type) {
-		mBindings.emplace_back(binding, type);
-		return this;
-	}
+	struct IndexedIndirectCommand {
+		uint32_t indexCount = 0;
+		uint32_t instanceCount = 1;
+		uint32_t firstIndex = 0;
+		uint32_t vertexOffset = 0;
+		uint32_t firstInstance = 0;
+	};
 }

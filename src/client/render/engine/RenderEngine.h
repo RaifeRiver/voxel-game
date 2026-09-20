@@ -21,7 +21,6 @@
 #include <memory>
 
 #include "ComputePipeline.h"
-#include "DescriptorAllocator.h"
 #include "GPUBuffer.h"
 #include "GPUImage.h"
 #include "RenderPipeline.h"
@@ -33,19 +32,17 @@ namespace voxel_game::client::render::engine {
 
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:
-		explicit RenderEngine(ecs::ECSRegistry& registry);
-
 		virtual std::unique_ptr<GPUImage> allocateImage(glm::ivec3 size, ImageFormat format, ImageUsage usage, ImageType type) = 0;
 
 		std::unique_ptr<GPUBuffer> allocateBuffer(const size_t size, const BufferUsage usage, const MemoryType memoryType, const MappedType mappedType = MappedType::NONE) {
 			return allocateBuffer_(size, usage, memoryType, mappedType);
 		}
 
-		virtual std::unique_ptr<ComputePipeline> createComputePipeline(const Shader& computeShader) = 0;
+		virtual std::unique_ptr<ComputePipelineBuilder> createComputePipelineBuilder(const Shader& computeShader) = 0;
 
 		virtual std::unique_ptr<RenderPipelineBuilder> createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) = 0;
 
-		virtual std::unique_ptr<DescriptorAllocatorBuilder> createDescriptorAllocatorBuilder() = 0;
+		virtual std::unique_ptr<DescriptorLayoutBuilder> createDescriptorLayoutBuilder() = 0;
 
 		virtual GPUImage& getRenderImage() = 0;
 

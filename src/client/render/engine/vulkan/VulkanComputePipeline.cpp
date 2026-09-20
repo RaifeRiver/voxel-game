@@ -23,14 +23,15 @@
 #include "spirv_cross.hpp"
 #include "tracy/TracyVulkan.hpp"
 #include "volk.h"
+#include "VulkanDescriptorLayout.h"
 
 #include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
 
 namespace voxel_game::client::render::engine::vulkan {
-	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const Shader& computeShader) : mVulkanEngine(vulkanEngine) {
-		const std::vector<uint32_t>& computeShaderData = computeShader.getSPIRV();
+	VulkanComputePipeline::VulkanComputePipeline(VulkanEngine* vulkanEngine, const ComputePipelineBuilder* builder) : mVulkanEngine(vulkanEngine) {
+		const std::vector<uint32_t>& computeShaderData = builder->getComputeShader().getSPIRV();
 
 		const VkShaderModuleCreateInfo shaderModuleCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO,
@@ -40,7 +41,9 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkShaderModule computeShaderModule;
 		vulkan_util::vkCheck(vkCreateShaderModule(vulkanEngine->getDevice(), &shaderModuleCreateInfo, nullptr, &computeShaderModule));
 
-		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 1, &computeShaderData);
+		for (DescriptorLayout* layout : builder->getDescriptorLayouts()) {
+			mDescriptorSetLayouts.push_back(reinterpret_cast<VulkanDescriptorLayout*>(layout)->getDescriptorSetLayout());
+		}
 
 		std::vector<VkPushConstantRange> pushConstantRanges = vulkan_util::getPushConstantRanges(1, &computeShaderData);
 		for (const auto&[stageFlags, offset, size] : pushConstantRanges) {
@@ -95,9 +98,11 @@ namespace voxel_game::client::render::engine::vulkan {
 	VulkanComputePipeline::~VulkanComputePipeline() {
 		vkDestroyPipelineLayout(mVulkanEngine->getDevice(), mPipelineLayout, nullptr);
 		vkDestroyPipeline(mVulkanEngine->getDevice(), mPipeline, nullptr);
+	}
 
-		for (const VkDescriptorSetLayout& descriptorSetLayout: mDescriptorSetLayouts) {
-			vkDestroyDescriptorSetLayout(mVulkanEngine->getDevice(), descriptorSetLayout, nullptr);
-		}
+	VulkanComputePipelineBuilder::VulkanComputePipelineBuilder(VulkanEngine* vulkanEngine, const Shader& computeShader) : ComputePipelineBuilder(computeShader), mVulkanEngine(vulkanEngine) {}
+
+	std::unique_ptr<ComputePipeline> VulkanComputePipelineBuilder::build() {
+		return std::make_unique<VulkanComputePipeline>(mVulkanEngine, this);
 	}
 }

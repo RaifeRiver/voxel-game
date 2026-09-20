@@ -19,9 +19,12 @@
 #include "VulkanRenderPipeline.h"
 
 #include "VulkanBuffer.h"
+#include "VulkanDescriptorLayout.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
 #include "VulkanUtil.h"
+#include "client/render/engine/IndexedIndirectCommand.h"
+#include "client/render/engine/IndirectCommand.h"
 #include "common/util/FileHelper.h"
 
 namespace voxel_game::client::render::engine::vulkan {
@@ -114,7 +117,9 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		std::vector<uint32_t> shaderData[] = {vertexShaderData, fragmentShaderData};
 
-		mDescriptorSetLayouts = vulkan_util::createDescriptorSetLayouts(mVulkanEngine, 2, shaderData);
+		for (DescriptorLayout* layout : builder->getDescriptorLayouts()) {
+			mDescriptorSetLayouts.push_back(reinterpret_cast<VulkanDescriptorLayout*>(layout)->getDescriptorSetLayout());
+		}
 
 		std::vector<VkPushConstantRange> pushConstantRanges = vulkan_util::getPushConstantRanges(1, shaderData);
 		for (const auto&[stageFlags, offset, size] : pushConstantRanges) {
@@ -276,10 +281,6 @@ namespace voxel_game::client::render::engine::vulkan {
 	VulkanRenderPipeline::~VulkanRenderPipeline() {
 		vkDestroyPipelineLayout(mVulkanEngine->getDevice(), mPipelineLayout, nullptr);
 		vkDestroyPipeline(mVulkanEngine->getDevice(), mPipeline, nullptr);
-
-		for (const VkDescriptorSetLayout& descriptorSetLayout: mDescriptorSetLayouts) {
-			vkDestroyDescriptorSetLayout(mVulkanEngine->getDevice(), descriptorSetLayout, nullptr);
-		}
 	}
 
 	void VulkanRenderPipeline::draw_(const uint32_t vertexCount, const uint32_t firstVertex, const std::string& label) {
@@ -292,6 +293,22 @@ namespace voxel_game::client::render::engine::vulkan {
 		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
 		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
 		vkCmdDrawIndexed(commandBuffer, indexCount, 1, firstIndex, 0, 0);
+	}
+
+	void VulkanRenderPipeline::drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset, const std::string& label) {
+		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
+		const auto vulkanCommandBuffer = reinterpret_cast<VulkanBuffer*>(indirectCommandBuffer);
+		const auto vulkanCountBuffer = reinterpret_cast<VulkanBuffer*>(countBuffer);
+		vkCmdDrawIndirectCount(commandBuffer, vulkanCommandBuffer->getBuffer(), commandOffset, vulkanCountBuffer->getBuffer(), countOffset, maxCount, sizeof(IndirectCommand));
+	}
+
+	void VulkanRenderPipeline::drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset, const std::string& label) {
+		const VkCommandBuffer commandBuffer = mVulkanEngine->getCommandBuffer();
+		TracyVkZoneTransient(mVulkanEngine->getTracyContext(), tracyZone, commandBuffer, label.c_str(), true);
+		const auto vulkanCommandBuffer = reinterpret_cast<VulkanBuffer*>(indirectCommandBuffer);
+		const auto vulkanCountBuffer = reinterpret_cast<VulkanBuffer*>(countBuffer);
+		vkCmdDrawIndexedIndirectCount(commandBuffer, vulkanCommandBuffer->getBuffer(), commandOffset, vulkanCountBuffer->getBuffer(), countOffset, maxCount, sizeof(IndexedIndirectCommand));
 	}
 
 	VulkanRenderPipelineBuilder::VulkanRenderPipelineBuilder(VulkanEngine* vulkanEngine, const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader), mVulkanEngine(vulkanEngine) {}

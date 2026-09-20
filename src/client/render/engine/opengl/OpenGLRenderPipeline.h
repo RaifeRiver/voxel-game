@@ -49,6 +49,10 @@ namespace voxel_game::client::render::engine::opengl {
 
 		void drawIndexed_(uint32_t indexCount, uint32_t firstIndex, const std::string& label) override;
 
+		void drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) override;
+
+		void drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) override;
+
 	private:
 		unsigned int mShaderProgram;
 		unsigned int mVertexArray = 0;

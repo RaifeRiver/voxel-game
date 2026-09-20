@@ -25,7 +25,7 @@
 namespace voxel_game::client::render::engine::opengl {
 	class OpenGLComputePipeline : public ComputePipeline {
 	public:
-		explicit OpenGLComputePipeline(const Shader& computeShaderGLSL);
+		explicit OpenGLComputePipeline(const ComputePipelineBuilder* builder);
 
 		void bind() override;
 
@@ -41,5 +41,12 @@ namespace voxel_game::client::render::engine::opengl {
 	private:
 		unsigned int mShaderProgram;
 		std::vector<opengl_util::PushConstant> mPushConstants;
+	};
+
+	class OpenGLComputePipelineBuilder : public ComputePipelineBuilder {
+	public:
+		explicit OpenGLComputePipelineBuilder(const Shader& computeShader);
+
+		std::unique_ptr<ComputePipeline> build() override;
 	};
 }

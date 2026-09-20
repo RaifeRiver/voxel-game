@@ -26,13 +26,13 @@
 
 #include "OpenGLBuffer.h"
 #include "OpenGLComputePipeline.h"
-#include "OpenGLDescriptorAllocator.h"
+#include "OpenGLDescriptorLayout.h"
 #include "OpenGLImage.h"
 #include "OpenGLRenderPipeline.h"
 #include "common/util/Log.h"
 
 namespace voxel_game::client::render::engine::opengl {
-	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
+	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init OpenGL engine");
 
 		LOG_INFO("Using OpenGL renderer");
@@ -40,6 +40,8 @@ namespace voxel_game::client::render::engine::opengl {
 		auto& window = registry.getResource<window::Window>();
 
 		initOpenGL(window);
+
+		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "opengl");
 
 		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
 			preRender();
@@ -55,16 +57,16 @@ namespace voxel_game::client::render::engine::opengl {
 		return std::make_unique<OpenGLImage>(size, format, usage, type);
 	}
 
-	std::unique_ptr<ComputePipeline> OpenGLEngine::createComputePipeline(const Shader& computeShader) {
-		return std::make_unique<OpenGLComputePipeline>(computeShader);
+	std::unique_ptr<ComputePipelineBuilder> OpenGLEngine::createComputePipelineBuilder(const Shader& computeShader) {
+		return std::make_unique<OpenGLComputePipelineBuilder>(computeShader);
 	}
 
 	std::unique_ptr<RenderPipelineBuilder> OpenGLEngine::createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) {
 		return std::make_unique<OpenGLRenderPipelineBuilder>(vertexShader, fragmentShader);
 	}
 
-	std::unique_ptr<DescriptorAllocatorBuilder> OpenGLEngine::createDescriptorAllocatorBuilder() {
-		return std::make_unique<OpenGLDescriptorAllocatorBuilder>();
+	std::unique_ptr<DescriptorLayoutBuilder> OpenGLEngine::createDescriptorLayoutBuilder() {
+		return std::make_unique<OpenGLDescriptorLayoutBuilder>();
 	}
 
 	void OpenGLEngine::beginRendering() {}

@@ -20,28 +20,39 @@
 
 #include "volk.h"
 
-#include "client/render/engine/DescriptorAllocator.h"
 #include "client/render/engine/DescriptorLayout.h"
 
 namespace voxel_game::client::render::engine::vulkan {
 	class VulkanEngine;
 
-	class VulkanDescriptorAllocator : public DescriptorAllocator {
+	VkDescriptorType toVKDescriptorType(DescriptorType type);
+
+	VkImageLayout toVKImageLayout(DescriptorType type);
+
+	class VulkanDescriptorLayout : public DescriptorLayout {
 	public:
-		VulkanDescriptorAllocator(VulkanEngine* vulkanEngine, DescriptorLayout* descriptorLayout, uint32_t maxSets);
+		explicit VulkanDescriptorLayout(VulkanEngine* vulkanEngine, const std::vector<DescriptorType>& bindings);
 
-		void clearDescriptors() override;
+		std::unique_ptr<DescriptorAllocator> createAllocator(uint32_t maxSets) override;
 
-		std::unique_ptr<DescriptorSet> allocate() override;
+		[[nodiscard]] VkDescriptorSetLayout getDescriptorSetLayout() const {
+			return mDescriptorSetLayout;
+		}
 
-		[[nodiscard]] DescriptorType getDescriptorType(uint32_t binding) const;
-
-		~VulkanDescriptorAllocator() override;
+		~VulkanDescriptorLayout() override;
 
 	private:
 		VulkanEngine* mVulkanEngine = nullptr;
-		VkDescriptorPool mDescriptorPool = nullptr;
 		VkDescriptorSetLayout mDescriptorSetLayout = nullptr;
-		std::vector<DescriptorType> mBindings;
+	};
+
+	class VulkanDescriptorLayoutBuilder : public DescriptorLayoutBuilder {
+	public:
+		explicit VulkanDescriptorLayoutBuilder(VulkanEngine* vulkanEngine);
+
+		std::unique_ptr<DescriptorLayout> build() override;
+
+	private:
+		VulkanEngine* mVulkanEngine = nullptr;
 	};
 }

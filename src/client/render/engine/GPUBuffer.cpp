@@ -48,4 +48,28 @@ namespace voxel_game::client::render::engine {
 		}
 		return getDeviceAddress_();
 	}
+
+	void GPUBuffer::copyFromBuffer(GPUBuffer& other, const uint32_t srcOffset, const uint32_t dstOffset, const uint32_t size) {
+		if (!(mUsage & BufferUsage::TRANSFER_DST)) {
+			throw std::runtime_error("Can't copy into buffer created without BufferUsage::TRANSFER_DST");
+		}
+		if (!(other.mUsage & BufferUsage::TRANSFER_SRC)) {
+			throw std::runtime_error("Can't copy from buffer created without BufferUsage::TRANSFER_SRC");
+		}
+		copyFromBuffer_(other, srcOffset, dstOffset, size);
+	}
+
+	void GPUBuffer::fill(const uint32_t offset, const uint32_t size, const uint32_t value) {
+		if (!(mUsage & BufferUsage::TRANSFER_DST)) {
+			throw std::runtime_error("Can't copy into buffer created without BufferUsage::TRANSFER_DST");
+		}
+		fill_(offset, size, value);
+	}
+
+	void GPUBuffer::barrier(const BufferAccess srcAccess, const BufferAccess dstAccess, const uint32_t offset, const uint32_t size) {
+		if (size + offset > getSize() && size != UINT32_MAX) {
+			throw std::runtime_error("Buffer barrier size exceeds buffer size");
+		}
+		barrier_(srcAccess, dstAccess, offset, size);
+	}
 }

@@ -1,0 +1,36 @@
+#version 460
+
+#include "voxel_game:chunk/buffers"
+
+layout (local_size_x = 64) in;
+
+layout (push_constant) uniform PushConstants {
+    vec4 frustumPlanes[6];
+    uint chunkCount;
+} pushConstants;
+
+bool isVisible(vec4 boundingSphere) {
+    for (uint i = 0; i < 6; i++) {
+        if (dot(pushConstants.frustumPlanes[i].xyz, boundingSphere.xyz) + pushConstants.frustumPlanes[i].w < -boundingSphere.w) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void main() {
+    uint invocationID = gl_GlobalInvocationID.x;
+    if (invocationID >= pushConstants.chunkCount) {
+        return;
+    }
+    Chunk chunk = chunks[invocationID];
+    if (isVisible(chunk.boundingSphere)) {
+        IndirectCommand command;
+        command.vertexCount = chunk.vertexCount;
+        command.instanceCount = 1;
+        command.firstVertex = 0;
+        command.firstInstance = invocationID;
+        uint id = atomicAdd(commandCount, 1);
+        indirectCommands[id] = command;
+    }
+}

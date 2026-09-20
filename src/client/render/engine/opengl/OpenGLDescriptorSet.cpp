@@ -48,12 +48,13 @@ namespace voxel_game::client::render::engine::opengl {
 	}
 
 	void OpenGLDescriptorSet::bind(const uint32_t set) const {
-		const std::vector<DescriptorBinding>& descriptorBindings = mDescriptorAllocator->getDescriptorBindings();
+		const std::vector<DescriptorType>& descriptorBindings = mDescriptorAllocator->getDescriptorBindings();
 		for (uint32_t i = 0; i < mImageBindings.size(); i++) {
 			if (mImageBindings[i]) {
-				for (const auto &[binding, type] : descriptorBindings) {
+				for (uint32_t binding = 0; binding < descriptorBindings.size(); binding++) {
 					if (binding == i) {
 						const OpenGLImage* image = dynamic_cast<OpenGLImage*>(mImageBindings[i]);
+						const DescriptorType type = descriptorBindings[binding];
 						if (type == DescriptorType::SAMPLED_TEXTURE || type == DescriptorType::TEXTURE) {
 							glBindTexture((set << 4) | i, image->getImage());
 						}
@@ -71,9 +72,10 @@ namespace voxel_game::client::render::engine::opengl {
 		}
 		for (uint32_t i = 0; i < mBufferBindings.size(); i++) {
 			if (mBufferBindings[i]) {
-				for (const auto &[binding, type] : descriptorBindings) {
+				for (uint32_t binding = 0; binding < descriptorBindings.size(); binding++) {
 					if (binding == i) {
 						const OpenGLBuffer* buffer = dynamic_cast<OpenGLBuffer*>(mBufferBindings[i]);
+						const DescriptorType type = descriptorBindings[binding];
 						if (type == DescriptorType::UNIFORM_BUFFER) {
 							glBindBufferBase(GL_UNIFORM_BUFFER, (set << 4) | i, buffer->getBuffer());
 						}

@@ -27,7 +27,7 @@
 namespace voxel_game::client::render::engine::vulkan {
 	class VulkanComputePipeline : public ComputePipeline {
 	public:
-		VulkanComputePipeline(VulkanEngine* vulkanEngine, const Shader& computeShader);
+		VulkanComputePipeline(VulkanEngine* vulkanEngine, const ComputePipelineBuilder* builder);
 
 		void bind() override;
 
@@ -47,5 +47,15 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkPipelineLayout mPipelineLayout = nullptr;
 		uint32_t mPushConstantsSize = 0;
 		VkShaderStageFlags mPushConstantStages = 0;
+	};
+
+	class VulkanComputePipelineBuilder : public ComputePipelineBuilder {
+	public:
+		explicit VulkanComputePipelineBuilder(VulkanEngine* vulkanEngine, const Shader& computeShader);
+
+		std::unique_ptr<ComputePipeline> build() override;
+
+	private:
+		VulkanEngine* mVulkanEngine = nullptr;
 	};
 }

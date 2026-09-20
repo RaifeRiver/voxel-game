@@ -20,4 +20,17 @@
 
 namespace voxel_game::client::render::engine {
 	ComputePipeline::ComputePipeline() : Pipeline(PipelineType::COMPUTE) {}
+
+	ComputePipelineBuilder::ComputePipelineBuilder(Shader computeShader) : mComputeShader(std::move(computeShader)) {}
+
+	ComputePipelineBuilder * ComputePipelineBuilder::descriptorLayout(const uint32_t set, DescriptorLayout *descriptorLayout) {
+		if (mDescriptorLayouts.size() <= set) {
+			mDescriptorLayouts.resize(set + 1);
+		}
+		if (mDescriptorLayouts[set]) {
+			throw std::runtime_error("Descriptor layout for set " + std::to_string(set) + " already exists");
+		}
+		mDescriptorLayouts[set] = descriptorLayout;
+		return this;
+	}
 }

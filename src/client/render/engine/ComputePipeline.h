@@ -20,7 +20,9 @@
 
 #include <string>
 
+#include "DescriptorLayout.h"
 #include "Pipeline.h"
+#include "Shader.h"
 
 namespace voxel_game::client::render::engine {
 	class ComputePipeline : public Pipeline {
@@ -33,5 +35,28 @@ namespace voxel_game::client::render::engine {
 
 	protected:
 		virtual void dispatch_(uint32_t x, uint32_t y, uint32_t z, const std::string& label) = 0;
+	};
+
+	class ComputePipelineBuilder {
+	public:
+		explicit ComputePipelineBuilder(Shader computeShader);
+
+		[[nodiscard]] const Shader& getComputeShader() const {
+			return mComputeShader;
+		}
+
+		[[nodiscard]] const std::vector<DescriptorLayout*>& getDescriptorLayouts() const {
+			return mDescriptorLayouts;
+		}
+
+		ComputePipelineBuilder* descriptorLayout(uint32_t set, DescriptorLayout* descriptorLayout);
+
+		virtual std::unique_ptr<ComputePipeline> build() = 0;
+
+		virtual ~ComputePipelineBuilder() = default;
+
+	private:
+		Shader mComputeShader;
+		std::vector<DescriptorLayout*> mDescriptorLayouts;
 	};
 }

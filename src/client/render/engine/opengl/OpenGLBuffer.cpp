@@ -45,4 +45,16 @@ namespace voxel_game::client::render::engine::opengl {
 	uint64_t OpenGLBuffer::getDeviceAddress_() {
 		throw std::runtime_error("Buffer device address is not supported on OpenGL");
 	}
+
+	void OpenGLBuffer::copyFromBuffer_(GPUBuffer& other, uint32_t srcOffset, uint32_t dstOffset, uint32_t size) {
+		throw std::runtime_error("Buffer copy is not supported on OpenGL");
+	}
+
+	void OpenGLBuffer::fill_(uint32_t offset, uint32_t size, uint32_t value) {
+		throw std::runtime_error("Buffer fill is not supported on OpenGL");
+	}
+
+	void OpenGLBuffer::barrier_(BufferAccess srcAccess, BufferAccess dstAccess, uint32_t offset, uint32_t size) {
+		throw std::runtime_error("Buffer barrier is not supported on OpenGL");
+	}
 }

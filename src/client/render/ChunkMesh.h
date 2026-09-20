@@ -26,6 +26,8 @@
 
 namespace voxel_game::client::render {
 	struct ChunkMesh {
+		bool hasMesh = false;
+		uint32_t chunkIndex = 0;
 		std::unique_ptr<engine::GPUBuffer> vertexBuffer = nullptr;
 	};
 

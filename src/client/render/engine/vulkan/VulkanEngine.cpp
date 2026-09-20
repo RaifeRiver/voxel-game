@@ -25,6 +25,7 @@
 
 #include "VulkanComputePipeline.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanDescriptorLayout.h"
 #include "VulkanRenderPipeline.h"
 #include "VulkanUtil.h"
 #include "client/LaunchOptions.h"
@@ -33,7 +34,7 @@
 #include "tracy/TracyC.h"
 
 namespace voxel_game::client::render::engine::vulkan {
-	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) : RenderEngine(registry) {
+	VulkanEngine::VulkanEngine(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init Vulkan engine");
 
 		LOG_INFO("Using Vulkan renderer");
@@ -52,6 +53,8 @@ namespace voxel_game::client::render::engine::vulkan {
 		createSyncStructures();
 		initTracyContext();
 
+		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "vulkan");
+
 		window.setVisible(true);
 
 		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
@@ -68,16 +71,16 @@ namespace voxel_game::client::render::engine::vulkan {
 		return std::make_unique<VulkanImage>(this, size, format, usage, type);
 	}
 
-	std::unique_ptr<ComputePipeline> VulkanEngine::createComputePipeline(const Shader& computeShader) {
-		return std::make_unique<VulkanComputePipeline>(this, computeShader);
+	std::unique_ptr<ComputePipelineBuilder> VulkanEngine::createComputePipelineBuilder(const Shader& computeShader) {
+		return std::make_unique<VulkanComputePipelineBuilder>(this, computeShader);
 	}
 
 	std::unique_ptr<RenderPipelineBuilder> VulkanEngine::createRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) {
 		return std::make_unique<VulkanRenderPipelineBuilder>(this, vertexShader, fragmentShader);
 	}
 
-	std::unique_ptr<DescriptorAllocatorBuilder> VulkanEngine::createDescriptorAllocatorBuilder() {
-		return std::make_unique<VulkanDescriptorAllocatorBuilder>(this);
+	std::unique_ptr<DescriptorLayoutBuilder> VulkanEngine::createDescriptorLayoutBuilder() {
+		return std::make_unique<VulkanDescriptorLayoutBuilder>(this);
 	}
 
 	void VulkanEngine::beginRendering() {
@@ -299,6 +302,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkPhysicalDeviceVulkan12Features features12 = {};
 		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
 		features12.bufferDeviceAddress = true;
+		features12.drawIndirectCount = true;
 
 		VkPhysicalDeviceVulkan13Features features13 = {};
 		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;

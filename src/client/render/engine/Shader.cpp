@@ -69,9 +69,11 @@ namespace voxel_game::client::render::engine {
 
 	static const shaderc::Compiler SHADERC_COMPILER;
 	static resource::ResourceManager* RESOURCE_MANAGER;
+	static std::string ENGINE_NAME;
 
-	void initShaderCompiler(resource::ResourceManager& resourceManager) {
+	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName) {
 		RESOURCE_MANAGER = &resourceManager;
+		ENGINE_NAME = engineName;
 	}
 
 	Shader::Shader(const std::vector<uint32_t>& spirv) : mSPIRV(spirv) {}
@@ -93,6 +95,7 @@ namespace voxel_game::client::render::engine {
 		for (const auto& [name, value] : mPreprocessorDefinitions) {
 			options.AddMacroDefinition(name, value);
 		}
+		options.AddMacroDefinition("VG_ENGINE", ENGINE_NAME);
 		const shaderc::SpvCompilationResult result = SHADERC_COMPILER.CompileGlslToSpv(mCode, toShaderCStage(stage), "string", options);
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 			throw std::runtime_error("Error compiling shader: " + result.GetErrorMessage());

@@ -25,24 +25,29 @@
 
 namespace voxel_game::client::render::engine::vulkan {
 	VkBufferUsageFlags toVKBufferUsage(const BufferUsage usage) {
-		switch (usage) {
-			case BufferUsage::NONE:
-				return 0;
-			case BufferUsage::TRANSFER_SRC:
-				return VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
-			case BufferUsage::TRANSFER_DST:
-				return VK_BUFFER_USAGE_TRANSFER_DST_BIT;
-			case BufferUsage::UNIFORM:
-				return VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
-			case BufferUsage::STORAGE:
-				return VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
-			case BufferUsage::SHADER_DEVICE_ADDRESS:
-				return VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
-			case BufferUsage::INDEX:
-				return VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-			default:
-				throw std::runtime_error("Unsupported buffer usage");
+		VkBufferUsageFlags bufferUsage = 0;
+		if (usage & BufferUsage::TRANSFER_SRC) {
+			bufferUsage |= VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 		}
+		if (usage & BufferUsage::TRANSFER_DST) {
+			bufferUsage |= VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		}
+		if (usage & BufferUsage::UNIFORM) {
+			bufferUsage |= VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+		}
+		if (usage & BufferUsage::STORAGE) {
+			bufferUsage |= VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
+		}
+		if (usage & BufferUsage::SHADER_DEVICE_ADDRESS) {
+			bufferUsage |= VK_BUFFER_USAGE_SHADER_DEVICE_ADDRESS_BIT;
+		}
+		if (usage & BufferUsage::INDEX) {
+			bufferUsage |= VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+		}
+		if (usage & BufferUsage::INDIRECT) {
+			bufferUsage |= VK_BUFFER_USAGE_INDIRECT_BUFFER_BIT;
+		}
+		return bufferUsage;
 	}
 
 	VmaMemoryUsage toVMAMemoryUsage(const MemoryType memoryType) {
@@ -69,6 +74,49 @@ namespace voxel_game::client::render::engine::vulkan {
 			default:
 				throw std::runtime_error("Unsupported mapped type");
 		}
+	}
+
+	VkAccessFlags toVKAccessFlags(const BufferAccess access) {
+		VkAccessFlags flags = 0;
+		if (access & BufferAccess::TRANSFER_READ) {
+			flags |= VK_ACCESS_TRANSFER_READ_BIT;
+		}
+		if (access & BufferAccess::TRANSFER_WRITE) {
+			flags |= VK_ACCESS_TRANSFER_WRITE_BIT;
+		}
+		if (access & BufferAccess::UNIFORM_READ) {
+			flags |= VK_ACCESS_UNIFORM_READ_BIT;
+		}
+		if (access & BufferAccess::SHADER_READ) {
+			flags |= VK_ACCESS_SHADER_READ_BIT;
+		}
+		if (access & BufferAccess::SHADER_WRITE) {
+			flags |= VK_ACCESS_SHADER_WRITE_BIT;
+		}
+		if (access & BufferAccess::INDEX_READ) {
+			flags |= VK_ACCESS_INDEX_READ_BIT;
+		}
+		if (access & BufferAccess::INDIRECT_READ) {
+			flags |= VK_ACCESS_INDIRECT_COMMAND_READ_BIT;
+		}
+		return flags;
+	}
+
+	VkPipelineStageFlags toVkPipelineStageFlags(BufferAccess access) {
+		VkPipelineStageFlags flags = 0;
+		if (access & BufferAccess::TRANSFER_READ || access & BufferAccess::TRANSFER_WRITE) {
+			flags |= VK_PIPELINE_STAGE_TRANSFER_BIT;
+		}
+		if (access & BufferAccess::UNIFORM_READ || access & BufferAccess::SHADER_READ || access & BufferAccess::SHADER_WRITE) {
+			flags |= VK_PIPELINE_STAGE_VERTEX_SHADER_BIT | VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | VK_PIPELINE_STAGE_COMPUTE_SHADER_BIT;
+		}
+		if (access & BufferAccess::INDEX_READ) {
+			flags |= VK_PIPELINE_STAGE_VERTEX_INPUT_BIT;
+		}
+		if (access & BufferAccess::INDIRECT_READ) {
+			flags |= VK_PIPELINE_STAGE_DRAW_INDIRECT_BIT;
+		}
+		return flags;
 	}
 
 	VulkanBuffer::VulkanBuffer(VulkanEngine* vulkanEngine, const size_t size, const BufferUsage usage, const MemoryType memoryType, const MappedType mappedType) : GPUBuffer(size, usage, memoryType, mappedType), mVulkanEngine(vulkanEngine) {
@@ -100,5 +148,32 @@ namespace voxel_game::client::render::engine::vulkan {
 			.buffer = mBuffer
 		};
 		return vkGetBufferDeviceAddress(mVulkanEngine->getDevice(), &bufferDeviceAddressInfo);
+	}
+
+	void VulkanBuffer::copyFromBuffer_(GPUBuffer& other, const uint32_t srcOffset, const uint32_t dstOffset, const uint32_t size) {
+		const VkBufferCopy bufferCopy = {
+			.srcOffset = srcOffset,
+			.dstOffset = dstOffset,
+			.size = size
+		};
+		vkCmdCopyBuffer(mVulkanEngine->getCommandBuffer(), reinterpret_cast<VulkanBuffer&>(other).mBuffer, mBuffer, 1, &bufferCopy);
+	}
+
+	void VulkanBuffer::fill_(const uint32_t offset, const uint32_t size, const uint32_t value) {
+		vkCmdFillBuffer(mVulkanEngine->getCommandBuffer(), mBuffer, offset, size, value);
+	}
+
+	void VulkanBuffer::barrier_(const BufferAccess srcAccess, const BufferAccess dstAccess, const uint32_t offset, const uint32_t size) {
+		const VkBufferMemoryBarrier memoryBarrier = {
+			.sType = VK_STRUCTURE_TYPE_BUFFER_MEMORY_BARRIER,
+			.srcAccessMask = toVKAccessFlags(srcAccess),
+			.dstAccessMask = toVKAccessFlags(dstAccess),
+			.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+			.buffer = mBuffer,
+			.offset = offset,
+			.size = size == UINT32_MAX ? VK_WHOLE_SIZE : size
+		};
+		vkCmdPipelineBarrier(mVulkanEngine->getCommandBuffer(), toVkPipelineStageFlags(srcAccess), toVkPipelineStageFlags(dstAccess), 0, 0, nullptr, 1, &memoryBarrier, 0, nullptr);
 	}
 }

@@ -18,33 +18,18 @@
 
 #pragma once
 
-#include "client/render/engine/GPUBuffer.h"
+#include "client/render/engine/DescriptorLayout.h"
 
 namespace voxel_game::client::render::engine::opengl {
-	class OpenGLBuffer : public GPUBuffer {
+	class OpenGLDescriptorLayout : public DescriptorLayout {
 	public:
-		OpenGLBuffer(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType);
+		explicit OpenGLDescriptorLayout(const std::vector<DescriptorType>& bindings);
 
-		[[nodiscard]] unsigned int getBuffer() const {
-			return mBuffer;
-		}
+		std::unique_ptr<DescriptorAllocator> createAllocator(uint32_t maxSets) override;
+	};
 
-		~OpenGLBuffer() override;
-
-	protected:
-		void* map_() override;
-
-		void unmap_() override;
-
-		uint64_t getDeviceAddress_() override;
-
-		void copyFromBuffer_(GPUBuffer &other, uint32_t srcOffset, uint32_t dstOffset, uint32_t size) override;
-
-		void fill_(uint32_t offset, uint32_t size, uint32_t value) override;
-
-		void barrier_(BufferAccess srcAccess, BufferAccess dstAccess, uint32_t offset, uint32_t size) override;
-
-	private:
-		unsigned int mBuffer = 0;
+	class OpenGLDescriptorLayoutBuilder : public DescriptorLayoutBuilder {
+	public:
+		std::unique_ptr<DescriptorLayout> build() override;
 	};
 }

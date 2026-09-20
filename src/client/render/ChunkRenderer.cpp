@@ -30,20 +30,33 @@
 #include "common/player/Player.h"
 #include "common/util/FileHelper.h"
 #include "common/util/Log.h"
+#include "engine/IndirectCommand.h"
 
 namespace voxel_game::client::render {
 	ChunkRenderer::ChunkRenderer(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init chunk renderer");
 
-		auto& renderEngine = registry.getResource<engine::RenderEngine>();
-		const auto& resourceManager = registry.getResource<resource::ResourceManager>();
+		engine::RenderEngine& renderEngine = registry.getResource<engine::RenderEngine>();
+		const resource::ResourceManager& resourceManager = registry.getResource<resource::ResourceManager>();
 
-		const engine::Shader vertexShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk", ".vert", resource::ResourceType::ASSET).path).build(engine::ShaderStage::VERTEX);
-		const engine::Shader fragmentShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk", ".frag", resource::ResourceType::ASSET).path).build(engine::ShaderStage::FRAGMENT);
-		mPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->cullMode(engine::CullMode::BACK)->build();
+		mDescriptorLayout = renderEngine.createDescriptorLayoutBuilder()->addBinding(0, engine::DescriptorType::STORAGE_BUFFER)->addBinding(1, engine::DescriptorType::STORAGE_BUFFER)->addBinding(2, engine::DescriptorType::STORAGE_BUFFER)->build();
 
-		mDescriptorAllocator = renderEngine.createDescriptorAllocatorBuilder()->build(1, engine::ShaderStage::VERTEX);
+		const engine::Shader cullingShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk/culling", ".comp", resource::ResourceType::ASSET).path).build(engine::ShaderStage::COMPUTE);
+		mCullingPipeline = renderEngine.createComputePipelineBuilder(cullingShader)->descriptorLayout(0, mDescriptorLayout.get())->build();
+
+		const engine::Shader vertexShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk/main", ".vert", resource::ResourceType::ASSET).path).build(engine::ShaderStage::VERTEX);
+		const engine::Shader fragmentShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk/main", ".frag", resource::ResourceType::ASSET).path).build(engine::ShaderStage::FRAGMENT);
+		mRenderPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->cullMode(engine::CullMode::BACK)->descriptorLayout(0, mDescriptorLayout.get())->build();
+
+		mChunkBuffer = renderEngine.allocateBuffer(sizeof(chunk::Chunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+		mIndirectCommandBuffer = renderEngine.allocateBuffer(sizeof(engine::IndirectCommand) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
+		mCountBuffer = renderEngine.allocateBuffer(sizeof(uint32_t), engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
+
+		mDescriptorAllocator = mDescriptorLayout->createAllocator(1);
 		mDescriptorSet = mDescriptorAllocator->allocate();
+		mDescriptorSet->setBinding(0, mChunkBuffer.get());
+		mDescriptorSet->setBinding(1, mIndirectCommandBuffer.get());
+		mDescriptorSet->setBinding(2, mCountBuffer.get());
 	}
 
 	void ChunkRenderer::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
@@ -51,13 +64,9 @@ namespace voxel_game::client::render {
 			return;
 		}
 
-		ZoneScopedN("Render chunk");
+		ZoneScopedN("Render chunks");
 
 		auto& renderEngine = registry.getResource<engine::RenderEngine>();
-
-		const ecs::Entity player = registry.getEntitiesWithComponents<player::LocalPlayer, component::Transform>()[0];
-		const component::Transform& transform = registry.getComponent<component::Transform>(player);
-		const player::CameraRotation& rotation = registry.getComponent<player::CameraRotation>(player);
 
 		for (const event::LoadChunkEvent* event: registry.getEvents<event::LoadChunkEvent>()) {
 			if (!registry.hasComponent<ChunkMeshData>(event->entity)) {
@@ -65,7 +74,7 @@ namespace voxel_game::client::render {
 			}
 			ChunkMeshData& meshData = registry.getComponent<ChunkMeshData>(event->entity);
 			ChunkMesh mesh = meshChunk(renderEngine, event->chunk);
-			if (mesh.vertexBuffer) {
+			if (mesh.hasMesh) {
 				meshData.meshes[event->chunk.getPos()] = std::move(mesh);
 			}
 		}
@@ -74,8 +83,23 @@ namespace voxel_game::client::render {
 				continue;
 			}
 			ChunkMeshData& meshData = registry.getComponent<ChunkMeshData>(event->entity);
-			meshData.meshes.erase(event->chunk);
+			auto it = meshData.meshes.find(event->chunk);
+			if (it != meshData.meshes.end()) {
+				if (mNextChunk != 0) {
+					mChunkBuffer->copyFromBuffer(*mChunkBuffer, --mNextChunk * sizeof(Chunk), it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
+					mChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ, it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
+				}
+				meshData.meshes.erase(event->chunk);
+			}
 		}
+
+		if (mNextChunk == 0) {
+			return;
+		}
+
+		const ecs::Entity player = registry.getEntitiesWithComponents<player::LocalPlayer, component::Transform>()[0];
+		const component::Transform& transform = registry.getComponent<component::Transform>(player);
+		const player::CameraRotation& rotation = registry.getComponent<player::CameraRotation>(player);
 
 		const glm::uvec2 size = renderEngine.getRenderImage().getSize();
 		const glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), static_cast<float>(size.x) / size.y, 1000000.0f, 0.1f);
@@ -86,20 +110,41 @@ namespace voxel_game::client::render {
 		const glm::mat4 viewMatrix = glm::inverse(translationMatrix * rotationMatrix);
 		const glm::mat4 viewProj = projectionMatrix * viewMatrix;
 
+		mCountBuffer->fill(0, sizeof(uint32_t), 0);
+		mCountBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_WRITE);
+
+		mCullingPipeline->bind();
+		mCullingPipeline->bindDescriptorSet(0, mDescriptorSet.get());
+
+		const glm::mat4 m = glm::transpose(viewProj);
+		CullingPushConstants cullingPushConstants = {};
+		cullingPushConstants.frustumPlanes[0] = m[3] + m[0];
+		cullingPushConstants.frustumPlanes[1] = m[3] - m[0];
+		cullingPushConstants.frustumPlanes[2] = m[3] + m[1];
+		cullingPushConstants.frustumPlanes[3] = m[3] - m[1];
+		cullingPushConstants.frustumPlanes[4] = m[2];
+		cullingPushConstants.frustumPlanes[5] = m[3] - m[2];
+		for (glm::vec4& frustumPlane: cullingPushConstants.frustumPlanes) {
+			frustumPlane /= glm::length(glm::vec3(frustumPlane));
+		}
+		cullingPushConstants.chunkCount = mNextChunk;
+		mCullingPipeline->setPushConstants(&cullingPushConstants);
+
+		mCullingPipeline->dispatch((mNextChunk + 63) >> 6);
+
+		mCountBuffer->barrier(engine::BufferAccess::SHADER_WRITE, engine::BufferAccess::INDIRECT_READ);
+		mIndirectCommandBuffer->barrier(engine::BufferAccess::SHADER_WRITE, engine::BufferAccess::INDIRECT_READ);
+
 		renderEngine.beginRendering();
 
-		mPipeline->bind();
+		mRenderPipeline->bind();
+		mRenderPipeline->bindDescriptorSet(0, mDescriptorSet.get());
 
-		ChunkPushConstants pushConstants = {};
-		for (const ecs::Entity entity : registry.getEntitiesWithComponents<ChunkMeshData>()) {
-			const ChunkMeshData& meshData = registry.getComponent<ChunkMeshData>(entity);
-			for (auto& [pos, mesh] : meshData.meshes) {
-				pushConstants.viewProj = viewProj * glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
-				pushConstants.vertexBufferAddress = mesh.vertexBuffer->getDeviceAddress();
-				mPipeline->setPushConstants(&pushConstants);
-				mPipeline->draw(mesh.vertexBuffer->getSize() / sizeof(ChunkVertex), 0, "Render chunk");
-			}
-		}
+		PushConstants pushConstants = {};
+		pushConstants.viewProj = viewProj;
+		mRenderPipeline->setPushConstants(&pushConstants);
+
+		mRenderPipeline->drawIndirectCount(mIndirectCommandBuffer.get(), mCountBuffer.get(), mNextChunk, "Render chunk");
 
 		renderEngine.endRendering();
 	}
@@ -109,7 +154,7 @@ namespace voxel_game::client::render {
 
 		ChunkMesh mesh;
 		if (!chunk.isUniform() || chunk.getBlock(0, 0, 0) != 0) {
-			std::vector<ChunkVertex> vertices;
+			std::vector<Vertex> vertices;
 			for (uint32_t x = 0; x < chunk::CHUNK_SIZE; x++) {
 				for (uint32_t y = 0; y < chunk::CHUNK_SIZE; y++) {
 					for (uint32_t z = 0; z < chunk::CHUNK_SIZE; z++) {
@@ -185,11 +230,23 @@ namespace voxel_game::client::render {
 			}
 
 			if (vertices.size() > 0) {
-				std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(vertices.size() * sizeof(ChunkVertex), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
-				memcpy(buffer->map(), vertices.data(), vertices.size() * sizeof(ChunkVertex));
-				buffer->unmap();
+				mesh.chunkIndex = mNextChunk++;
 
+				std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(vertices.size() * sizeof(Vertex), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+				memcpy(buffer->map(), vertices.data(), vertices.size() * sizeof(Vertex));
+				buffer->unmap();
 				mesh.vertexBuffer = std::move(buffer);
+
+				auto chunkBufferData = static_cast<Chunk *>(mChunkBuffer->map());
+				glm::ivec3 pos = chunk.getPos();
+				auto& [modelMatrix, boundingSphere, bufferAddress, vertexCount] = chunkBufferData[mesh.chunkIndex];
+				modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
+				boundingSphere = glm::ivec4(pos * static_cast<int32_t>(chunk::CHUNK_SIZE) + static_cast<int32_t>(chunk::CHUNK_SIZE) / 2, std::ceil(std::sqrt(static_cast<float>(chunk::CHUNK_SIZE * chunk::CHUNK_SIZE / 2 * 3))));
+				bufferAddress = mesh.vertexBuffer->getDeviceAddress();
+				vertexCount = vertices.size();
+				mChunkBuffer->unmap();
+
+				mesh.hasMesh = true;
 			}
 		}
 

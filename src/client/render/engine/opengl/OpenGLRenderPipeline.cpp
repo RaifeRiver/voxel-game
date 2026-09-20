@@ -184,6 +184,14 @@ namespace voxel_game::client::render::engine::opengl {
 		glDrawElements(mPrimitiveTopology, static_cast<int>(indexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(firstIndex * 4));
 	}
 
+	void OpenGLRenderPipeline::drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) {
+		throw std::runtime_error("Draw indirect count not supported on OpenGL");
+	}
+
+	void OpenGLRenderPipeline::drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) {
+		throw std::runtime_error("Draw indexed indirect count not supported on OpenGL");
+	}
+
 	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}
 
 	std::unique_ptr<RenderPipeline> OpenGLRenderPipelineBuilder::build() {

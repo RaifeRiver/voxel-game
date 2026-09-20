@@ -32,6 +32,10 @@ namespace voxel_game::client::render::engine::vulkan {
 
 	VmaAllocationCreateFlags toVMAAllocationFlags(MappedType mappedType);
 
+	VkAccessFlags toVKAccessFlags(BufferAccess access);
+
+	VkPipelineStageFlags toVkPipelineStageFlags(BufferAccess access);
+
 	class VulkanBuffer : public GPUBuffer {
 	public:
 		VulkanBuffer(VulkanEngine* vulkanEngine, size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType);
@@ -48,6 +52,12 @@ namespace voxel_game::client::render::engine::vulkan {
 		void unmap_() override;
 
 		uint64_t getDeviceAddress_() override;
+
+		void copyFromBuffer_(GPUBuffer& other, uint32_t srcOffset, uint32_t dstOffset, uint32_t size) override;
+
+		void fill_(uint32_t offset, uint32_t size, uint32_t value) override;
+
+		void barrier_(BufferAccess srcAccess, BufferAccess dstAccess, uint32_t offset, uint32_t size) override;
 
 	private:
 		VulkanEngine* mVulkanEngine;

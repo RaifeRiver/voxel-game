@@ -60,7 +60,7 @@ namespace voxel_game::client::render::engine {
 		resource::ResourceManager& mResourceManager;
 	};
 
-	void initShaderCompiler(resource::ResourceManager& resourceManager);
+	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName);
 
 	class Shader {
 	public:

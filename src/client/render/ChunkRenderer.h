@@ -30,14 +30,25 @@
 #include "engine/RenderPipeline.h"
 
 namespace voxel_game::client::render {
-	struct ChunkVertex {
+	struct alignas(16) Chunk {
+		glm::mat4 modelMatrix;
+		glm::ivec4 boundingSphere;
+		uint64_t bufferAddress;
+		uint32_t vertexCount;
+	};
+
+	struct Vertex {
 		glm::vec3 position;
 		uint32_t colour;
 	};
 
-	struct ChunkPushConstants {
+	struct CullingPushConstants {
+		glm::vec4 frustumPlanes[6];
+		uint32_t chunkCount;
+	};
+
+	struct PushConstants {
 		glm::mat4 viewProj;
-		uint64_t vertexBufferAddress;
 	};
 
 	class ChunkRenderer : public ecs::System<ChunkRenderer> {
@@ -47,10 +58,16 @@ namespace voxel_game::client::render {
 		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
 
 	private:
-		std::unique_ptr<engine::RenderPipeline> mPipeline = nullptr;
+		std::unique_ptr<engine::DescriptorLayout> mDescriptorLayout = nullptr;
 		std::unique_ptr<engine::DescriptorAllocator> mDescriptorAllocator = nullptr;
 		std::unique_ptr<engine::DescriptorSet> mDescriptorSet = nullptr;
+		std::unique_ptr<engine::ComputePipeline> mCullingPipeline = nullptr;
+		std::unique_ptr<engine::RenderPipeline> mRenderPipeline = nullptr;
+		std::unique_ptr<engine::GPUBuffer> mChunkBuffer = nullptr;
+		std::unique_ptr<engine::GPUBuffer> mIndirectCommandBuffer = nullptr;
+		std::unique_ptr<engine::GPUBuffer> mCountBuffer = nullptr;
+		uint32_t mNextChunk = 0;
 
-		static ChunkMesh meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk);
+		ChunkMesh meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk);
 	};
 }

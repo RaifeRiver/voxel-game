@@ -16,10 +16,15 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include "RenderEngine.h"
+#pragma once
+
+#include <cstdint>
 
 namespace voxel_game::client::render::engine {
-	RenderEngine::RenderEngine(ecs::ECSRegistry& registry) {
-		initShaderCompiler(registry.getResource<resource::ResourceManager>());
-	}
+	struct IndirectCommand {
+		uint32_t vertexCount = 0;
+		uint32_t instanceCount = 1;
+		uint32_t firstVertex = 0;
+		uint32_t firstInstance = 0;
+	};
 }

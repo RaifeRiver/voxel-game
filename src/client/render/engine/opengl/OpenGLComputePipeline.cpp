@@ -24,8 +24,8 @@
 #include "OpenGLDescriptorSet.h"
 
 namespace voxel_game::client::render::engine::opengl {
-	OpenGLComputePipeline::OpenGLComputePipeline(const Shader& computeShaderGLSL) {
-		const std::vector<uint32_t>& computeShaderData = computeShaderGLSL.getSPIRV();
+	OpenGLComputePipeline::OpenGLComputePipeline(const ComputePipelineBuilder* builder) {
+		const std::vector<uint32_t>& computeShaderData = builder->getComputeShader().getSPIRV();
 
 		const std::string computeShaderCode = opengl_util::convertShader(computeShaderData);
 		const char* computeShaderCodeChars = computeShaderCode.c_str();
@@ -62,5 +62,11 @@ namespace voxel_game::client::render::engine::opengl {
 	void OpenGLComputePipeline::dispatch_(const uint32_t x, const uint32_t y, const uint32_t z, const std::string& label) {
 		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
 		glDispatchCompute(x, y, z);
+	}
+
+	OpenGLComputePipelineBuilder::OpenGLComputePipelineBuilder(const Shader& computeShader) : ComputePipelineBuilder(computeShader) {}
+
+	std::unique_ptr<ComputePipeline> OpenGLComputePipelineBuilder::build() {
+		return std::make_unique<OpenGLComputePipeline>(this);
 	}
 }

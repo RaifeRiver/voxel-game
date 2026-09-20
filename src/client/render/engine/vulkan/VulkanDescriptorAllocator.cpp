@@ -18,49 +18,17 @@
 
 #include "VulkanDescriptorAllocator.h"
 
-#include <ranges>
 #include <unordered_map>
 
+#include "VulkanDescriptorLayout.h"
 #include "VulkanDescriptorSet.h"
 #include "VulkanEngine.h"
-#include "VulkanShader.h"
 #include "VulkanUtil.h"
 
 namespace voxel_game::client::render::engine::vulkan {
-	VkDescriptorType toVKDescriptorType(const DescriptorType type) {
-		switch (type) {
-			case DescriptorType::SAMPLED_TEXTURE:
-				return VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			case DescriptorType::TEXTURE:
-				return VK_DESCRIPTOR_TYPE_SAMPLED_IMAGE;
-			case DescriptorType::IMAGE:
-				return VK_DESCRIPTOR_TYPE_STORAGE_IMAGE;
-			case DescriptorType::SAMPLER:
-				return VK_DESCRIPTOR_TYPE_SAMPLER;
-			case DescriptorType::UNIFORM_BUFFER:
-				return VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			case DescriptorType::STORAGE_BUFFER:
-				return VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-			default:
-				throw std::runtime_error("Unsupported descriptor type");
-		}
-	}
-
-	VkImageLayout toVKImageLayout(const DescriptorType type) {
-		switch (type) {
-			case DescriptorType::SAMPLED_TEXTURE:
-			case DescriptorType::TEXTURE:
-				return VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-			case DescriptorType::IMAGE:
-				return VK_IMAGE_LAYOUT_GENERAL;
-			default:
-				throw std::runtime_error("Unsupported descriptor type");
-		}
-	}
-
-	VulkanDescriptorAllocator::VulkanDescriptorAllocator(VulkanEngine* vulkanEngine, const std::vector<DescriptorBinding>& bindings, const uint32_t maxSets, const ShaderStage shaderStages) : mVulkanEngine(vulkanEngine), mBindings(bindings) {
+	VulkanDescriptorAllocator::VulkanDescriptorAllocator(VulkanEngine* vulkanEngine, DescriptorLayout* descriptorLayout, const uint32_t maxSets) : mVulkanEngine(vulkanEngine), mBindings(descriptorLayout->getBindings()) {
 		std::unordered_map<DescriptorType, uint32_t> typeCounts;
-		for (const auto &type: bindings | std::views::values) {
+		for (const DescriptorType& type: mBindings) {
 			auto it = typeCounts.find(type);
 			if (it != typeCounts.end()) {
 				it->second++;
@@ -86,22 +54,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		};
 		vulkan_util::vkCheck(vkCreateDescriptorPool(mVulkanEngine->getDevice(), &descriptorPoolCreateInfo, nullptr, &mDescriptorPool));
 
-		std::vector<VkDescriptorSetLayoutBinding> descriptorSetLayoutBindings;
-		descriptorSetLayoutBindings.reserve(bindings.size());
-		for (const auto&[binding, type] : bindings) {
-			descriptorSetLayoutBindings.push_back({
-				.binding = binding,
-				.descriptorType = toVKDescriptorType(type),
-				.descriptorCount = 1,
-				.stageFlags = toVKShaderStage(shaderStages)
-			});
-		}
-		const VkDescriptorSetLayoutCreateInfo descriptorSetLayoutCreateInfo = {
-			.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-			.bindingCount = static_cast<uint32_t>(descriptorSetLayoutBindings.size()),
-			.pBindings = descriptorSetLayoutBindings.data()
-		};
-		vulkan_util::vkCheck(vkCreateDescriptorSetLayout(mVulkanEngine->getDevice(), &descriptorSetLayoutCreateInfo, nullptr, &mDescriptorSetLayout));
+		mDescriptorSetLayout = reinterpret_cast<VulkanDescriptorLayout*>(descriptorLayout)->getDescriptorSetLayout();
 	}
 
 	void VulkanDescriptorAllocator::clearDescriptors() {
@@ -120,23 +73,14 @@ namespace voxel_game::client::render::engine::vulkan {
 		return std::make_unique<VulkanDescriptorSet>(mVulkanEngine, this, mDescriptorPool, descriptorSet);
 	}
 
-	DescriptorType VulkanDescriptorAllocator::getDescriptorType(const uint32_t binding) {
-		for (auto& [b, type] : mBindings) {
-			if (b == binding) {
-				return type;
-			}
+	DescriptorType VulkanDescriptorAllocator::getDescriptorType(const uint32_t binding) const {
+		if (binding >= mBindings.size()) {
+			throw std::runtime_error("No binding at index " + std::to_string(binding));
 		}
-		throw std::runtime_error("No binding at index " + std::to_string(binding));
+		return mBindings[binding];
 	}
 
 	VulkanDescriptorAllocator::~VulkanDescriptorAllocator() {
-		vkDestroyDescriptorSetLayout(mVulkanEngine->getDevice(), mDescriptorSetLayout, nullptr);
 		vkDestroyDescriptorPool(mVulkanEngine->getDevice(), mDescriptorPool, nullptr);
-	}
-
-	VulkanDescriptorAllocatorBuilder::VulkanDescriptorAllocatorBuilder(VulkanEngine* vulkanEngine) : mVulkanEngine(vulkanEngine) {}
-
-	std::unique_ptr<DescriptorAllocator> VulkanDescriptorAllocatorBuilder::build(const uint32_t maxSets, const ShaderStage shaderStages) {
-		return std::make_unique<VulkanDescriptorAllocator>(mVulkanEngine, mBindings, maxSets, shaderStages);
 	}
 }

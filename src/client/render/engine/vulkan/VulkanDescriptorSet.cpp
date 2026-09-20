@@ -20,6 +20,7 @@
 
 #include "VulkanBuffer.h"
 #include "VulkanDescriptorAllocator.h"
+#include "VulkanDescriptorLayout.h"
 
 namespace voxel_game::client::render::engine::vulkan {
 	// ReSharper disable CppParameterMayBeConst

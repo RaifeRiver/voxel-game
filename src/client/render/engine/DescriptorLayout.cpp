@@ -16,19 +16,19 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#pragma once
-
-#include <memory>
-
-#include "DescriptorSet.h"
+#include "DescriptorLayout.h"
 
 namespace voxel_game::client::render::engine {
-	class DescriptorAllocator {
-	public:
-		virtual void clearDescriptors() = 0;
+	DescriptorLayout::DescriptorLayout(const std::vector<DescriptorType>& bindings) : mBindings(bindings) {}
 
-		virtual std::unique_ptr<DescriptorSet> allocate() = 0;
-
-		virtual ~DescriptorAllocator() = default;
-	};
+	DescriptorLayoutBuilder* DescriptorLayoutBuilder::addBinding(const uint32_t binding, DescriptorType type) {
+		if (mBindings.size() <= binding) {
+			mBindings.resize(binding + 1);
+		}
+		if (mBindings[binding]) {
+			throw std::runtime_error("Binding " + std::to_string(binding) + " already has a type");
+		}
+		mBindings[binding] = type;
+		return this;
+	}
 }

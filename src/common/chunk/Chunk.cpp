@@ -29,7 +29,10 @@ namespace voxel_game::chunk {
 		if (mPaletted) {
 			return mPalette[(mData[index >> mIndexShift] >> ((index & mBlockMask) * mBitsPerBlock)) & mClearMask].id;
 		}
-		return mData[index];
+		if (index & 1) {
+			return mData[index >> 1] >> 32;
+		}
+		return mData[index >> 1] & 0xFFFFFFFF;
 	}
 
 	void Chunk::setBlock(const uint32_t index, const uint32_t id) {
@@ -48,13 +51,16 @@ namespace voxel_game::chunk {
 				const uint32_t shiftedIndex = index >> mIndexShift;
 				mData[shiftedIndex] &= ~(mClearMask << offset);
 				mData[shiftedIndex] |= static_cast<uint64_t>(paletteID) << offset;
-			}
-			else {
-				mData[index] = id;
+				return;
 			}
 		}
+		if (index & 1) {
+			mData[index >> 1] &= 0xFFFFFFFF;
+			mData[index >> 1] |= static_cast<uint64_t>(id) << 32;
+		}
 		else {
-			mData[index] = id;
+			mData[index >> 1] &= 0xFFFFFFFF00000000;
+			mData[index >> 1] |= id;
 		}
 	}
 
@@ -155,10 +161,15 @@ namespace voxel_game::chunk {
 
 		const std::vector<uint64_t> data = std::move(mData);
 		if (bitsPerBlock > 8) {
-			mData.assign(CHUNK_VOLUME, 0);
+			mData.assign(CHUNK_VOLUME >> 1, 0);
 
 			for (uint32_t i = 0; i < CHUNK_VOLUME; i++) {
-				mData[i] = mPalette[(data[i >> mIndexShift] >> ((i & mBlockMask) * mBitsPerBlock)) & mClearMask].id;
+				if (i & 1) {
+					mData[i >> 1] |= static_cast<uint64_t>(mPalette[(data[i >> mIndexShift] >> ((i & mBlockMask) * mBitsPerBlock)) & mClearMask].id) << 32;
+				}
+				else {
+					mData[i >> 1] = mPalette[(data[i >> mIndexShift] >> ((i & mBlockMask) * mBitsPerBlock)) & mClearMask].id;
+				}
 			}
 
 			mPalette.clear();

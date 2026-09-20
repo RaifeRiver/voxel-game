@@ -1,9 +1,7 @@
 #extension GL_EXT_buffer_reference : require
 
 struct ChunkVertex {
-    float x;
-    float y;
-    float z;
+    uint pos;
     uint colour;
 };
 

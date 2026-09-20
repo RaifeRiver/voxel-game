@@ -38,7 +38,8 @@ namespace voxel_game::client::render {
 	};
 
 	struct Vertex {
-		glm::vec3 position;
+		glm::u8vec3 pos;
+		uint8_t padding;
 		uint32_t colour;
 	};
 

@@ -3,6 +3,7 @@
 #extension GL_EXT_buffer_reference : require
 
 #include "voxel_game:chunk/buffers"
+#include "voxel_game:util/unpack_uint"
 
 layout (push_constant) uniform PushConstants {
     mat4 viewProj;
@@ -13,6 +14,6 @@ layout (location = 0) out vec4 outColour;
 void main() {
     Chunk chunk = chunks[gl_InstanceIndex];
     ChunkVertex vertex = chunk.vertexBuffer.vertices[gl_VertexIndex];
-    gl_Position = pushConstants.viewProj * chunk.modelMatrix * vec4(vertex.x, vertex.y, vertex.z, 1);
+    gl_Position = pushConstants.viewProj * chunk.modelMatrix * vec4(unpackUint4x8(vertex.pos).xyz, 1);
     outColour = unpackUnorm4x8(vertex.colour);
 }

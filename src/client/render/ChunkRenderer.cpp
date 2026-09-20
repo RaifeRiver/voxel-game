@@ -130,7 +130,7 @@ namespace voxel_game::client::render {
 		cullingPushConstants.chunkCount = mNextChunk;
 		mCullingPipeline->setPushConstants(&cullingPushConstants);
 
-		mCullingPipeline->dispatch((mNextChunk + 63) >> 6);
+		mCullingPipeline->dispatch((mNextChunk + 63) >> 6, 1, 1, "Chunk culling");
 
 		mCountBuffer->barrier(engine::BufferAccess::SHADER_WRITE, engine::BufferAccess::INDIRECT_READ);
 		mIndirectCommandBuffer->barrier(engine::BufferAccess::SHADER_WRITE, engine::BufferAccess::INDIRECT_READ);

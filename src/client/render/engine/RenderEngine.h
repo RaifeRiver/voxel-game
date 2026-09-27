@@ -24,11 +24,18 @@
 #include "GPUBuffer.h"
 #include "GPUImage.h"
 #include "RenderPipeline.h"
-#include "common/ecs/ECSRegistry.h"
 #include "common/ecs/Resource.h"
 
 namespace voxel_game::client::render::engine {
 	constexpr uint32_t FRAME_OVERLAP = 2;
+
+	struct ShaderFeatures {
+		bool bufferReference;
+	};
+
+	struct RenderEngineFeatures {
+		ShaderFeatures shaderFeatures;
+	};
 
 	class RenderEngine : public ecs::Resource<RenderEngine> {
 	public:
@@ -53,6 +60,8 @@ namespace voxel_game::client::render::engine {
 		virtual void endRendering() = 0;
 
 		virtual void waitForGPU() = 0;
+
+		[[nodiscard]] virtual const RenderEngineFeatures& getSupportedFeatures() = 0;
 
 		[[nodiscard]] uint64_t getFrame() const {
 			return mFrame;

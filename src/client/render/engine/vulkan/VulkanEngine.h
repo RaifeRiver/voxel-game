@@ -24,7 +24,6 @@
 #include "vk_mem_alloc.h"
 
 #include "VulkanImage.h"
-#include "client/render/engine/DescriptorAllocator.h"
 #include "client/render/engine/RenderEngine.h"
 #include "client/window/Window.h"
 #include "common/ecs/ECSRegistry.h"
@@ -69,6 +68,10 @@ namespace voxel_game::client::render::engine::vulkan {
 		void endRendering() override;
 
 		void waitForGPU() override;
+
+		[[nodiscard]] const RenderEngineFeatures& getSupportedFeatures() override {
+			return mFeatures;
+		}
 
 		void submitImmediate(const std::function<void(VkCommandBuffer)>& function) const;
 
@@ -116,6 +119,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		VkCommandBuffer mImmediateCommandBuffer = nullptr;
 		VkFence mImmediateFence = nullptr;
 		TracyVkCtx mTracyContext = nullptr;
+		RenderEngineFeatures mFeatures = {};
 		bool mRendering = false;
 		bool mNeedsResize = false;
 

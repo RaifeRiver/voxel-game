@@ -18,6 +18,7 @@
 
 #include "Shader.h"
 
+#include "RenderEngine.h"
 #include "common/util/FileHelper.h"
 #include "common/util/Log.h"
 
@@ -70,10 +71,12 @@ namespace voxel_game::client::render::engine {
 	static const shaderc::Compiler SHADERC_COMPILER;
 	static resource::ResourceManager* RESOURCE_MANAGER;
 	static std::string ENGINE_NAME;
+	static RenderEngineFeatures RENDER_ENGINE_FEATURES;
 
-	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName) {
+	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName, const RenderEngineFeatures features) {
 		RESOURCE_MANAGER = &resourceManager;
 		ENGINE_NAME = engineName;
+		RENDER_ENGINE_FEATURES = features;
 	}
 
 	Shader::Shader(const std::vector<uint32_t>& spirv) : mSPIRV(spirv) {}
@@ -92,10 +95,17 @@ namespace voxel_game::client::render::engine {
 		options.SetTargetEnvironment(shaderc_target_env_vulkan, shaderc_env_version_vulkan_1_3);
 		options.SetIncluder(std::make_unique<ShaderIncluder>(*RESOURCE_MANAGER));
 		options.SetOptimizationLevel(shaderc_optimization_level_performance);
+
 		for (const auto& [name, value] : mPreprocessorDefinitions) {
 			options.AddMacroDefinition(name, value);
 		}
-		options.AddMacroDefinition("VG_ENGINE", ENGINE_NAME);
+
+		options.AddMacroDefinition("VG_ENGINE_" + ENGINE_NAME, "1");
+
+		if (RENDER_ENGINE_FEATURES.shaderFeatures.bufferReference) {
+			options.AddMacroDefinition("VG_ENGINE_BUFFER_REFERENCE", "1");
+		}
+		
 		const shaderc::SpvCompilationResult result = SHADERC_COMPILER.CompileGlslToSpv(mCode, toShaderCStage(stage), "string", options);
 		if (result.GetCompilationStatus() != shaderc_compilation_status_success) {
 			throw std::runtime_error("Error compiling shader: " + result.GetErrorMessage());

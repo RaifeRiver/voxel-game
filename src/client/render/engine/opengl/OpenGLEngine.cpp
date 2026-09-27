@@ -31,6 +31,14 @@
 #include "OpenGLRenderPipeline.h"
 #include "common/util/Log.h"
 
+#if _WIN32
+#include <windows.h>
+extern "C" {
+__declspec(dllexport) unsigned long NvOptimusEnablement = 1;
+__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
+}
+#endif
+
 namespace voxel_game::client::render::engine::opengl {
 	OpenGLEngine::OpenGLEngine(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init OpenGL engine");
@@ -41,9 +49,9 @@ namespace voxel_game::client::render::engine::opengl {
 
 		initOpenGL(window);
 
-		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "opengl");
+		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "OPENGL", mFeatures);
 
-		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry&, float) {
 			preRender();
 		});
 		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry& r, float) {
@@ -110,6 +118,9 @@ namespace voxel_game::client::render::engine::opengl {
 					LOG_ERROR("OpenGL Error: id: {}, message: {}", id, trimmedMessage);
 					break;
 				default:
+					if (id == 131185) {
+						break;
+					}
 					LOG_INFO("OpenGL Message: id: {}, message: {}", id, trimmedMessage);
 					break;
 			}
@@ -156,8 +167,8 @@ namespace voxel_game::client::render::engine::opengl {
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
 
-		glClear(GL_DEPTH_BUFFER_BIT);
 		glClearDepth(0.0f);
+		glClear(GL_DEPTH_BUFFER_BIT);
 	}
 
 	void OpenGLEngine::postRender(window::Window& window) {

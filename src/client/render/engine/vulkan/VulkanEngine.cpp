@@ -53,7 +53,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		createSyncStructures();
 		initTracyContext();
 
-		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "vulkan");
+		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "VULKAN", mFeatures);
 
 		window.setVisible(true);
 
@@ -299,20 +299,37 @@ namespace voxel_game::client::render::engine::vulkan {
 		constexpr float queuePriorities = 1.0f;
 		VkDeviceQueueCreateInfo deviceQueueCreateInfo = vulkan_util::deviceQueueCreateInfo(queueFamily, &queuePriorities);
 
-		VkPhysicalDeviceVulkan12Features features12 = {};
-		features12.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES;
-		features12.bufferDeviceAddress = true;
-		features12.drawIndirectCount = true;
+		VkPhysicalDeviceVulkan12Features supportedFeatures12 = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES
+		};
+		VkPhysicalDeviceVulkan13Features supportedFeatures13 = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.pNext = &supportedFeatures12
+		};
+		VkPhysicalDeviceFeatures2 supportedDeviceFeatures = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2,
+			.pNext = &supportedFeatures13
+		};
+		vkGetPhysicalDeviceFeatures2(mPhysicalDevice, &supportedDeviceFeatures);
+		VkPhysicalDeviceFeatures& supportedFeatures = supportedDeviceFeatures.features;
 
-		VkPhysicalDeviceVulkan13Features features13 = {};
-		features13.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES;
-		features13.pNext = &features12;
-		features13.dynamicRendering = true;
-		features13.shaderDemoteToHelperInvocation = true;
-		features13.synchronization2 = true;
+		VkPhysicalDeviceVulkan12Features features12 = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_2_FEATURES,
+			.drawIndirectCount = supportedFeatures12.drawIndirectCount,
+			.bufferDeviceAddress = supportedFeatures12.bufferDeviceAddress
+		};
 
-		VkPhysicalDeviceFeatures features = {};
-		features.fillModeNonSolid = true;
+		VkPhysicalDeviceVulkan13Features features13 = {
+			.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_VULKAN_1_3_FEATURES,
+			.pNext = &features12,
+			.shaderDemoteToHelperInvocation = supportedFeatures13.shaderDemoteToHelperInvocation,
+			.synchronization2 = supportedFeatures13.synchronization2,
+			.dynamicRendering = supportedFeatures13.dynamicRendering
+		};
+
+		VkPhysicalDeviceFeatures features = {
+			.fillModeNonSolid = supportedFeatures.fillModeNonSolid
+		};
 
 		VkDeviceCreateInfo deviceCreateInfo = vulkan_util::deviceCreateInfo(1, &deviceQueueCreateInfo, extensions, &features, &features13);
 		vulkan_util::vkCheck(vkCreateDevice(mPhysicalDevice, &deviceCreateInfo, nullptr, &mDevice));
@@ -321,6 +338,8 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		vkGetDeviceQueue(mDevice, queueFamily, 0, &mGraphicsQueue);
 		mGraphicsQueueFamily = queueFamily;
+
+		//mFeatures.shaderFeatures.bufferReference = supportedFeatures12.bufferDeviceAddress;
 	}
 
 	void VulkanEngine::createAllocator() {

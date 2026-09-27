@@ -33,12 +33,35 @@ namespace voxel_game::client::render::engine::opengl {
 		const unsigned int computeShader = glCreateShader(GL_COMPUTE_SHADER);
 		glShaderSource(computeShader, 1, &computeShaderCodeChars, nullptr);
 		glCompileShader(computeShader);
+		int computeStatus = 0;
+		glGetShaderiv(computeShader, GL_COMPILE_STATUS, &computeStatus);
+		if (!computeStatus) {
+			glDeleteShader(computeShader);
+
+			int logLength = 0;
+			glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &logLength);
+			char log[logLength];
+			glGetShaderInfoLog(computeShader, logLength, &logLength, log);
+			throw std::runtime_error("Error compiling compute shader: " + std::string(log, logLength));
+		}
 
 		mShaderProgram = glCreateProgram();
 		glAttachShader(mShaderProgram, computeShader);
 		glLinkProgram(mShaderProgram);
 
 		glDeleteShader(computeShader);
+
+		int programStatus = 0;
+		glGetProgramiv(mShaderProgram, GL_LINK_STATUS, &programStatus);
+		if (!programStatus) {
+			glDeleteProgram(mShaderProgram);
+
+			int logLength = 0;
+			glGetProgramiv(mShaderProgram, GL_INFO_LOG_LENGTH, &logLength);
+			char log[logLength];
+			glGetProgramInfoLog(mShaderProgram, logLength, &logLength, log);
+			throw std::runtime_error("Error linking shader program: " + std::string(log, logLength));
+		}
 
 		mPushConstants = opengl_util::getPushConstants(1, &computeShaderData, mShaderProgram);
 	}

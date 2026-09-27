@@ -64,6 +64,7 @@ namespace voxel_game::client::render::engine::opengl {
 		unsigned int mCullFace = 0;
 		unsigned int mFrontFace = 0;
 		BlendMode mBlendMode = BlendMode::NONE;
+		bool mDepthTest = 0;
 	};
 
 	class OpenGLRenderPipelineBuilder : public RenderPipelineBuilder {

@@ -23,6 +23,7 @@
 
 #include "OpenGLDescriptorSet.h"
 #include "OpenGLUtil.h"
+#include "client/render/engine/IndirectCommand.h"
 #include "client/render/engine/Shader.h"
 #include "common/util/FileHelper.h"
 #include "tracy/TracyOpenGL.hpp"
@@ -98,10 +99,33 @@ namespace voxel_game::client::render::engine::opengl {
 		const unsigned int vertexShader = glCreateShader(GL_VERTEX_SHADER);
 		glShaderSource(vertexShader, 1, &vertexShaderCodeChars, nullptr);
 		glCompileShader(vertexShader);
+		int vertexStatus = 0;
+		glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &vertexStatus);
+		if (!vertexStatus) {
+			glDeleteShader(vertexShader);
+
+			int logLength = 0;
+			glGetShaderiv(vertexShader, GL_INFO_LOG_LENGTH, &logLength);
+			char log[logLength];
+			glGetShaderInfoLog(vertexShader, logLength, &logLength, log);
+			throw std::runtime_error("Error compiling vertex shader: " + std::string(log, logLength));
+		}
 
 		const unsigned int fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 		glShaderSource(fragmentShader, 1, &fragmentShaderCodeChars, nullptr);
 		glCompileShader(fragmentShader);
+		int fragmentStatus = 0;
+		glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &fragmentStatus);
+		if (!fragmentStatus) {
+			glDeleteShader(vertexShader);
+			glDeleteShader(fragmentShader);
+
+			int logLength = 0;
+			glGetShaderiv(fragmentShader, GL_INFO_LOG_LENGTH, &logLength);
+			char log[logLength];
+			glGetShaderInfoLog(fragmentShader, logLength, &logLength, log);
+			throw std::runtime_error("Error compiling fragment shader: " + std::string(log, logLength));
+		}
 
 		mShaderProgram = glCreateProgram();
 		glAttachShader(mShaderProgram, vertexShader);
@@ -110,6 +134,18 @@ namespace voxel_game::client::render::engine::opengl {
 
 		glDeleteShader(vertexShader);
 		glDeleteShader(fragmentShader);
+
+		int programStatus = 0;
+		glGetProgramiv(mShaderProgram, GL_LINK_STATUS, &programStatus);
+		if (!programStatus) {
+			glDeleteProgram(mShaderProgram);
+
+			int logLength = 0;
+			glGetProgramiv(mShaderProgram, GL_INFO_LOG_LENGTH, &logLength);
+			char log[logLength];
+			glGetProgramInfoLog(mShaderProgram, logLength, &logLength, log);
+			throw std::runtime_error("Error linking shader program: " + std::string(log, logLength));
+		}
 
 		glGenVertexArrays(1, &mVertexArray);
 
@@ -122,6 +158,7 @@ namespace voxel_game::client::render::engine::opengl {
 		mCullFace = toOpenGLCullFace(builder->getCullMode());
 		mFrontFace = toOpenGLFrontFace(builder->getFrontFace());
 		mBlendMode = builder->getBlendMode();
+		mDepthTest = builder->getDepthFormat() != ImageFormat::UNKNOWN;
 	}
 
 	void OpenGLRenderPipeline::bind() {
@@ -154,6 +191,15 @@ namespace voxel_game::client::render::engine::opengl {
 				throw std::runtime_error("Unsupported blend mode");
 			}
 		}
+
+		if (mDepthTest) {
+			glEnable(GL_DEPTH_TEST);
+			glClipControl(GL_LOWER_LEFT, GL_ZERO_TO_ONE);
+			glDepthFunc(GL_GEQUAL);
+		}
+		else {
+			glDisable(GL_DEPTH_TEST);
+		}
 	}
 
 	void OpenGLRenderPipeline::bindDescriptorSet(const uint32_t set, DescriptorSet* descriptorSet) {
@@ -184,12 +230,18 @@ namespace voxel_game::client::render::engine::opengl {
 		glDrawElements(mPrimitiveTopology, static_cast<int>(indexCount), GL_UNSIGNED_INT, reinterpret_cast<void*>(firstIndex * 4));
 	}
 
-	void OpenGLRenderPipeline::drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) {
-		throw std::runtime_error("Draw indirect count not supported on OpenGL");
+	void OpenGLRenderPipeline::drawIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset, const std::string& label) {
+		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OpenGLBuffer*>(indirectCommandBuffer)->getBuffer());
+		glBindBuffer(GL_PARAMETER_BUFFER, reinterpret_cast<OpenGLBuffer*>(countBuffer)->getBuffer());
+		glMultiDrawArraysIndirectCount(mPrimitiveTopology, reinterpret_cast<void*>(commandOffset), countOffset, maxCount, sizeof(IndirectCommand));
 	}
 
-	void OpenGLRenderPipeline::drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, uint32_t maxCount, uint32_t commandOffset, uint32_t countOffset, const std::string& label) {
-		throw std::runtime_error("Draw indexed indirect count not supported on OpenGL");
+	void OpenGLRenderPipeline::drawIndexedIndirectCount_(GPUBuffer* indirectCommandBuffer, GPUBuffer* countBuffer, const uint32_t maxCount, const uint32_t commandOffset, const uint32_t countOffset, const std::string& label) {
+		TracyGpuZoneTransient(tracyZone, label.c_str(), true);
+		glBindBuffer(GL_DRAW_INDIRECT_BUFFER, reinterpret_cast<OpenGLBuffer*>(indirectCommandBuffer)->getBuffer());
+		glBindBuffer(GL_PARAMETER_BUFFER, reinterpret_cast<OpenGLBuffer*>(countBuffer)->getBuffer());
+		glMultiDrawElementsIndirectCount(mPrimitiveTopology, GL_UNSIGNED_INT, reinterpret_cast<void*>(commandOffset), countOffset, maxCount, sizeof(IndirectCommand));
 	}
 
 	OpenGLRenderPipelineBuilder::OpenGLRenderPipelineBuilder(const Shader& vertexShader, const Shader& fragmentShader) : RenderPipelineBuilder(vertexShader, fragmentShader) {}

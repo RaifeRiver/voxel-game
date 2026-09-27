@@ -18,8 +18,6 @@
 
 #include "OpenGLUtil.h"
 
-#include <vector>
-
 #include "glad/glad.h"
 #include "spirv_glsl.hpp"
 
@@ -30,7 +28,7 @@ namespace voxel_game::client::render::engine::opengl::opengl_util {
 		spirv_cross::CompilerGLSL compiler(shaderData);
 		const spirv_cross::ShaderResources shaderResources = compiler.get_shader_resources();
 		spirv_cross::CompilerGLSL::Options options;
-		options.version = 430;
+		options.version = 460;
 		compiler.set_common_options(options);
 
 		auto flattenBindings = [&](const spirv_cross::SmallVector<spirv_cross::Resource>& resources) {

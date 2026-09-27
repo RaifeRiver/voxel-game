@@ -18,9 +18,13 @@
 
 #pragma once
 
+#include "glad/glad.h"
+
 #include "client/render/engine/GPUBuffer.h"
 
 namespace voxel_game::client::render::engine::opengl {
+	GLbitfield toOpenGLBufferAccess(BufferAccess srcAccess, BufferAccess dstAccess);
+
 	class OpenGLBuffer : public GPUBuffer {
 	public:
 		OpenGLBuffer(size_t size, BufferUsage usage, MemoryType memoryType, MappedType mappedType);
@@ -38,7 +42,7 @@ namespace voxel_game::client::render::engine::opengl {
 
 		uint64_t getDeviceAddress_() override;
 
-		void copyFromBuffer_(GPUBuffer &other, uint32_t srcOffset, uint32_t dstOffset, uint32_t size) override;
+		void copyFromBuffer_(GPUBuffer& other, uint32_t srcOffset, uint32_t dstOffset, uint32_t size) override;
 
 		void fill_(uint32_t offset, uint32_t size, uint32_t value) override;
 

@@ -33,11 +33,17 @@ namespace voxel_game::client::render {
 	struct alignas(16) Chunk {
 		glm::mat4 modelMatrix;
 		glm::ivec4 boundingSphere;
-		uint64_t bufferAddress;
+		union {
+			uint64_t faceBuffer;
+			struct {
+				uint32_t faceOffset;
+				uint32_t padding;
+			};
+		};
 		uint32_t vertexCount;
 	};
 
-	struct Vertex {
+	struct Face {
 		glm::u8vec3 pos;
 		uint8_t dir;
 		uint32_t colour;
@@ -67,7 +73,10 @@ namespace voxel_game::client::render {
 		std::unique_ptr<engine::GPUBuffer> mChunkBuffer = nullptr;
 		std::unique_ptr<engine::GPUBuffer> mIndirectCommandBuffer = nullptr;
 		std::unique_ptr<engine::GPUBuffer> mCountBuffer = nullptr;
+		std::unique_ptr<engine::GPUBuffer> mFaceBuffer = nullptr;
+		uint32_t mFaceBufferPointer = 0;
 		uint32_t mNextChunk = 0;
+		bool mUseBufferReference = false;
 
 		ChunkMesh meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk);
 	};

@@ -26,6 +26,8 @@
 #include "common/resource/ResourceManager.h"
 
 namespace voxel_game::client::render::engine {
+	struct RenderEngineFeatures;
+
 	enum class ShaderStage : uint32_t {
 		NONE = 0,
 		VERTEX = 1 << 0,
@@ -60,7 +62,7 @@ namespace voxel_game::client::render::engine {
 		resource::ResourceManager& mResourceManager;
 	};
 
-	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName);
+	void initShaderCompiler(resource::ResourceManager& resourceManager, const std::string& engineName, RenderEngineFeatures features);
 
 	class Shader {
 	public:

@@ -52,6 +52,10 @@ namespace voxel_game::client::render::engine::opengl {
 
 		void waitForGPU() override;
 
+		[[nodiscard]] const RenderEngineFeatures& getSupportedFeatures() override {
+			return mFeatures;
+		}
+
 		void destroy() override;
 
 	protected:
@@ -62,6 +66,7 @@ namespace voxel_game::client::render::engine::opengl {
 		std::unique_ptr<OpenGLImage> mDepthImage = nullptr;
 		GLuint mFramebufferObject = 0;
 		GLsync mRenderFences[FRAME_OVERLAP] = {};
+		RenderEngineFeatures mFeatures = {};
 
 		void initOpenGL(window::Window& window);
 

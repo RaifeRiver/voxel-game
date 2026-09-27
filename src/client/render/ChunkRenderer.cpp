@@ -39,7 +39,14 @@ namespace voxel_game::client::render {
 		engine::RenderEngine& renderEngine = registry.getResource<engine::RenderEngine>();
 		const resource::ResourceManager& resourceManager = registry.getResource<resource::ResourceManager>();
 
-		mDescriptorLayout = renderEngine.createDescriptorLayoutBuilder()->addBinding(0, engine::DescriptorType::STORAGE_BUFFER)->addBinding(1, engine::DescriptorType::STORAGE_BUFFER)->addBinding(2, engine::DescriptorType::STORAGE_BUFFER)->build();
+		mUseBufferReference = renderEngine.getSupportedFeatures().shaderFeatures.bufferReference;
+
+		const std::unique_ptr<engine::DescriptorLayoutBuilder> descriptorLayoutBuilder = renderEngine.createDescriptorLayoutBuilder();
+		descriptorLayoutBuilder->addBinding(0, engine::DescriptorType::STORAGE_BUFFER)->addBinding(1, engine::DescriptorType::STORAGE_BUFFER)->addBinding(2, engine::DescriptorType::STORAGE_BUFFER);
+		if (!mUseBufferReference) {
+			descriptorLayoutBuilder->addBinding(3, engine::DescriptorType::STORAGE_BUFFER);
+		}
+		mDescriptorLayout = descriptorLayoutBuilder->build();
 
 		const engine::Shader cullingShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk/culling", ".comp", resource::ResourceType::ASSET).path).build(engine::ShaderStage::COMPUTE);
 		mCullingPipeline = renderEngine.createComputePipelineBuilder(cullingShader)->descriptorLayout(0, mDescriptorLayout.get())->build();
@@ -51,12 +58,18 @@ namespace voxel_game::client::render {
 		mChunkBuffer = renderEngine.allocateBuffer(sizeof(chunk::Chunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
 		mIndirectCommandBuffer = renderEngine.allocateBuffer(sizeof(engine::IndirectCommand) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
 		mCountBuffer = renderEngine.allocateBuffer(sizeof(uint32_t), engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
+		if (!mUseBufferReference) {
+			mFaceBuffer = renderEngine.allocateBuffer(sizeof(Face) * 16384 * 10000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+		}
 
 		mDescriptorAllocator = mDescriptorLayout->createAllocator(1);
 		mDescriptorSet = mDescriptorAllocator->allocate();
 		mDescriptorSet->setBinding(0, mChunkBuffer.get());
 		mDescriptorSet->setBinding(1, mIndirectCommandBuffer.get());
 		mDescriptorSet->setBinding(2, mCountBuffer.get());
+		if (!mUseBufferReference) {
+			mDescriptorSet->setBinding(3, mFaceBuffer.get());
+		}
 	}
 
 	void ChunkRenderer::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
@@ -66,7 +79,7 @@ namespace voxel_game::client::render {
 
 		ZoneScopedN("Render chunks");
 
-		auto& renderEngine = registry.getResource<engine::RenderEngine>();
+		engine::RenderEngine& renderEngine = registry.getResource<engine::RenderEngine>();
 
 		for (const event::LoadChunkEvent* event: registry.getEvents<event::LoadChunkEvent>()) {
 			if (!registry.hasComponent<ChunkMeshData>(event->entity)) {
@@ -154,7 +167,7 @@ namespace voxel_game::client::render {
 
 		ChunkMesh mesh;
 		if (!chunk.isUniform() || chunk.getBlock(0, 0, 0) != 0) {
-			std::vector<Vertex> vertices;
+			std::vector<Face> faces;
 			for (uint32_t x = 0; x < chunk::CHUNK_SIZE; x++) {
 				for (uint32_t y = 0; y < chunk::CHUNK_SIZE; y++) {
 					for (uint32_t z = 0; z < chunk::CHUNK_SIZE; z++) {
@@ -163,49 +176,58 @@ namespace voxel_game::client::render {
 							const uint32_t colour = glm::packUnorm4x8({(block - 1) % 1024 / 32 / 31.0f, (block - 1) % 32 / 31.0f, (block - 1) / 1024 / 31.0f, 1});
 
 							if (z == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y, z + 1) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 0, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 0, .colour = colour});
 							}
 
 							if (z == 0 || chunk.getBlock(x, y, z - 1) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 1, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 1, .colour = colour});
 							}
 
 							if (y == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y + 1, z) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 2, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 2, .colour = colour});
 							}
 
 							if (y == 0 || chunk.getBlock(x, y - 1, z) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 3, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 3, .colour = colour});
 							}
 
 							if (x == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x + 1, y, z) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 4, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 4, .colour = colour});
 							}
 
 							if (x == 0 || chunk.getBlock(x - 1, y, z) == 0) {
-								vertices.push_back({.pos = {x, y, z}, .dir = 5, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = 5, .colour = colour});
 							}
 						}
 					}
 				}
 			}
 
-			if (vertices.size() > 0) {
+			if (faces.size() > 0) {
 				mesh.chunkIndex = mNextChunk++;
 
-				std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(vertices.size() * sizeof(Vertex), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
-				memcpy(buffer->map(), vertices.data(), vertices.size() * sizeof(Vertex));
-				buffer->unmap();
-				mesh.vertexBuffer = std::move(buffer);
-
-				auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
+				const auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
 				const glm::ivec3 pos = chunk.getPos();
-				auto& [modelMatrix, boundingSphere, bufferAddress, vertexCount] = chunkBufferData[mesh.chunkIndex];
-				modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
-				boundingSphere = glm::ivec4(pos * static_cast<int32_t>(chunk::CHUNK_SIZE) + static_cast<int32_t>(chunk::CHUNK_SIZE) / 2, std::ceil(std::sqrt(static_cast<float>(chunk::CHUNK_SIZE * chunk::CHUNK_SIZE / 2 * 3))));
-				bufferAddress = mesh.vertexBuffer->getDeviceAddress();
-				vertexCount = vertices.size() * 6;
+				Chunk& chunkData = chunkBufferData[mesh.chunkIndex];
+				chunkData.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
+				chunkData.boundingSphere = glm::ivec4(pos * static_cast<int32_t>(chunk::CHUNK_SIZE) + static_cast<int32_t>(chunk::CHUNK_SIZE) / 2, std::ceil(std::sqrt(static_cast<float>(chunk::CHUNK_SIZE * chunk::CHUNK_SIZE / 2 * 3))));
+				chunkData.vertexCount = faces.size() * 6;
+				if (mUseBufferReference) {
+					std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(faces.size() * sizeof(Face), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+					memcpy(buffer->map(), faces.data(), faces.size() * sizeof(Face));
+					buffer->unmap();
+					mesh.vertexBuffer = std::move(buffer);
+					chunkData.faceBuffer = mesh.vertexBuffer->getDeviceAddress();
+				}
+				else {
+					chunkData.faceOffset = mFaceBufferPointer;
+				}
 				mChunkBuffer->unmap();
+				if (!mUseBufferReference) {
+					memcpy(static_cast<Face*>(mFaceBuffer->map()) + mFaceBufferPointer, faces.data(), faces.size() * sizeof(Face));
+					mFaceBuffer->unmap();
+					mFaceBufferPointer += faces.size();;
+				}
 
 				mesh.hasMesh = true;
 			}

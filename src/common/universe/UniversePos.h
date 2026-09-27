@@ -57,10 +57,34 @@ namespace voxel_game::universe {
 		return result;
 	}
 
+	[[nodiscard]] inline UniversePos operator+(const UniversePos& a, const glm::ivec3& b) {
+		UniversePos result = {};
+		result.sector = a.sector + glm::i64vec3(b / SECTOR_SIZE);
+		result.local = a.local + glm::vec3(b % SECTOR_SIZE);
+		result.fix();
+		return result;
+	}
+
+	[[nodiscard]] inline UniversePos operator+(const UniversePos& a, const glm::i64vec3& b) {
+		UniversePos result = {};
+		result.sector = a.sector + b / static_cast<int64_t>(SECTOR_SIZE);
+		result.local = a.local + glm::vec3(b % static_cast<int64_t>(SECTOR_SIZE));
+		result.fix();
+		return result;
+	}
+
 	[[nodiscard]] inline UniversePos operator-(const UniversePos& a, const UniversePos& b) {
 		UniversePos result = {};
 		result.sector = a.sector - b.sector;
 		result.local = a.local - b.local;
+		result.fix();
+		return result;
+	}
+
+	[[nodiscard]] inline UniversePos operator-(const UniversePos& a, const glm::ivec3& b) {
+		UniversePos result = {};
+		result.sector = a.sector - glm::i64vec3(b / SECTOR_SIZE);
+		result.local = a.local - glm::vec3(b % SECTOR_SIZE);
 		result.fix();
 		return result;
 	}

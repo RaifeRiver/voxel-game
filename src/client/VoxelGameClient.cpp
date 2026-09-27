@@ -29,7 +29,6 @@
 #include "common/universe/UniverseLoaderInfo.h"
 #include "common/util/Log.h"
 #include "player/PlayerInputController.h"
-#include "render/ChunkMesh.h"
 #include "render/ChunkRenderer.h"
 #include "render/SkyRenderer.h"
 #include "render/engine/RenderEngine.h"
@@ -69,10 +68,6 @@ namespace voxel_game::client {
 		registry.getSystemManager().createSystem<player::PlayerInputController>();
 		registry.getComponent<universe::UniverseLoaderInfo>(player).radius = launchOptions.getLoadDistance();
 
-		const ecs::Entity planet = registry.createEntity();
-		registry.attachComponent<chunk::ChunkData>(planet);
-		registry.attachComponent<render::ChunkMeshData>(planet);
-
 		auto& window = registry.getResource<window::Window>();
 		window.setLockMouse(true);
 	}
@@ -87,6 +82,10 @@ namespace voxel_game::client {
 			lastTime = currentTime;
 
 			window.pollEvents();
+
+			if (window.isKeyPressed(window::Key::KEY_T)) {
+				registry.getComponent<component::Transform>(registry.getEntitiesWithComponents<voxel_game::player::LocalPlayer>()[0]).pos.sector = {1500000000000000000L, 0, 1500000000000000000L};
+			}
 
 			registry.update(deltaTime);
 

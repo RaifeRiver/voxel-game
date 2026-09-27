@@ -21,6 +21,7 @@
 #include "tracy/Tracy.hpp"
 
 #include "ChunkData.h"
+#include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
 #include "common/event/LoadChunkEvent.h"
 #include "common/event/LoadSectorEvent.h"
@@ -42,13 +43,14 @@ namespace voxel_game::chunk {
 		const std::vector<ecs::Entity>& chunkDataEntities = registry.getEntitiesWithComponents<ChunkData>();
 		for (const ecs::Entity entity : chunkDataEntities) {
 			ChunkData& chunkData = registry.getComponent<ChunkData>(entity);
+			component::Transform& transform = registry.getComponent<component::Transform>(entity);
 
 			for (const event::UnloadSectorEvent* event : unloadSectorEvents) {
 				const glm::i64vec3 sector = event->sector;
 				for (int32_t x = 0; x < universe::SECTOR_SIZE / CHUNK_SIZE; x++) {
 					for (int32_t y = 0; y < universe::SECTOR_SIZE / CHUNK_SIZE; y++) {
 						for (int32_t z = 0; z < universe::SECTOR_SIZE / CHUNK_SIZE; z++) {
-							glm::ivec3 chunk = glm::ivec3{sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
+							glm::ivec3 chunk = glm::ivec3{sector - transform.pos.sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
 							if (chunkData.isLoaded(chunk)) {
 								registry.pushEvent<event::UnloadChunkEvent>({entity, chunk});
 								chunkData.chunks.erase(chunk);
@@ -63,7 +65,7 @@ namespace voxel_game::chunk {
 				for (int32_t x = 0; x < universe::SECTOR_SIZE / CHUNK_SIZE; x++) {
 					for (int32_t y = 0; y < universe::SECTOR_SIZE / CHUNK_SIZE; y++) {
 						for (int32_t z = 0; z < universe::SECTOR_SIZE / CHUNK_SIZE; z++) {
-							glm::ivec3 chunk = glm::ivec3{sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
+							glm::ivec3 chunk = glm::ivec3{sector - transform.pos.sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
 							if (!chunkData.isLoaded(chunk)) {
 								chunkData.chunks.emplace(chunk, createChunk(chunk, entity));
 								registry.pushEvent<event::LoadChunkEvent>({entity, chunkData.chunks.at(chunk)});

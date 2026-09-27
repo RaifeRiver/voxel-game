@@ -25,8 +25,8 @@
 
 namespace voxel_game::component {
 	struct Transform : ecs::Component<Transform> {
-		universe::UniversePos pos;
-		glm::quat rotation;
-		glm::vec3 scale;
+		universe::UniversePos pos = {};
+		glm::quat rotation = {};
+		glm::vec3 scale = {1, 1, 1};
 	};
 }

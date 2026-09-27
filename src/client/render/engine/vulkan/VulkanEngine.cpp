@@ -596,6 +596,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		}
 
 		mFrame++;
+		mFrame %= FRAME_OVERLAP;
 	}
 
 	void VulkanEngine::destroySwapchain() {

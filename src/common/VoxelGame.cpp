@@ -24,6 +24,7 @@
 #include "chunk/ChunkLoader.h"
 #include "component/Components.h"
 #include "resource/ResourceManager.h"
+#include "universe/PlanetLoader.h"
 #include "universe/UniverseLoader.h"
 
 namespace voxel_game {
@@ -45,6 +46,7 @@ namespace voxel_game {
 		ZoneScopedN("Post init common");
 
 		registry.getSystemManager().createSystem<universe::UniverseLoader>();
+		registry.getSystemManager().createSystem<universe::PlanetLoader>();
 		registry.getSystemManager().createSystem<chunk::ChunkLoader>();
 	}
 

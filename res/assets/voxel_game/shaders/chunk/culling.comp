@@ -24,7 +24,8 @@ void main() {
         return;
     }
     Chunk chunk = chunks[invocationID];
-    if (isVisible(chunk.boundingSphere)) {
+    FrameChunk frameChunk = frameChunks[invocationID];
+    if (isVisible(frameChunk.boundingSphere)) {
         IndirectCommand command;
         command.vertexCount = chunk.vertexCount;
         command.instanceCount = 1;

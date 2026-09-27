@@ -124,7 +124,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		bool mNeedsResize = false;
 
 		VulkanFrameData& getFrameData() {
-			return mFrameData[mFrame % FRAME_OVERLAP];
+			return mFrameData[mFrame];
 		}
 
 		void createInstance(window::Window& window);

@@ -12,14 +12,12 @@ layout (buffer_reference, std430) readonly buffer ChunkFaceBuffer {
     ChunkFace faces[];
 };
 #else
-layout (set = 0, binding = 3, std430) readonly buffer ChunkFaceBuffer {
+layout (set = 0, binding = 4, std430) readonly buffer ChunkFaceBuffer {
     ChunkFace faces[];
 } faceBuffer;
 #endif
 
 struct Chunk {
-    mat4 modelMatrix;
-    ivec4 boundingSphere;
 #ifdef VG_ENGINE_BUFFER_REFERENCE
     ChunkFaceBuffer faceBuffer;
 #else
@@ -39,6 +37,11 @@ ChunkFace getFace(Chunk chunk, uint id) {
 }
 #endif
 
+struct FrameChunk {
+    mat4 modelMatrix;
+    ivec4 boundingSphere;
+};
+
 layout (set = 0, binding = 0, std430) readonly buffer ChunkBuffer {
     Chunk chunks[];
 };
@@ -49,4 +52,8 @@ layout (set = 0, binding = 1, std430) writeonly buffer IndirectCommandBuffer {
 
 layout (set = 0, binding = 2, std430) buffer CountBuffer {
     uint commandCount;
+};
+
+layout (set = 0, binding = 3, std430) readonly buffer FrameChunkBuffer {
+    FrameChunk frameChunks[];
 };

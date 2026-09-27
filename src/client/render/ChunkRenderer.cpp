@@ -25,6 +25,7 @@
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
 #include "common/event/LoadChunkEvent.h"
+#include "common/event/LoadPlanetEvent.h"
 #include "common/event/UnloadChunkEvent.h"
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
@@ -42,9 +43,9 @@ namespace voxel_game::client::render {
 		mUseBufferReference = renderEngine.getSupportedFeatures().shaderFeatures.bufferReference;
 
 		const std::unique_ptr<engine::DescriptorLayoutBuilder> descriptorLayoutBuilder = renderEngine.createDescriptorLayoutBuilder();
-		descriptorLayoutBuilder->addBinding(0, engine::DescriptorType::STORAGE_BUFFER)->addBinding(1, engine::DescriptorType::STORAGE_BUFFER)->addBinding(2, engine::DescriptorType::STORAGE_BUFFER);
+		descriptorLayoutBuilder->addBinding(0, engine::DescriptorType::STORAGE_BUFFER)->addBinding(1, engine::DescriptorType::STORAGE_BUFFER)->addBinding(2, engine::DescriptorType::STORAGE_BUFFER)->addBinding(3, engine::DescriptorType::STORAGE_BUFFER);
 		if (!mUseBufferReference) {
-			descriptorLayoutBuilder->addBinding(3, engine::DescriptorType::STORAGE_BUFFER);
+			descriptorLayoutBuilder->addBinding(4, engine::DescriptorType::STORAGE_BUFFER);
 		}
 		mDescriptorLayout = descriptorLayoutBuilder->build();
 
@@ -56,6 +57,9 @@ namespace voxel_game::client::render {
 		mRenderPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->cullMode(engine::CullMode::BACK)->descriptorLayout(0, mDescriptorLayout.get())->build();
 
 		mChunkBuffer = renderEngine.allocateBuffer(sizeof(chunk::Chunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+		for (std::unique_ptr<engine::GPUBuffer>& frameChunkBuffer : mFrameChunkBuffers) {
+			frameChunkBuffer = renderEngine.allocateBuffer(sizeof(FrameChunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+		}
 		mIndirectCommandBuffer = renderEngine.allocateBuffer(sizeof(engine::IndirectCommand) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
 		mCountBuffer = renderEngine.allocateBuffer(sizeof(uint32_t), engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::INDIRECT, engine::MemoryType::GPU);
 		if (!mUseBufferReference) {
@@ -68,7 +72,7 @@ namespace voxel_game::client::render {
 		mDescriptorSet->setBinding(1, mIndirectCommandBuffer.get());
 		mDescriptorSet->setBinding(2, mCountBuffer.get());
 		if (!mUseBufferReference) {
-			mDescriptorSet->setBinding(3, mFaceBuffer.get());
+			mDescriptorSet->setBinding(4, mFaceBuffer.get());
 		}
 	}
 
@@ -81,6 +85,10 @@ namespace voxel_game::client::render {
 
 		engine::RenderEngine& renderEngine = registry.getResource<engine::RenderEngine>();
 
+		for (const event::LoadPlanetEvent* event: registry.getEvents<event::LoadPlanetEvent>()) {
+			registry.attachComponent<ChunkMeshData>(event->planet);
+		}
+
 		for (const event::LoadChunkEvent* event: registry.getEvents<event::LoadChunkEvent>()) {
 			if (!registry.hasComponent<ChunkMeshData>(event->entity)) {
 				continue;
@@ -89,6 +97,11 @@ namespace voxel_game::client::render {
 			ChunkMesh mesh = meshChunk(renderEngine, event->chunk);
 			if (mesh.hasMesh) {
 				meshData.meshes[event->chunk.getPos()] = std::move(mesh);
+				uint32_t index = mesh.chunkIndex;
+				if (meshData.meshPositions.size() <= index) {
+					meshData.meshPositions.resize(index + 1);
+				}
+				meshData.meshPositions[index] = event->chunk.getPos();
 			}
 		}
 		for (const event::UnloadChunkEvent* event: registry.getEvents<event::UnloadChunkEvent>()) {
@@ -99,8 +112,17 @@ namespace voxel_game::client::render {
 			auto it = meshData.meshes.find(event->chunk);
 			if (it != meshData.meshes.end()) {
 				if (mNextChunk != 0) {
-					mChunkBuffer->copyFromBuffer(*mChunkBuffer, --mNextChunk * sizeof(Chunk), it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
+					mChunkBuffer->copyFromBuffer(*mChunkBuffer, (mNextChunk - 1) * sizeof(Chunk), it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
 					mChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ, it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
+					for (const std::unique_ptr<engine::GPUBuffer>& frameChunkBuffer : mFrameChunkBuffers) {
+						frameChunkBuffer->copyFromBuffer(*mChunkBuffer, (mNextChunk - 1) * sizeof(FrameChunk), it->second.chunkIndex * sizeof(FrameChunk), sizeof(FrameChunk));
+						frameChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ, it->second.chunkIndex * sizeof(FrameChunk), sizeof(FrameChunk));
+					}
+					glm::ivec3 position = meshData.meshPositions[mNextChunk - 1];
+					meshData.meshPositions.erase(meshData.meshPositions.begin() + (mNextChunk - 1));
+					meshData.meshPositions[it->second.chunkIndex] = position;
+					meshData.meshes[position].chunkIndex = it->second.chunkIndex;
+					mNextChunk--;
 				}
 				meshData.meshes.erase(event->chunk);
 			}
@@ -114,13 +136,30 @@ namespace voxel_game::client::render {
 		const component::Transform& transform = registry.getComponent<component::Transform>(player);
 		const player::CameraRotation& rotation = registry.getComponent<player::CameraRotation>(player);
 
+		const std::unique_ptr<engine::GPUBuffer>& frameChunkBuffer = mFrameChunkBuffers[renderEngine.getFrame()];
+		auto frameChunkBufferData = static_cast<FrameChunk*>(frameChunkBuffer->map());
+		for (const ecs::Entity entity : registry.getEntitiesWithComponents<ChunkMeshData, component::Transform>()) {
+			const component::Transform& chunkTransform = registry.getComponent<component::Transform>(entity);
+			const int32_t boundingSphereRadius = std::ceil(chunk::CHUNK_SIZE * glm::compMax(chunkTransform.scale) / 2.0f * std::sqrt(3.0f));
+			for (auto& [pos, mesh] : registry.getComponent<ChunkMeshData>(entity).meshes) {
+				auto& [modelMatrix, boundingSphere] = frameChunkBufferData[mesh.chunkIndex];
+				auto [relativeSector, relativeLocal] = chunkTransform.pos + glm::i64vec3(pos) * static_cast<int64_t>(chunk::CHUNK_SIZE) - transform.pos;
+				auto relativePos = glm::vec3(relativeSector * static_cast<int64_t>(universe::SECTOR_SIZE)) + relativeLocal;
+				modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), relativePos), chunkTransform.scale);
+				boundingSphere = glm::ivec4(relativePos + chunk::CHUNK_SIZE / 2.0f, boundingSphereRadius);
+			}
+		}
+		frameChunkBuffer->unmap();
+		frameChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ);
+
+		mDescriptorSet->setBinding(3, frameChunkBuffer.get());
+
 		const glm::uvec2 size = renderEngine.getRenderImage().getSize();
 		const glm::mat4 projectionMatrix = glm::perspective(glm::radians(90.0f), static_cast<float>(size.x) / size.y, 1000000.0f, 0.1f);
 		const glm::quat pitchRotation = glm::angleAxis(rotation.pitch, glm::vec3(1.0f, 0.0f, 0.0f));
 		const glm::quat yawRotation = glm::angleAxis(rotation.yaw, glm::vec3(0.0f, -1.0f, 0.0f));
 		const glm::mat4 rotationMatrix = glm::toMat4(yawRotation) * glm::toMat4(pitchRotation);
-		const glm::mat4 translationMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(transform.pos.sector) * universe::SECTOR_SIZE + transform.pos.local);
-		const glm::mat4 viewMatrix = glm::inverse(translationMatrix * rotationMatrix);
+		const glm::mat4 viewMatrix = glm::inverse(rotationMatrix);
 		const glm::mat4 viewProj = projectionMatrix * viewMatrix;
 
 		mCountBuffer->fill(0, sizeof(uint32_t), 0);
@@ -207,10 +246,7 @@ namespace voxel_game::client::render {
 				mesh.chunkIndex = mNextChunk++;
 
 				const auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
-				const glm::ivec3 pos = chunk.getPos();
 				Chunk& chunkData = chunkBufferData[mesh.chunkIndex];
-				chunkData.modelMatrix = glm::translate(glm::mat4(1.0f), glm::vec3(pos) * chunk::CHUNK_SIZE);
-				chunkData.boundingSphere = glm::ivec4(pos * static_cast<int32_t>(chunk::CHUNK_SIZE) + static_cast<int32_t>(chunk::CHUNK_SIZE) / 2, std::ceil(std::sqrt(static_cast<float>(chunk::CHUNK_SIZE * chunk::CHUNK_SIZE / 2 * 3))));
 				chunkData.vertexCount = faces.size() * 6;
 				if (mUseBufferReference) {
 					std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(faces.size() * sizeof(Face), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);

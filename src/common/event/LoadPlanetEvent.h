@@ -18,21 +18,14 @@
 
 #pragma once
 
-#include "glm/vec3.hpp"
-#include "glm/gtx/hash.hpp"
+#include "common/ecs/Entity.h"
+#include "common/ecs/Event.h"
 
-#include "common/ecs/Component.h"
-#include "engine/GPUBuffer.h"
+namespace voxel_game::event {
+	struct LoadPlanetEvent : ecs::Event<LoadPlanetEvent> {
+		ecs::Entity planet;
 
-namespace voxel_game::client::render {
-	struct ChunkMesh {
-		bool hasMesh = false;
-		uint32_t chunkIndex = 0;
-		std::unique_ptr<engine::GPUBuffer> vertexBuffer = nullptr;
-	};
-
-	struct ChunkMeshData : ecs::Component<ChunkMeshData> {
-		std::unordered_map<glm::ivec3, ChunkMesh> meshes;
-		std::vector<glm::ivec3> meshPositions;
+		// ReSharper disable once CppNonExplicitConvertingConstructor
+		LoadPlanetEvent(const ecs::Entity planet) : planet(planet) {}
 	};
 }

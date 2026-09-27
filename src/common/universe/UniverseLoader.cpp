@@ -74,13 +74,13 @@ namespace voxel_game::universe {
 						const int32_t maxZ = std::sqrt(radius2 - x2 - y * y);
 						for (int32_t z = -maxZ; z <= maxZ; z++) {
 							glm::i64vec3 newSector = transform.pos.sector + glm::i64vec3{x, y, z};
-							const bool intersectsOld = util::checkPointIntersectsSphere<int64_t>(universeLoaderInfo.lastSector, universeLoaderInfo.radius, newSector);
+							const bool intersectsOld = util::checkPointIntersectsSphere<__int128_t>(universeLoaderInfo.lastSector, universeLoaderInfo.radius, newSector);
 							const glm::i64vec3 oldSector = universeLoaderInfo.lastSector + glm::i64vec3{x, y, z};
-							const bool intersectsNew = util::checkPointIntersectsSphere<int64_t>(transform.pos.sector, universeLoaderInfo.radius, oldSector);
+							const bool intersectsNew = util::checkPointIntersectsSphere<__int128_t>(transform.pos.sector, universeLoaderInfo.radius, oldSector);
 							if (!intersectsOld || !intersectsNew) {
 								bool otherEntityLoadingNew = false;
 								for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
-									if (util::checkPointIntersectsSphere<int64_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, newSector)) {
+									if (util::checkPointIntersectsSphere<__int128_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, newSector)) {
 										otherEntityLoadingNew = true;
 										break;
 									}
@@ -90,7 +90,7 @@ namespace voxel_game::universe {
 								}
 								bool otherEntityLoadingOld = false;
 								for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
-									if (util::checkPointIntersectsSphere<int64_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, oldSector)) {
+									if (util::checkPointIntersectsSphere<__int128_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, oldSector)) {
 										otherEntityLoadingOld = true;
 										break;
 									}
@@ -114,7 +114,7 @@ namespace voxel_game::universe {
 							glm::i64vec3 sector = transform.pos.sector + glm::i64vec3{x, y, z};
 							bool loaded = false;
 							for (const UniverseLoaderInfo& otherLoadInfo: intersectingEntities) {
-								if (util::checkPointIntersectsSphere(otherLoadInfo.lastSector, static_cast<int64_t>(otherLoadInfo.radius), sector)) {
+								if (util::checkPointIntersectsSphere<__int128_t>(otherLoadInfo.lastSector, otherLoadInfo.radius, sector)) {
 									loaded = true;
 									break;
 								}

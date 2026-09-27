@@ -18,21 +18,11 @@
 
 #pragma once
 
-#include "glm/vec3.hpp"
-#include "glm/gtx/hash.hpp"
+#include "common/ecs/System.h"
 
-#include "common/ecs/Component.h"
-#include "engine/GPUBuffer.h"
-
-namespace voxel_game::client::render {
-	struct ChunkMesh {
-		bool hasMesh = false;
-		uint32_t chunkIndex = 0;
-		std::unique_ptr<engine::GPUBuffer> vertexBuffer = nullptr;
-	};
-
-	struct ChunkMeshData : ecs::Component<ChunkMeshData> {
-		std::unordered_map<glm::ivec3, ChunkMesh> meshes;
-		std::vector<glm::ivec3> meshPositions;
+namespace voxel_game::universe {
+	class PlanetLoader : public ecs::System<PlanetLoader> {
+	public:
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
 	};
 }

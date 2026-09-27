@@ -30,9 +30,7 @@
 #include "engine/RenderPipeline.h"
 
 namespace voxel_game::client::render {
-	struct alignas(16) Chunk {
-		glm::mat4 modelMatrix;
-		glm::ivec4 boundingSphere;
+	struct alignas(8) Chunk {
 		union {
 			uint64_t faceBuffer;
 			struct {
@@ -41,6 +39,11 @@ namespace voxel_game::client::render {
 			};
 		};
 		uint32_t vertexCount;
+	};
+
+	struct FrameChunk {
+		glm::mat4 modelMatrix;
+		glm::ivec4 boundingSphere;
 	};
 
 	struct Face {
@@ -71,6 +74,7 @@ namespace voxel_game::client::render {
 		std::unique_ptr<engine::ComputePipeline> mCullingPipeline = nullptr;
 		std::unique_ptr<engine::RenderPipeline> mRenderPipeline = nullptr;
 		std::unique_ptr<engine::GPUBuffer> mChunkBuffer = nullptr;
+		std::unique_ptr<engine::GPUBuffer> mFrameChunkBuffers[2] = {};
 		std::unique_ptr<engine::GPUBuffer> mIndirectCommandBuffer = nullptr;
 		std::unique_ptr<engine::GPUBuffer> mCountBuffer = nullptr;
 		std::unique_ptr<engine::GPUBuffer> mFaceBuffer = nullptr;

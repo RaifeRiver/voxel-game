@@ -157,12 +157,10 @@ namespace voxel_game::client::render::engine::opengl {
 	}
 
 	void OpenGLEngine::preRender() {
-		const uint64_t frame = mFrame % FRAME_OVERLAP;
-
-		if (mRenderFences[frame] != nullptr) {
-			glClientWaitSync(mRenderFences[frame], GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
-			glDeleteSync(mRenderFences[frame]);
-			mRenderFences[frame] = nullptr;
+		if (mRenderFences[mFrame] != nullptr) {
+			glClientWaitSync(mRenderFences[mFrame], GL_SYNC_FLUSH_COMMANDS_BIT, GL_TIMEOUT_IGNORED);
+			glDeleteSync(mRenderFences[mFrame]);
+			mRenderFences[mFrame] = nullptr;
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferObject);
@@ -172,14 +170,12 @@ namespace voxel_game::client::render::engine::opengl {
 	}
 
 	void OpenGLEngine::postRender(window::Window& window) {
-		const uint64_t frame = mFrame % FRAME_OVERLAP;
-
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, mFramebufferObject);
 		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		const auto windowSize = glm::ivec2(window.getSize());
 		glBlitFramebuffer(0, windowSize.y, windowSize.x, 0, 0, 0, windowSize.x, windowSize.y, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		mRenderFences[frame] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
+		mRenderFences[mFrame] = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
 
 		window.swapOpenGLBuffers();
 	}

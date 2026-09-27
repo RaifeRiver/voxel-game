@@ -22,12 +22,13 @@ const vec3 vertexOffsets[24] = vec3[24](
 
 void main() {
     Chunk chunk = chunks[gl_InstanceIndex];
+    FrameChunk frameChunk = frameChunks[gl_InstanceIndex];
     uint faceID = gl_VertexIndex / 6;
     uint vertexID = indices[gl_VertexIndex - faceID * 6];
     ChunkFace face = getFace(chunk, faceID);
     uvec4 posData = unpackUint4x8(face.pos);
     uint normal = posData.w;
     vec3 pos = vec3(posData.xyz) + vertexOffsets[normal * 4 + vertexID];
-    gl_Position = pushConstants.viewProj * chunk.modelMatrix * vec4(pos, 1);
+    gl_Position = pushConstants.viewProj * frameChunk.modelMatrix * vec4(pos, 1);
     outColour = unpackUnorm4x8(face.colour);
 }

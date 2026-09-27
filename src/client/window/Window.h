@@ -34,6 +34,7 @@ namespace voxel_game::client::window {
 		KEY_D,
 		KEY_S,
 		KEY_W,
+		KEY_T,
 
 		KEY_LEFT_SHIFT,
 		KEY_SPACE

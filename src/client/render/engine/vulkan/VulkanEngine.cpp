@@ -339,7 +339,7 @@ namespace voxel_game::client::render::engine::vulkan {
 		vkGetDeviceQueue(mDevice, queueFamily, 0, &mGraphicsQueue);
 		mGraphicsQueueFamily = queueFamily;
 
-		//mFeatures.shaderFeatures.bufferReference = supportedFeatures12.bufferDeviceAddress;
+		mFeatures.shaderFeatures.bufferReference = supportedFeatures12.bufferDeviceAddress;
 	}
 
 	void VulkanEngine::createAllocator() {
@@ -384,6 +384,13 @@ namespace voxel_game::client::render::engine::vulkan {
 		if (surfaceCapabilities.maxImageCount != 0) {
 			count = std::min(count, surfaceCapabilities.maxImageCount);
 		}
+
+		uint32_t presentModeCount = 0;
+		vulkan_util::vkCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &presentModeCount, nullptr));
+		std::vector<VkPresentModeKHR> presentModes(presentModeCount);
+		vulkan_util::vkCheck(vkGetPhysicalDeviceSurfacePresentModesKHR(mPhysicalDevice, mSurface, &presentModeCount, presentModes.data()));
+
+		const VkPresentModeKHR preferredPresentMode = vsync ? VK_PRESENT_MODE_MAILBOX_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR;
 		constexpr VkFormat imageFormat = VK_FORMAT_B8G8R8A8_SRGB;
 		const VkSwapchainCreateInfoKHR swapchainCreateInfo = {
 			.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
@@ -396,7 +403,7 @@ namespace voxel_game::client::render::engine::vulkan {
 			.imageUsage = VK_IMAGE_USAGE_TRANSFER_DST_BIT,
 			.preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
 			.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-			.presentMode = vsync ? VK_PRESENT_MODE_FIFO_KHR : VK_PRESENT_MODE_IMMEDIATE_KHR
+			.presentMode = std::ranges::find(presentModes, preferredPresentMode) != presentModes.end() ? preferredPresentMode : VK_PRESENT_MODE_FIFO_KHR
 		};
 		vulkan_util::vkCheck(vkCreateSwapchainKHR(mDevice, &swapchainCreateInfo, nullptr, &mSwapchain));
 

@@ -41,8 +41,6 @@ namespace voxel_game::client::window::glfw {
 				return GLFW_KEY_LEFT_SHIFT;
 			case Key::KEY_SPACE:
 				return GLFW_KEY_SPACE;
-			case Key::KEY_T:
-				return GLFW_KEY_T;
 			default:
 				throw std::runtime_error("Unsupported key");
 		}

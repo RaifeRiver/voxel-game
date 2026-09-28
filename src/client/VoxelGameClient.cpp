@@ -83,10 +83,6 @@ namespace voxel_game::client {
 
 			window.pollEvents();
 
-			if (window.isKeyPressed(window::Key::KEY_T)) {
-				registry.getComponent<component::Transform>(registry.getEntitiesWithComponents<voxel_game::player::LocalPlayer>()[0]).pos.sector = {1500000000000000000L, 0, 1500000000000000000L};
-			}
-
 			registry.update(deltaTime);
 
 			FrameMark;

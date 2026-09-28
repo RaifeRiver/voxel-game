@@ -37,9 +37,9 @@ namespace voxel_game::universe {
 
 		const std::vector<event::LoadSectorEvent*> loadSectorEvents = registry.getEvents<event::LoadSectorEvent>();
 		for (const event::LoadSectorEvent* loadSectorEvent : loadSectorEvents) {
-			if (loadSectorEvent->sector.x == 1500000000000000000L && loadSectorEvent->sector.y == 0 && loadSectorEvent->sector.z == 1500000000000000000L) {
+			if (loadSectorEvent->sector.x == 0 && loadSectorEvent->sector.y == 0 && loadSectorEvent->sector.z == 0) {
 				const ecs::Entity planet = registry.createEntity();
-				registry.attachComponent<component::Transform>(planet).pos = {.sector = {1500000000000000000L, 0, 1500000000000000000L}};LOG_INFO("Load planet");
+				registry.attachComponent<component::Transform>(planet);
 				registry.attachComponent<chunk::ChunkData>(planet);
 				registry.pushEvent<event::LoadPlanetEvent>(planet);
 			}

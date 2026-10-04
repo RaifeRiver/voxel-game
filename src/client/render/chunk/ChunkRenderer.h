@@ -23,13 +23,13 @@
 #include "glm/mat4x4.hpp"
 
 #include "ChunkMesh.h"
+#include "client/render/engine/DescriptorAllocator.h"
+#include "client/render/engine/RenderEngine.h"
+#include "client/render/engine/RenderPipeline.h"
 #include "common/chunk/Chunk.h"
 #include "common/ecs/System.h"
-#include "engine/DescriptorAllocator.h"
-#include "engine/RenderEngine.h"
-#include "engine/RenderPipeline.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::chunk {
 	struct alignas(8) Chunk {
 		union {
 			uint64_t faceBuffer;
@@ -46,12 +46,6 @@ namespace voxel_game::client::render {
 		glm::ivec4 boundingSphere;
 	};
 
-	struct Face {
-		glm::u8vec3 pos;
-		uint8_t dir;
-		uint32_t colour;
-	};
-
 	struct CullingPushConstants {
 		glm::vec4 frustumPlanes[6];
 		uint32_t chunkCount;
@@ -59,6 +53,16 @@ namespace voxel_game::client::render {
 
 	struct PushConstants {
 		glm::mat4 viewProj;
+	};
+
+	struct ChunkRender {
+		uint32_t chunkIndex = 0;
+		std::unique_ptr<engine::GPUBuffer> vertexBuffer = nullptr;
+	};
+
+	struct ChunkRenderData : ecs::Component<ChunkRenderData> {
+		std::unordered_map<glm::ivec3, ChunkRender> data;
+		std::vector<glm::ivec3> positions;
 	};
 
 	class ChunkRenderer : public ecs::System<ChunkRenderer> {
@@ -81,7 +85,5 @@ namespace voxel_game::client::render {
 		uint32_t mFaceBufferPointer = 0;
 		uint32_t mNextChunk = 0;
 		bool mUseBufferReference = false;
-
-		ChunkMesh meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk);
 	};
 }

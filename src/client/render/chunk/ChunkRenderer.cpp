@@ -18,10 +18,10 @@
 
 #include "ChunkRenderer.h"
 
-#include "glm/packing.hpp"
 #include "tracy/Tracy.hpp"
 #include "tracy/TracyC.h"
 
+#include "client/render/engine/IndirectCommand.h"
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
 #include "common/event/LoadChunkEvent.h"
@@ -31,9 +31,8 @@
 #include "common/player/Player.h"
 #include "common/util/FileHelper.h"
 #include "common/util/Log.h"
-#include "engine/IndirectCommand.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::chunk {
 	ChunkRenderer::ChunkRenderer(ecs::ECSRegistry& registry) {
 		ZoneScopedN("Init chunk renderer");
 
@@ -86,31 +85,55 @@ namespace voxel_game::client::render {
 		engine::RenderEngine& renderEngine = registry.getResource<engine::RenderEngine>();
 
 		for (const event::LoadPlanetEvent* event: registry.getEvents<event::LoadPlanetEvent>()) {
-			registry.attachComponent<ChunkMeshData>(event->planet);
+			registry.attachComponent<ChunkRenderData>(event->planet);
 		}
 
 		for (const event::LoadChunkEvent* event: registry.getEvents<event::LoadChunkEvent>()) {
-			if (!registry.hasComponent<ChunkMeshData>(event->entity)) {
+			if (!registry.hasComponent<ChunkRenderData>(event->entity)) {
 				continue;
 			}
-			ChunkMeshData& meshData = registry.getComponent<ChunkMeshData>(event->entity);
-			ChunkMesh mesh = meshChunk(renderEngine, event->chunk);
-			if (mesh.hasMesh) {
-				meshData.meshes[event->chunk.getPos()] = std::move(mesh);
-				uint32_t index = mesh.chunkIndex;
-				if (meshData.meshPositions.size() <= index) {
-					meshData.meshPositions.resize(index + 1);
+			ChunkRenderData& renderData = registry.getComponent<ChunkRenderData>(event->entity);
+			auto [faces] = meshChunk(event->chunk);
+			if (!faces.empty()) {
+				ChunkRender render = {
+					.chunkIndex = mNextChunk++
+				};
+
+				const auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
+				Chunk chunkData = chunkBufferData[render.chunkIndex];
+				chunkData.vertexCount = faces.size() * 6;
+				if (mUseBufferReference) {
+					std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(faces.size() * sizeof(Face), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+					memcpy(buffer->map(), faces.data(), faces.size() * sizeof(Face));
+					buffer->unmap();
+					render.vertexBuffer = std::move(buffer);
+					chunkData.faceBuffer = render.vertexBuffer->getDeviceAddress();
 				}
-				meshData.meshPositions[index] = event->chunk.getPos();
+				else {
+					chunkData.faceOffset = mFaceBufferPointer;
+				}
+				mChunkBuffer->unmap();
+				if (!mUseBufferReference) {
+					memcpy(static_cast<Face*>(mFaceBuffer->map()) + mFaceBufferPointer, faces.data(), faces.size() * sizeof(Face));
+					mFaceBuffer->unmap();
+					mFaceBufferPointer += faces.size();;
+				}
+
+				renderData.data[event->chunk.getPos()] = std::move(render);
+				uint32_t index = render.chunkIndex;
+				if (renderData.positions.size() <= index) {
+					renderData.positions.resize(index + 1);
+				}
+				renderData.positions[index] = event->chunk.getPos();
 			}
 		}
 		for (const event::UnloadChunkEvent* event: registry.getEvents<event::UnloadChunkEvent>()) {
-			if (!registry.hasComponent<ChunkMeshData>(event->entity)) {
+			if (!registry.hasComponent<ChunkRenderData>(event->entity)) {
 				continue;
 			}
-			ChunkMeshData& meshData = registry.getComponent<ChunkMeshData>(event->entity);
-			auto it = meshData.meshes.find(event->chunk);
-			if (it != meshData.meshes.end()) {
+			ChunkRenderData& renderData = registry.getComponent<ChunkRenderData>(event->entity);
+			auto it = renderData.data.find(event->chunk);
+			if (it != renderData.data.end()) {
 				if (mNextChunk != 0) {
 					mChunkBuffer->copyFromBuffer(*mChunkBuffer, (mNextChunk - 1) * sizeof(Chunk), it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
 					mChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ, it->second.chunkIndex * sizeof(Chunk), sizeof(Chunk));
@@ -118,13 +141,13 @@ namespace voxel_game::client::render {
 						frameChunkBuffer->copyFromBuffer(*mChunkBuffer, (mNextChunk - 1) * sizeof(FrameChunk), it->second.chunkIndex * sizeof(FrameChunk), sizeof(FrameChunk));
 						frameChunkBuffer->barrier(engine::BufferAccess::TRANSFER_WRITE, engine::BufferAccess::SHADER_READ, it->second.chunkIndex * sizeof(FrameChunk), sizeof(FrameChunk));
 					}
-					glm::ivec3 position = meshData.meshPositions[mNextChunk - 1];
-					meshData.meshPositions.erase(meshData.meshPositions.begin() + (mNextChunk - 1));
-					meshData.meshPositions[it->second.chunkIndex] = position;
-					meshData.meshes[position].chunkIndex = it->second.chunkIndex;
+					glm::ivec3 position = renderData.positions[mNextChunk - 1];
+					renderData.positions.erase(renderData.positions.begin() + (mNextChunk - 1));
+					renderData.positions[it->second.chunkIndex] = position;
+					renderData.data[position].chunkIndex = it->second.chunkIndex;
 					mNextChunk--;
 				}
-				meshData.meshes.erase(event->chunk);
+				renderData.data.erase(event->chunk);
 			}
 		}
 
@@ -138,15 +161,15 @@ namespace voxel_game::client::render {
 
 		const std::unique_ptr<engine::GPUBuffer>& frameChunkBuffer = mFrameChunkBuffers[renderEngine.getFrame()];
 		auto frameChunkBufferData = static_cast<FrameChunk*>(frameChunkBuffer->map());
-		for (const ecs::Entity entity : registry.getEntitiesWithComponents<ChunkMeshData, component::Transform>()) {
+		for (const ecs::Entity entity : registry.getEntitiesWithComponents<ChunkRenderData, component::Transform>()) {
 			const component::Transform& chunkTransform = registry.getComponent<component::Transform>(entity);
-			const int32_t boundingSphereRadius = std::ceil(chunk::CHUNK_SIZE * glm::compMax(chunkTransform.scale) / 2.0f * std::sqrt(3.0f));
-			for (auto& [pos, mesh] : registry.getComponent<ChunkMeshData>(entity).meshes) {
+			const int32_t boundingSphereRadius = std::ceil(voxel_game::chunk::CHUNK_SIZE * glm::compMax(chunkTransform.scale) / 2.0f * std::sqrt(3.0f));
+			for (auto& [pos, mesh] : registry.getComponent<ChunkRenderData>(entity).data) {
 				auto& [modelMatrix, boundingSphere] = frameChunkBufferData[mesh.chunkIndex];
-				auto [relativeSector, relativeLocal] = chunkTransform.pos + glm::i64vec3(pos) * static_cast<int64_t>(chunk::CHUNK_SIZE) - transform.pos;
+				auto [relativeSector, relativeLocal] = chunkTransform.pos + glm::i64vec3(pos) * static_cast<int64_t>(voxel_game::chunk::CHUNK_SIZE) - transform.pos;
 				auto relativePos = glm::vec3(relativeSector * static_cast<int64_t>(universe::SECTOR_SIZE)) + relativeLocal;
 				modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), relativePos), chunkTransform.scale);
-				boundingSphere = glm::ivec4(relativePos + chunk::CHUNK_SIZE / 2.0f, boundingSphereRadius);
+				boundingSphere = glm::ivec4(relativePos + voxel_game::chunk::CHUNK_SIZE / 2.0f, boundingSphereRadius);
 			}
 		}
 		frameChunkBuffer->unmap();
@@ -199,76 +222,5 @@ namespace voxel_game::client::render {
 		mRenderPipeline->drawIndirectCount(mIndirectCommandBuffer.get(), mCountBuffer.get(), mNextChunk, "Render chunk");
 
 		renderEngine.endRendering();
-	}
-
-	ChunkMesh ChunkRenderer::meshChunk(engine::RenderEngine& renderEngine, const chunk::Chunk& chunk) {
-		ZoneScopedN("Mesh chunk");
-
-		ChunkMesh mesh;
-		if (!chunk.isUniform() || chunk.getBlock(0, 0, 0) != 0) {
-			std::vector<Face> faces;
-			for (uint32_t x = 0; x < chunk::CHUNK_SIZE; x++) {
-				for (uint32_t y = 0; y < chunk::CHUNK_SIZE; y++) {
-					for (uint32_t z = 0; z < chunk::CHUNK_SIZE; z++) {
-						const uint32_t block = chunk.getBlock(x, y, z);
-						if (block != 0) {
-							const uint32_t colour = glm::packUnorm4x8({(block - 1) % 1024 / 32 / 31.0f, (block - 1) % 32 / 31.0f, (block - 1) / 1024 / 31.0f, 1});
-
-							if (z == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y, z + 1) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 0, .colour = colour});
-							}
-
-							if (z == 0 || chunk.getBlock(x, y, z - 1) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 1, .colour = colour});
-							}
-
-							if (y == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y + 1, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 2, .colour = colour});
-							}
-
-							if (y == 0 || chunk.getBlock(x, y - 1, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 3, .colour = colour});
-							}
-
-							if (x == chunk::CHUNK_SIZE - 1 || chunk.getBlock(x + 1, y, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 4, .colour = colour});
-							}
-
-							if (x == 0 || chunk.getBlock(x - 1, y, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 5, .colour = colour});
-							}
-						}
-					}
-				}
-			}
-
-			if (faces.size() > 0) {
-				mesh.chunkIndex = mNextChunk++;
-
-				const auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
-				Chunk& chunkData = chunkBufferData[mesh.chunkIndex];
-				chunkData.vertexCount = faces.size() * 6;
-				if (mUseBufferReference) {
-					std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(faces.size() * sizeof(Face), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
-					memcpy(buffer->map(), faces.data(), faces.size() * sizeof(Face));
-					buffer->unmap();
-					mesh.vertexBuffer = std::move(buffer);
-					chunkData.faceBuffer = mesh.vertexBuffer->getDeviceAddress();
-				}
-				else {
-					chunkData.faceOffset = mFaceBufferPointer;
-				}
-				mChunkBuffer->unmap();
-				if (!mUseBufferReference) {
-					memcpy(static_cast<Face*>(mFaceBuffer->map()) + mFaceBufferPointer, faces.data(), faces.size() * sizeof(Face));
-					mFaceBuffer->unmap();
-					mFaceBufferPointer += faces.size();;
-				}
-
-				mesh.hasMesh = true;
-			}
-		}
-
-		return mesh;
 	}
 }

@@ -29,8 +29,8 @@
 #include "common/universe/UniverseLoaderInfo.h"
 #include "common/util/Log.h"
 #include "player/PlayerInputController.h"
-#include "render/ChunkRenderer.h"
 #include "render/SkyRenderer.h"
+#include "render/chunk/ChunkRenderer.h"
 #include "render/engine/RenderEngine.h"
 #include "render/engine/opengl/OpenGLEngine.h"
 #include "render/engine/vulkan/VulkanEngine.h"
@@ -58,7 +58,7 @@ namespace voxel_game::client {
 		}
 
 		registry.getSystemManager().createSystem<render::SkyRenderer>(registry);
-		registry.getSystemManager().createSystem<render::ChunkRenderer>(registry);
+		registry.getSystemManager().createSystem<render::chunk::ChunkRenderer>(registry);
 
 		const ecs::Entity player = registry.createEntity();
 		voxel_game::player::attachPlayerComponents(registry, player, true);
@@ -98,7 +98,7 @@ namespace voxel_game::client {
 			registry.destroyEntity(entity);
 		}
 
-		registry.getSystemManager().removeSystem<render::ChunkRenderer>();
+		registry.getSystemManager().removeSystem<render::chunk::ChunkRenderer>();
 		registry.getSystemManager().removeSystem<render::SkyRenderer>();
 
 		registry.removeResource<render::engine::RenderEngine>();

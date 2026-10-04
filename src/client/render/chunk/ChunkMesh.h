@@ -21,18 +21,19 @@
 #include "glm/vec3.hpp"
 #include "glm/gtx/hash.hpp"
 
-#include "common/ecs/Component.h"
-#include "engine/GPUBuffer.h"
+#include "client/render/engine/GPUBuffer.h"
+#include "common/chunk/Chunk.h"
 
-namespace voxel_game::client::render {
+namespace voxel_game::client::render::chunk {
+	struct Face {
+		glm::u8vec3 pos;
+		uint8_t dir;
+		uint32_t colour;
+	};
+
 	struct ChunkMesh {
-		bool hasMesh = false;
-		uint32_t chunkIndex = 0;
-		std::unique_ptr<engine::GPUBuffer> vertexBuffer = nullptr;
-	};
+		std::vector<Face> faces;
+	};;
 
-	struct ChunkMeshData : ecs::Component<ChunkMeshData> {
-		std::unordered_map<glm::ivec3, ChunkMesh> meshes;
-		std::vector<glm::ivec3> meshPositions;
-	};
+	ChunkMesh meshChunk(const voxel_game::chunk::Chunk& chunk);
 }

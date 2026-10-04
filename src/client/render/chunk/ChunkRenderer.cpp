@@ -55,7 +55,7 @@ namespace voxel_game::client::render::chunk {
 		const engine::Shader fragmentShader = engine::ShaderBuilder(resourceManager.findResource("voxel_game:shaders/chunk/main", ".frag", resource::ResourceType::ASSET).path).build(engine::ShaderStage::FRAGMENT);
 		mRenderPipeline = renderEngine.createRenderPipelineBuilder(vertexShader, fragmentShader)->depthFormat(renderEngine.getDepthImage().getFormat())->cullMode(engine::CullMode::BACK)->descriptorLayout(0, mDescriptorLayout.get())->build();
 
-		mChunkBuffer = renderEngine.allocateBuffer(sizeof(chunk::Chunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
+		mChunkBuffer = renderEngine.allocateBuffer(sizeof(Chunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
 		for (std::unique_ptr<engine::GPUBuffer>& frameChunkBuffer : mFrameChunkBuffers) {
 			frameChunkBuffer = renderEngine.allocateBuffer(sizeof(FrameChunk) * 1100000, engine::BufferUsage::STORAGE | engine::BufferUsage::TRANSFER_DST | engine::BufferUsage::TRANSFER_SRC, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);
 		}
@@ -100,7 +100,7 @@ namespace voxel_game::client::render::chunk {
 				};
 
 				const auto chunkBufferData = static_cast<Chunk*>(mChunkBuffer->map());
-				Chunk chunkData = chunkBufferData[render.chunkIndex];
+				Chunk& chunkData = chunkBufferData[render.chunkIndex];
 				chunkData.vertexCount = faces.size() * 6;
 				if (mUseBufferReference) {
 					std::unique_ptr<engine::GPUBuffer> buffer = renderEngine.allocateBuffer(faces.size() * sizeof(Face), engine::BufferUsage::SHADER_DEVICE_ADDRESS, engine::MemoryType::GPU, engine::MappedType::SEQUENTIAL_WRITE);

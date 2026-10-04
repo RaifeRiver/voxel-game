@@ -25,10 +25,19 @@
 #include "common/chunk/Chunk.h"
 
 namespace voxel_game::client::render::chunk {
+	enum class Direction : uint8_t {
+		Z_PLUS = 0,
+		Z_MINUS = 1,
+		Y_PLUS = 2,
+		Y_MINUS = 3,
+		X_PLUS = 4,
+		X_MINUS = 5
+	};
+
 	struct Face {
 		glm::u8vec3 pos;
-		uint8_t dir;
-		uint32_t colour;
+		Direction dir;
+		glm::u8vec4 colour;
 	};
 
 	struct ChunkMesh {

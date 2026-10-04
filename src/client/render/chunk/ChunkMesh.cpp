@@ -32,37 +32,37 @@ namespace voxel_game::client::render::chunk {
 					for (uint32_t z = 0; z < voxel_game::chunk::CHUNK_SIZE; z++) {
 						const uint32_t block = chunk.getBlock(x, y, z);
 						if (block != 0) {
-							const uint32_t colour = glm::packUnorm4x8({(block - 1) % 1024 / 32 / 31.0f, (block - 1) % 32 / 31.0f, (block - 1) / 1024 / 31.0f, 1});
+							const glm::u8vec4 colour = {(block - 1) % 1024 / 32 / 31.0f * 255, (block - 1) % 32 / 31.0f * 255, (block - 1) / 1024 / 31.0f * 255, 255};
 
 							if (z == voxel_game::chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y, z + 1) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 0, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::Z_PLUS, .colour = colour});
 							}
 
 							if (z == 0 || chunk.getBlock(x, y, z - 1) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 1, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::Z_MINUS, .colour = colour});
 							}
 
 							if (y == voxel_game::chunk::CHUNK_SIZE - 1 || chunk.getBlock(x, y + 1, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 2, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::Y_PLUS, .colour = colour});
 							}
 
 							if (y == 0 || chunk.getBlock(x, y - 1, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 3, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::Y_MINUS, .colour = colour});
 							}
 
 							if (x == voxel_game::chunk::CHUNK_SIZE - 1 || chunk.getBlock(x + 1, y, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 4, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::X_PLUS, .colour = colour});
 							}
 
 							if (x == 0 || chunk.getBlock(x - 1, y, z) == 0) {
-								faces.push_back({.pos = {x, y, z}, .dir = 5, .colour = colour});
+								faces.push_back({.pos = {x, y, z}, .dir = Direction::X_MINUS, .colour = colour});
 							}
 						}
 					}
 				}
 			}
 
-			mesh.faces = faces;
+			mesh.faces = std::move(faces);
 		}
 
 		return mesh;

@@ -31,6 +31,7 @@
 #include "common/player/Player.h"
 #include "common/util/FileHelper.h"
 #include "common/util/Log.h"
+#include "glm/gtx/component_wise.hpp"
 
 namespace voxel_game::client::render::chunk {
 	ChunkRenderer::ChunkRenderer(ecs::ECSRegistry& registry) {

@@ -40,6 +40,10 @@ namespace voxel_game::universe {
 			local += other;
 			fix();
 		}
+
+		explicit operator glm::vec3() const {
+			return glm::vec3(sector) * static_cast<float>(SECTOR_SIZE) + local;
+		}
 	};
 
 	[[nodiscard]] inline UniversePos operator+(const UniversePos& a, const UniversePos& b) {

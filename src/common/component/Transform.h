@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include "glm/ext.hpp"
+#include "glm/gtx/quaternion.hpp"
 
 #include "common/ecs/Component.h"
 #include "common/universe/UniversePos.h"

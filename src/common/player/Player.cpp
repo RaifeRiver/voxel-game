@@ -19,6 +19,8 @@
 #include "Player.h"
 
 #include "CameraRotation.h"
+#include "common/chunk/Chunk.h"
+#include "common/chunk/ChunkLoader.h"
 #include "common/component/Transform.h"
 #include "common/component/Velocity.h"
 #include "common/universe/UniverseLoaderInfo.h"
@@ -30,6 +32,7 @@ namespace voxel_game::player {
 		registry.attachComponent<component::Transform>(entity);
 		registry.attachComponent<component::Velocity>(entity);
 		registry.attachComponent<universe::UniverseLoaderInfo>(entity).radius = 8;
+		registry.attachComponent<chunk::ChunkLoaderInfo>(entity).radius = 16;
 
 		if (local) {
 			registry.attachComponent<LocalPlayer>(entity);

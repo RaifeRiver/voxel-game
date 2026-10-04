@@ -20,13 +20,13 @@
 
 #include <numeric>
 
-#include "common/chunk/ChunkData.h"
 #include "tracy/Tracy.hpp"
 
+#include "common/chunk/ChunkData.h"
+#include "common/chunk/ChunkLoader.h"
 #include "common/component/Transform.h"
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
-#include "common/universe/UniverseLoaderInfo.h"
 #include "common/util/Log.h"
 #include "common/util/UpdateTime.h"
 #include "player/PlayerInputController.h"
@@ -67,7 +67,7 @@ namespace voxel_game::client {
 		auto& cameraRotation = registry.getComponent<voxel_game::player::CameraRotation>(player);
 		cameraRotation.pitch = -0.6f;
 		registry.getSystemManager().createSystem<player::PlayerInputController>();
-		registry.getComponent<universe::UniverseLoaderInfo>(player).radius = launchOptions.getLoadDistance();
+		registry.getComponent<chunk::ChunkLoaderInfo>(player).radius = launchOptions.getLoadDistance();
 
 		auto& window = registry.getResource<window::Window>();
 		window.setLockMouse(true);

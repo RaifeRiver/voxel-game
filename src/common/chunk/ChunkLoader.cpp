@@ -24,12 +24,11 @@
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
 #include "common/event/LoadChunkEvent.h"
-#include "common/event/LoadSectorEvent.h"
-#include "common/event/UnloadChunkEvent.h"
-#include "common/event/UnloadSectorEvent.h"
 #include "common/universe/UniversePos.h"
 
 namespace voxel_game::chunk {
+	constexpr uint32_t MAX_CHUNKS_PER_UPDATE = 100;
+
 	void ChunkLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
@@ -37,41 +36,55 @@ namespace voxel_game::chunk {
 
 		ZoneScopedN("Loading chunks");
 
-		const std::vector<event::LoadSectorEvent*> loadSectorEvents = registry.getEvents<event::LoadSectorEvent>();
-		const std::vector<event::UnloadSectorEvent*> unloadSectorEvents = registry.getEvents<event::UnloadSectorEvent>();
+		const std::vector<ecs::Entity> chunkLoaders = registry.getEntitiesWithComponents<ChunkLoaderInfo, component::Transform>();
+		for (const ecs::Entity chunkLoader : chunkLoaders) {
+			const ChunkLoaderInfo& chunkLoaderInfo = registry.getComponent<ChunkLoaderInfo>(chunkLoader);
+			component::Transform& loaderTransform = registry.getComponent<component::Transform>(chunkLoader);
 
-		const std::vector<ecs::Entity>& chunkDataEntities = registry.getEntitiesWithComponents<ChunkData>();
-		for (const ecs::Entity entity : chunkDataEntities) {
-			ChunkData& chunkData = registry.getComponent<ChunkData>(entity);
-			component::Transform& transform = registry.getComponent<component::Transform>(entity);
+			const float loadRadius = static_cast<float>(chunkLoaderInfo.radius) * CHUNK_SIZE;
+			const float loadRadius2 = loadRadius * loadRadius;
 
-			for (const event::UnloadSectorEvent* event : unloadSectorEvents) {
-				const glm::i64vec3 sector = event->sector;
-				for (int32_t x = 0; x < universe::SECTOR_SIZE / CHUNK_SIZE; x++) {
-					for (int32_t y = 0; y < universe::SECTOR_SIZE / CHUNK_SIZE; y++) {
-						for (int32_t z = 0; z < universe::SECTOR_SIZE / CHUNK_SIZE; z++) {
-							glm::ivec3 chunk = glm::ivec3{sector - transform.pos.sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
+			const std::vector<ecs::Entity> chunkObjects = registry.getEntitiesWithComponents<ChunkData, component::Transform>();
+			for (const ecs::Entity chunkObject : chunkObjects) {
+				ChunkData& chunkData = registry.getComponent<ChunkData>(chunkObject);
+				component::Transform& objectTransform = registry.getComponent<component::Transform>(chunkObject);
+
+				glm::vec3 sphereCentre = glm::conjugate(objectTransform.rotation) * glm::vec3(loaderTransform.pos - objectTransform.pos);
+
+				const glm::vec3 minBound = sphereCentre - loadRadius;
+				const glm::vec3 maxBound = sphereCentre + loadRadius;
+
+				const auto minChunk = glm::ivec3(glm::floor(minBound / static_cast<float>(CHUNK_SIZE)));
+				const auto maxChunk = glm::ivec3(glm::floor(maxBound / static_cast<float>(CHUNK_SIZE)));
+
+				std::vector<std::pair<float, glm::ivec3>> chunksToLoad;
+
+				for (int32_t x = minChunk.x; x <= maxChunk.x; x++) {
+					for (int32_t y = minChunk.y; y <= maxChunk.y; y++) {
+						for (int32_t z = minChunk.z; z <= maxChunk.z; z++) {
+							glm::ivec3 chunk = {x, y, z};
 							if (chunkData.isLoaded(chunk)) {
-								registry.pushEvent<event::UnloadChunkEvent>({entity, chunk});
-								chunkData.chunks.erase(chunk);
+								continue;
+							}
+
+							glm::i64vec3 chunkCentre = glm::i64vec3(chunk) * static_cast<int64_t>(CHUNK_SIZE) + static_cast<int64_t>(HALF_CHUNK_SIZE);
+							auto distanceVec = glm::dvec3(chunkCentre) - glm::dvec3(sphereCentre);
+							double distance = glm::dot(distanceVec, distanceVec);
+							if (distance <= loadRadius2) {
+								chunksToLoad.emplace_back(distance, chunk);
 							}
 						}
 					}
 				}
-			}
 
-			for (const event::LoadSectorEvent* event : loadSectorEvents) {
-				const glm::i64vec3 sector = event->sector;
-				for (int32_t x = 0; x < universe::SECTOR_SIZE / CHUNK_SIZE; x++) {
-					for (int32_t y = 0; y < universe::SECTOR_SIZE / CHUNK_SIZE; y++) {
-						for (int32_t z = 0; z < universe::SECTOR_SIZE / CHUNK_SIZE; z++) {
-							glm::ivec3 chunk = glm::ivec3{sector - transform.pos.sector} * glm::ivec3{universe::SECTOR_SIZE / CHUNK_SIZE} + glm::ivec3{x, y, z};
-							if (!chunkData.isLoaded(chunk)) {
-								chunkData.chunks.emplace(chunk, createChunk(chunk, entity));
-								registry.pushEvent<event::LoadChunkEvent>({entity, chunkData.chunks.at(chunk)});
-							}
-						}
-					}
+				std::ranges::sort(chunksToLoad, [](const std::pair<float, glm::ivec3>& a, const std::pair<float, glm::ivec3>& b) {
+					return a.first < b.first;
+				});
+
+				for (uint32_t i = 0; i < std::min(static_cast<uint32_t>(chunksToLoad.size()), MAX_CHUNKS_PER_UPDATE); i++) {
+					glm::ivec3 chunk = chunksToLoad[i].second;
+					chunkData.chunks.emplace(chunk, createChunk(chunk, chunkObject));
+					registry.pushEvent<event::LoadChunkEvent>({chunkObject, chunkData.chunks.at(chunk)});
 				}
 			}
 		}

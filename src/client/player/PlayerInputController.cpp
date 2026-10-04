@@ -18,6 +18,7 @@
 
 #include "PlayerInputController.h"
 
+#include "glm/gtx/norm.hpp"
 #include "tracy/Tracy.hpp"
 
 #include "client/window/Window.h"

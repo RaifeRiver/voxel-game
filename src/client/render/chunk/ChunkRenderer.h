@@ -69,7 +69,7 @@ namespace voxel_game::client::render::chunk {
 	public:
 		explicit ChunkRenderer(ecs::ECSRegistry& registry);
 
-		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry) override;
 
 	private:
 		std::unique_ptr<engine::DescriptorLayout> mDescriptorLayout = nullptr;

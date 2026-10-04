@@ -37,9 +37,9 @@ namespace voxel_game::ecs {
 		}
 	}
 
-	void ECSRegistry::update(const float deltaTime) {
+	void ECSRegistry::update() {
 		mCommandQueue.execute(*this);
-		mSystemManager.runSystems(*this, deltaTime);
+		mSystemManager.runSystems(*this);
 
 		for (std::vector<std::unique_ptr<IEvent>>& events : mEvents[mOtherEvents]) {
 			events.clear();

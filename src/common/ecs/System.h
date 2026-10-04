@@ -33,11 +33,11 @@ namespace voxel_game::ecs {
 		COUNT
 	};
 
-	using SystemFunction = std::function<void(ECSRegistry&, float)>;
+	using SystemFunction = std::function<void(ECSRegistry&)>;
 
 	class ISystem {
 	public:
-		virtual void runStage(SystemStage stage, ECSRegistry& registry, float deltaTime) = 0;
+		virtual void runStage(SystemStage stage, ECSRegistry& registry) = 0;
 
 		virtual uint32_t getID() = 0;
 

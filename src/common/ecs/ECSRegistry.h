@@ -180,7 +180,7 @@ namespace voxel_game::ecs {
 			return mSystemManager;
 		}
 
-		void update(float deltaTime);
+		void update();
 
 	private:
 		std::vector<std::unique_ptr<IComponentStorage>> mComponentStorages;

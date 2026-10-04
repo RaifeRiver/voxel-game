@@ -28,7 +28,7 @@
 #include "common/util/Log.h"
 
 namespace voxel_game::universe {
-	void PlanetLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
+	void PlanetLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
 		}

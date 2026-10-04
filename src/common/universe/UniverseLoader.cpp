@@ -31,7 +31,7 @@
 #include "common/util/MathUtil.h"
 
 namespace voxel_game::universe {
-	void UniverseLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
+	void UniverseLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
 		}

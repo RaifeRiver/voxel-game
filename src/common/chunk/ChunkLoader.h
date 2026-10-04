@@ -22,9 +22,13 @@
 #include "common/ecs/System.h"
 
 namespace voxel_game::chunk {
+	struct ChunkLoaderInfo : ecs::Component<ChunkLoaderInfo> {
+		int32_t radius;
+	};
+
 	class ChunkLoader : public ecs::System<ChunkLoader> {
 	public:
-		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry) override;
 
 	private:
 		static Chunk createChunk(glm::ivec3 pos, ecs::Entity entity);

@@ -75,7 +75,7 @@ namespace voxel_game::client::render::chunk {
 		}
 	}
 
-	void ChunkRenderer::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
+	void ChunkRenderer::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::RENDER) {
 			return;
 		}

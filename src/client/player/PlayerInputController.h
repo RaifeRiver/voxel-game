@@ -27,6 +27,6 @@ namespace voxel_game::client::player {
 
 	class PlayerInputController : public ecs::System<PlayerInputController> {
 	public:
-		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry) override;
 	};
 }

@@ -25,13 +25,13 @@ namespace voxel_game::ecs {
 		mStages[static_cast<size_t>(stage)].push_back(system);
 	}
 
-	void SystemManager::runSystems(ECSRegistry& registry, const float deltaTime) {
+	void SystemManager::runSystems(ECSRegistry& registry) {
 		for (size_t i = 0; i < static_cast<size_t>(SystemStage::COUNT); i++) {
 			for (SystemFunction& system : mStages[i]) {
-				system(registry, deltaTime);
+				system(registry);
 			}
 			for (const std::unique_ptr<ISystem>& system: mSystems) {
-				system->runStage(static_cast<SystemStage>(i), registry, deltaTime);
+				system->runStage(static_cast<SystemStage>(i), registry);
 			}
 		}
 	}

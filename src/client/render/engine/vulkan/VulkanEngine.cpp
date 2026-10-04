@@ -57,10 +57,10 @@ namespace voxel_game::client::render::engine::vulkan {
 
 		window.setVisible(true);
 
-		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry& r) {
 			preRender(r.getResource<window::Window>(), r.getResource<LaunchOptions>().enableVsync());
 		});
-		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry&, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry&) {
 			postRender();
 		});
 

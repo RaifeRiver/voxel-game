@@ -47,7 +47,7 @@ namespace voxel_game::ecs {
 			mSystems[id] = std::make_unique<T>(std::forward<Args>(args)...);
 		}
 
-		void runSystems(ECSRegistry& registry, float deltaTime);
+		void runSystems(ECSRegistry& registry);
 
 		void removeSystem(uint32_t id);
 

@@ -30,7 +30,7 @@
 #include "common/universe/UniversePos.h"
 
 namespace voxel_game::chunk {
-	void ChunkLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, float) {
+	void ChunkLoader::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
 		}

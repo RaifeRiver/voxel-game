@@ -28,6 +28,7 @@
 #include "common/player/Player.h"
 #include "common/universe/UniverseLoaderInfo.h"
 #include "common/util/Log.h"
+#include "common/util/UpdateTime.h"
 #include "player/PlayerInputController.h"
 #include "render/SkyRenderer.h"
 #include "render/chunk/ChunkRenderer.h"
@@ -75,15 +76,20 @@ namespace voxel_game::client {
 	void run(ecs::ECSRegistry &registry) {
 		auto& window = registry.getResource<window::Window>();
 
+		util::UpdateTime& updateTime = registry.createResource<util::UpdateTime>();
+
 		std::chrono::time_point<std::chrono::steady_clock> lastTime = std::chrono::steady_clock::now();
 		while (!window.shouldClose()) {
 			std::chrono::time_point<std::chrono::steady_clock> currentTime = std::chrono::steady_clock::now();
 			const float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
 			lastTime = currentTime;
 
+			updateTime.deltaTime = deltaTime;
+			updateTime.update++;
+
 			window.pollEvents();
 
-			registry.update(deltaTime);
+			registry.update();
 
 			FrameMark;
 		}

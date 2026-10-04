@@ -26,9 +26,10 @@
 #include "common/ecs/Entity.h"
 #include "common/player/CameraRotation.h"
 #include "common/player/Player.h"
+#include "common/util/UpdateTime.h"
 
 namespace voxel_game::client::player {
-	void PlayerInputController::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry, const float deltaTime) {
+	void PlayerInputController::runStage(const ecs::SystemStage stage, ecs::ECSRegistry& registry) {
 		if (stage != ecs::SystemStage::UPDATE) {
 			return;
 		}
@@ -36,6 +37,9 @@ namespace voxel_game::client::player {
 		ZoneScopedN("Process player input");
 
 		window::Window& window = registry.getResource<window::Window>();
+		const util::UpdateTime& updateTime = registry.getResource<util::UpdateTime>();
+
+		const float deltaTime = updateTime.deltaTime;
 
 		const std::vector<ecs::Entity> players = registry.getEntitiesWithComponents<voxel_game::player::LocalPlayer, component::Transform, component::Velocity, voxel_game::player::CameraRotation>();
 		for (const ecs::Entity entity: players) {

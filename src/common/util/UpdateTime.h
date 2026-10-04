@@ -18,17 +18,12 @@
 
 #pragma once
 
-#include "engine/RenderEngine.h"
-#include "common/ecs/ECSRegistry.h"
+#include "common/ecs/Resource.h"
 
-namespace voxel_game::client::render {
-	class SkyRenderer : public ecs::System<SkyRenderer> {
+namespace voxel_game::util {
+	class UpdateTime : public ecs::Resource<UpdateTime> {
 	public:
-		explicit SkyRenderer(ecs::ECSRegistry& registry);
-
-		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry) override;
-
-	private:
-		std::unique_ptr<engine::RenderPipeline> mPipeline = nullptr;
+		float deltaTime = 0.0f;
+		uint32_t update = 0;
 	};
 }

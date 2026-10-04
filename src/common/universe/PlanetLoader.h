@@ -23,6 +23,6 @@
 namespace voxel_game::universe {
 	class PlanetLoader : public ecs::System<PlanetLoader> {
 	public:
-		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry, float deltaTime) override;
+		void runStage(ecs::SystemStage stage, ecs::ECSRegistry& registry) override;
 	};
 }

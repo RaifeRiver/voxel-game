@@ -51,10 +51,10 @@ namespace voxel_game::client::render::engine::opengl {
 
 		initShaderCompiler(registry.getResource<resource::ResourceManager>(), "OPENGL", mFeatures);
 
-		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry&, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::PRE_RENDER, [this](ecs::ECSRegistry&) {
 			preRender();
 		});
-		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry& r, float) {
+		registry.getSystemManager().registerSystem(ecs::SystemStage::POST_RENDER, [this](ecs::ECSRegistry& r) {
 			postRender(r.getResource<window::Window>());
 		});
 

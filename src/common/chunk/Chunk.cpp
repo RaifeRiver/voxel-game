@@ -68,6 +68,10 @@ namespace voxel_game::chunk {
 		return mBitsPerBlock == 0;
 	}
 
+	void Chunk::setLastLoaded(const uint32_t lastLoaded) {
+		mLastLoaded = lastLoaded;
+	}
+
 	void Chunk::convertToPalette() {
 		mBitsPerBlock = 1;
 		mIndexShift = 6;

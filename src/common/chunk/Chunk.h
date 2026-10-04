@@ -32,6 +32,7 @@ namespace voxel_game::chunk {
 	constexpr uint32_t CHUNK_VOLUME = CHUNK_SIZE * CHUNK_SIZE * CHUNK_SIZE;
 	const uint32_t CHUNK_SHIFT = static_cast<uint32_t>(std::log2(CHUNK_SIZE));
 	constexpr uint32_t CHUNK_MASK = CHUNK_SIZE - 1;
+	constexpr uint32_t HALF_CHUNK_SIZE = CHUNK_SIZE / 2;
 
 	struct ChunkPaletteEntry {
 		uint32_t id;
@@ -64,6 +65,12 @@ namespace voxel_game::chunk {
 			return mPos;
 		}
 
+		void setLastLoaded(uint32_t lastLoaded);
+
+		[[nodiscard]] uint32_t getLastLoaded() const {
+			return mLastLoaded;
+		}
+
 	private:
 		uint32_t mUniformType = 0;
 		uint8_t mBitsPerBlock = 0;
@@ -75,6 +82,7 @@ namespace voxel_game::chunk {
 		bool mPaletted = true;
 		glm::ivec3 mPos;
 		ecs::Entity mObject;
+		uint32_t mLastLoaded = 0;
 
 		void convertToPalette();
 

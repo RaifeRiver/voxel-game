@@ -24,7 +24,9 @@
 #include "common/component/Transform.h"
 #include "common/ecs/ECSRegistry.h"
 #include "common/event/LoadChunkEvent.h"
+#include "common/event/UnloadChunkEvent.h"
 #include "common/universe/UniversePos.h"
+#include "common/util/UpdateTime.h"
 
 namespace voxel_game::chunk {
 	constexpr uint32_t MAX_CHUNKS_PER_UPDATE = 100;
@@ -36,18 +38,21 @@ namespace voxel_game::chunk {
 
 		ZoneScopedN("Loading chunks");
 
+		util::UpdateTime& updateTime = registry.getResource<util::UpdateTime>();
+
 		const std::vector<ecs::Entity> chunkLoaders = registry.getEntitiesWithComponents<ChunkLoaderInfo, component::Transform>();
-		for (const ecs::Entity chunkLoader : chunkLoaders) {
-			const ChunkLoaderInfo& chunkLoaderInfo = registry.getComponent<ChunkLoaderInfo>(chunkLoader);
-			component::Transform& loaderTransform = registry.getComponent<component::Transform>(chunkLoader);
+		const std::vector<ecs::Entity> chunkObjects = registry.getEntitiesWithComponents<ChunkData, component::Transform>();
 
-			const float loadRadius = static_cast<float>(chunkLoaderInfo.radius) * CHUNK_SIZE;
-			const float loadRadius2 = loadRadius * loadRadius;
+		for (const ecs::Entity chunkObject : chunkObjects) {
+			ChunkData& chunkData = registry.getComponent<ChunkData>(chunkObject);
+			component::Transform& objectTransform = registry.getComponent<component::Transform>(chunkObject);
 
-			const std::vector<ecs::Entity> chunkObjects = registry.getEntitiesWithComponents<ChunkData, component::Transform>();
-			for (const ecs::Entity chunkObject : chunkObjects) {
-				ChunkData& chunkData = registry.getComponent<ChunkData>(chunkObject);
-				component::Transform& objectTransform = registry.getComponent<component::Transform>(chunkObject);
+			for (const ecs::Entity chunkLoader : chunkLoaders) {
+				const ChunkLoaderInfo& chunkLoaderInfo = registry.getComponent<ChunkLoaderInfo>(chunkLoader);
+				component::Transform& loaderTransform = registry.getComponent<component::Transform>(chunkLoader);
+
+				const float loadRadius = static_cast<float>(chunkLoaderInfo.radius) * CHUNK_SIZE;
+				const float loadRadius2 = loadRadius * loadRadius;
 
 				glm::vec3 sphereCentre = glm::conjugate(objectTransform.rotation) * glm::vec3(loaderTransform.pos - objectTransform.pos);
 
@@ -63,15 +68,17 @@ namespace voxel_game::chunk {
 					for (int32_t y = minChunk.y; y <= maxChunk.y; y++) {
 						for (int32_t z = minChunk.z; z <= maxChunk.z; z++) {
 							glm::ivec3 chunk = {x, y, z};
-							if (chunkData.isLoaded(chunk)) {
-								continue;
-							}
 
 							glm::i64vec3 chunkCentre = glm::i64vec3(chunk) * static_cast<int64_t>(CHUNK_SIZE) + static_cast<int64_t>(HALF_CHUNK_SIZE);
 							auto distanceVec = glm::dvec3(chunkCentre) - glm::dvec3(sphereCentre);
 							double distance = glm::dot(distanceVec, distanceVec);
 							if (distance <= loadRadius2) {
-								chunksToLoad.emplace_back(distance, chunk);
+								if (!chunkData.isLoaded(chunk)) {
+									chunksToLoad.emplace_back(distance, chunk);
+								}
+								else {
+									chunkData.chunks.at(chunk).setLastLoaded(updateTime.update);
+								}
 							}
 						}
 					}
@@ -82,11 +89,21 @@ namespace voxel_game::chunk {
 				});
 
 				for (uint32_t i = 0; i < std::min(static_cast<uint32_t>(chunksToLoad.size()), MAX_CHUNKS_PER_UPDATE); i++) {
-					glm::ivec3 chunk = chunksToLoad[i].second;
-					chunkData.chunks.emplace(chunk, createChunk(chunk, chunkObject));
-					registry.pushEvent<event::LoadChunkEvent>({chunkObject, chunkData.chunks.at(chunk)});
+					glm::ivec3 pos = chunksToLoad[i].second;
+					chunkData.chunks.emplace(pos, createChunk(pos, chunkObject));
+					Chunk& chunk = chunkData.chunks.at(pos);
+					chunk.setLastLoaded(updateTime.update);
+					registry.pushEvent<event::LoadChunkEvent>({chunkObject, chunk});
 				}
 			}
+
+			std::erase_if(chunkData.chunks, [&](const auto& chunk) {
+				if (chunk.second.getLastLoaded() < updateTime.update) {
+					registry.pushEvent<event::UnloadChunkEvent>({chunkObject, chunk.first});
+					return true;
+				}
+				return false;
+			});
 		}
 	}
 

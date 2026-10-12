@@ -165,12 +165,20 @@ namespace voxel_game::client::render::chunk {
 		for (const ecs::Entity entity : registry.getEntitiesWithComponents<ChunkRenderData, component::Transform>()) {
 			const component::Transform& chunkTransform = registry.getComponent<component::Transform>(entity);
 			const int32_t boundingSphereRadius = std::ceil(voxel_game::chunk::CHUNK_SIZE * glm::compMax(chunkTransform.scale) / 2.0f * std::sqrt(3.0f));
+			glm::mat4 rotationMatrix = glm::toMat4(chunkTransform.rotation);
+			glm::i64vec3 relativeSector = chunkTransform.pos.sector - transform.pos.sector;
+			glm::vec3 sectorOffset = relativeSector * static_cast<int64_t>(universe::SECTOR_SIZE);
+			glm::vec3 relativeLocal = chunkTransform.pos.local - transform.pos.local;
+			glm::vec3 relativePos = sectorOffset + relativeLocal;
 			for (auto& [pos, mesh] : registry.getComponent<ChunkRenderData>(entity).data) {
 				auto& [modelMatrix, boundingSphere] = frameChunkBufferData[mesh.chunkIndex];
-				auto [relativeSector, relativeLocal] = chunkTransform.pos + glm::i64vec3(pos) * static_cast<int64_t>(voxel_game::chunk::CHUNK_SIZE) - transform.pos;
-				auto relativePos = glm::vec3(relativeSector * static_cast<int64_t>(universe::SECTOR_SIZE)) + relativeLocal;
-				modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), relativePos), chunkTransform.scale);
-				boundingSphere = glm::ivec4(relativePos + voxel_game::chunk::CHUNK_SIZE / 2.0f, boundingSphereRadius);
+				glm::vec3 chunkOffset = glm::vec3(pos) * static_cast<float>(voxel_game::chunk::CHUNK_SIZE);
+				auto rotatedChunkOffset = glm::vec3(rotationMatrix * glm::vec4(chunkOffset, 1.0f));
+				glm::vec3 chunkPos = glm::vec3(relativePos) + rotatedChunkOffset;
+				modelMatrix = glm::scale(glm::translate(glm::mat4(1.0f), chunkPos) * rotationMatrix, chunkTransform.scale);
+				glm::vec3 chunkCentre = chunkOffset + voxel_game::chunk::CHUNK_SIZE / 2.0f;
+				glm::vec3 rotatedChunkCentre = glm::vec3(relativePos) + glm::vec3(rotationMatrix * glm::vec4(chunkCentre, 1.0f));
+				boundingSphere = glm::ivec4(rotatedChunkCentre, boundingSphereRadius);
 			}
 		}
 		frameChunkBuffer->unmap();

@@ -87,6 +87,12 @@ namespace voxel_game::client {
 			updateTime.deltaTime = deltaTime;
 			updateTime.update++;
 
+			std::vector<ecs::Entity> entities = registry.getEntitiesWithComponents<chunk::ChunkData, component::Transform>();
+			for (const ecs::Entity entity: entities) {
+				component::Transform& transform = registry.getComponent<component::Transform>(entity);
+				transform.rotation = glm::normalize(transform.rotation * glm::angleAxis(deltaTime * 0.1f, glm::vec3(0.0f, 1.0f, 0.0f)));
+			}
+
 			window.pollEvents();
 
 			registry.update();
